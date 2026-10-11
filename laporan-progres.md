@@ -9,29 +9,40 @@
 ### Progres 1 ###
 1. Membuat repository dan invite member
 
-![alt text](image.png)
+![alt text](assets/images/image.png)
 
 2. Membuat inisiasi project
 
-![alt text](image-1.png)
+![alt text](assets/images/image-1.png)
 
 ### Tugas Member 1 (Abdullah Fattah as Backend) ###
 1. Accept invitation
 2. Konfimasi Bukti
 3. Clone project 
 4. Konfirmasi Bukti
+![alt text](<assets/images/image-2.jpeg>)
+3. Clone project 
+4. Konfirmasi Bukti
+![alt text](<assets/images/image-3.jpeg>)
 
 ### Tugas Member 2 (Haikal Azkal Azkiya  as Frontend) ###
 1. Accept invitation
 2. Konfimasi Bukti
-![alt text](<Screenshot 2026-10-12 004830.png>)
+![alt text](<assets/images/image-6.png>)
 3. Clone project 
 4. Konfirmasi Bukti
-![alt text](image-2.png)
+![alt text](assets/images/image-7.png)
+
+### Tugas Member 3 (Dzaky Muhammad Nafis as Frontend) ###
+1. Accept invitation
+2. Konfimasi Bukti
+![alt text](<assets/images/image-4.png>)
+3. Clone project 
+4. Konfirmasi Bukti
+![alt text](assets/images/image-5.png)
 
 
-
-
+            
 ### Diskusi Penentuan Project ###
 Project yang Dipilih: Penyewaan Sepda
 - Kelompok mengusulkan pembuatan sistem mobile untuk penyewaan dan pengelolaan sepeda.
