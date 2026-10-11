@@ -31,6 +31,7 @@
 
 
 
+
 ### Diskusi Penentuan Project ###
 Project yang Dipilih: Penyewaan Sepda
 - Kelompok mengusulkan pembuatan sistem mobile untuk penyewaan dan pengelolaan sepeda.
