@@ -18,10 +18,8 @@
 ### Tugas Member 1 (Abdullah Fattah as Backend) ###
 1. Accept invitation
 2. Konfimasi Bukti
-![alt text](<WhatsApp Image 2026-10-12 at 00.43.55.jpeg>)
 3. Clone project 
 4. Konfirmasi Bukti
-![alt text](<WhatsApp Image 2026-10-12 at 00.43.54.jpeg>)
 
 ### Tugas Member 2 (Haikal Azkal Azkiya  as Frontend) ###
 1. Accept invitation
