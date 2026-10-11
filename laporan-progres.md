@@ -8,3 +8,19 @@
 
 ### Progres 1 ###
 1. Membuat repository dan invite member
+
+![alt text](image.png)
+
+2. Membuat inisiasi project
+
+![alt text](image-1.png)
+
+### Tugas Member ###
+1. Accept invitation
+2. Clone project 
+3. Konfirmasi Bukti
+
+### Diskusi Penentuan Project ###
+Project yang Dipilih: Penyewaan Sepda
+- Kelompok mengusulkan pembuatan sistem mobile untuk penyewaan dan pengelolaan sepeda.
+- Anggota kelompok berdiskusi dan sepakat memilih project tersebut untuk dikembangkan bersama.
