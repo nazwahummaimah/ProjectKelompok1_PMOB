@@ -15,10 +15,13 @@
 
 ![alt text](image-1.png)
 
-### Tugas Member ###
+### Tugas Member 1 (Abdullah Fattah as Backend) ###
 1. Accept invitation
-2. Clone project 
-3. Konfirmasi Bukti
+2. Konfimasi Bukti
+![alt text](<WhatsApp Image 2026-10-11 at 23.55.38.jpeg>)
+3. Clone project 
+4. Konfirmasi Bukti
+![alt text](image-2.png)
 
 ### Diskusi Penentuan Project ###
 Project yang Dipilih: Penyewaan Sepda
