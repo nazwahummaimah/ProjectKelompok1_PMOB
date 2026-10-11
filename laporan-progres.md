@@ -9,16 +9,24 @@
 ### Progres 1 ###
 1. Membuat repository dan invite member
 
-![alt text](image.png)
+![alt text](assets/images/image.png)
 
 2. Membuat inisiasi project
 
-![alt text](image-1.png)
+![alt text](assets/images/image-1.png)
 
 ### Tugas Member 1 (Abdullah Fattah as Backend) ###
 1. Accept invitation
 2. Konfimasi Bukti
-![alt text](<WhatsApp Image 2026-10-11 at 23.55.38.jpeg>)
+![alt text](<assets/images/image-2.jpeg>)
+3. Clone project 
+4. Konfirmasi Bukti
+![alt text](image-2.png)
+
+### Tugas Member 2 (Dzaky Muhammad Nafis as Frontend) ###
+1. Accept invitation
+2. Konfimasi Bukti
+![alt text](<assets/images/image-4.png>)
 3. Clone project 
 4. Konfirmasi Bukti
 ![alt text](image-2.png)
