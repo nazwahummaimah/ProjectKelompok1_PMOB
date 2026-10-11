@@ -23,6 +23,16 @@
 4. Konfirmasi Bukti
 ![alt text](image-2.png)
 
+### Tugas Member 2 (Haikal Azkal Azkiya  as Frontend) ###
+1. Accept invitation
+2. Konfimasi Bukti
+![alt text](<Screenshot 2026-10-12 004830.png>)
+3. Clone project 
+4. Konfirmasi Bukti
+![alt text](image-2.png)
+
+
+
 ### Diskusi Penentuan Project ###
 Project yang Dipilih: Penyewaan Sepda
 - Kelompok mengusulkan pembuatan sistem mobile untuk penyewaan dan pengelolaan sepeda.
