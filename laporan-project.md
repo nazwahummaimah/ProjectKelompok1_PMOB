@@ -24,9 +24,6 @@ Fitur Utama:
 
   <img src="pencatatan.jpeg" width="50%" >
 
-  
-
-
 Notulensi:
 1. Pencatatan transaksi penyewaan masih menggunakan buku manual dan staf terkadang lupa mencatat transaksi
 2. Rental memiliki sekitar 62 unit sepeda di dua cabang. Ketersediaan sepeda masih mengandalkan ingatan staf dan  belum diperbarui melalui sistem secara langsung.
@@ -41,14 +38,37 @@ Notulensi:
 11. Pemilik membutuhkan laporan pendapatan harian dan bulanan serta pencatatan pengeluaran operasional.
 12. Sistem diharapkan dapat membantu pencatatan transaksi, pengelolaan inventaris, pembaruan status sepeda, pencatatan pembayaran, dan pembuatan laporan.
 
-
-
 ### Pembagian Tugas ###
 
+1. Abdullah Fattah
+- Membuat tampilan halaman beranda
+- Membuat tampilan splash-screen
 
+2. Dzaky Muhammad Nafis
+- Membuat tampilan halaman login
+- Membuat tampilan halaman register
 
-
-
-
+3. Haikal Azkal Azkiya 
+- Membuat tampilan halaman durasi sewa
 
 ### Hasil Halaman ###
+
+1. Splash-screen
+
+<img src="assets/images/image-1.png" width="50%">
+
+2. Beranda
+
+<img src="assets/images/image-1.png" width="50%">
+
+3. Durasi sewa
+
+<img src="assets/images/image-1.png" width="50%">
+
+4. Login
+
+<img src="assets/images/login.gif" width="50%">
+
+5. Register
+
+<img src="assets/images/register.gif" width="50%">
