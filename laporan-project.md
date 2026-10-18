@@ -24,9 +24,6 @@ Fitur Utama:
 
   <img src="pencatatan.jpeg" width="50%" >
 
-  
-
-
 Notulensi:
 1. Pencatatan transaksi penyewaan masih menggunakan buku manual dan staf terkadang lupa mencatat transaksi
 2. Rental memiliki sekitar 62 unit sepeda di dua cabang. Ketersediaan sepeda masih mengandalkan ingatan staf dan  belum diperbarui melalui sistem secara langsung.
@@ -40,8 +37,6 @@ Notulensi:
 10. Rekap pendapatan masih dilakukan secara manual dan terkadang terjadi selisih antara catatan dengan uang yang diterima.
 11. Pemilik membutuhkan laporan pendapatan harian dan bulanan serta pencatatan pengeluaran operasional.
 12. Sistem diharapkan dapat membantu pencatatan transaksi, pengelolaan inventaris, pembaruan status sepeda, pencatatan pembayaran, dan pembuatan laporan.
-
-
 
 ### Pembagian Tugas ###
 
