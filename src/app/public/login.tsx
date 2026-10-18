@@ -69,7 +69,7 @@ export default function LoginScreen() {
               <MaterialCommunityIcons name="shield-check" size={18} color={COLORS.primary} />
               <Text style={styles.heroBadgeText}>Akun pengguna</Text>
             </View>
-            <Text style={styles.heroTitle}>Masuk untuk mulai sewa</Text>
+            <Text style={styles.heroTitle}>Masuk untuk melihat perjalananmu!</Text>
             <Text style={styles.heroText}>
               Kelola riwayat sewa, cek status unit, dan akses layanan cabang dengan cepat.
             </Text>
@@ -141,7 +141,11 @@ export default function LoginScreen() {
               <View style={styles.divider} />
             </View>
 
-            <Pressable style={styles.secondaryButton} accessibilityRole="button">
+            <Pressable
+              style={styles.secondaryButton}
+              onPress={() => router.push('/public/register')}
+              accessibilityRole="button"
+            >
               <MaterialCommunityIcons name="account-plus-outline" size={18} color={COLORS.primary} />
               <Text style={styles.secondaryButtonText}>Daftar akun baru</Text>
             </Pressable>
@@ -150,7 +154,7 @@ export default function LoginScreen() {
           <View style={styles.infoBox}>
             <Ionicons name="information-circle-outline" size={18} color={COLORS.primary} />
             <Text style={styles.infoText}>
-              Untuk registrasi, silakan datang langsung ke cabang atau hubungi petugas Jamal Jepret.
+              Buat akun untuk mulai menggunakan layanan Jamal Jepret.
             </Text>
           </View>
         </ScrollView>
