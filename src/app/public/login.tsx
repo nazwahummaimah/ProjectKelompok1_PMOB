@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const COLORS = {
@@ -25,9 +26,11 @@ const COLORS = {
   border: '#E0E0E0',
   muted: '#9AA3A0',
   shadow: 'rgba(22, 65, 35, 0.12)',
+  navInactive: '#87969E',
 };
 
 export default function LoginScreen() {
+  const router = useRouter();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,6 +38,9 @@ export default function LoginScreen() {
   const onLogin = () => {
     // Placeholder untuk logic login di tahap berikutnya.
   };
+
+  const openHome = () => router.push('/public');
+  const openDuration = () => router.push('/public/durasi-sewa');
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -149,7 +155,60 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <View style={styles.bottomNav}>
+        <BottomNavItem
+          icon="home"
+          label="Home"
+          onPress={openHome}
+        />
+        <BottomNavItem
+          icon="scan-outline"
+          label="Durasi Sewa"
+          onPress={openDuration}
+        />
+        <BottomNavItem
+          icon="person-circle-outline"
+          label="Login"
+          active
+          onPress={() => {}}
+        />
+      </View>
     </SafeAreaView>
+  );
+}
+
+function BottomNavItem({
+  icon,
+  label,
+  active = false,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  active?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={styles.bottomNavItem}
+      accessibilityRole="button"
+    >
+      <Ionicons
+        name={icon}
+        size={23}
+        color={active ? COLORS.primary : COLORS.navInactive}
+      />
+      <Text
+        style={[
+          styles.bottomNavLabel,
+          active && styles.bottomNavLabelActive,
+        ]}
+      >
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -164,7 +223,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 32,
+    paddingBottom: 30,
   },
   topBrand: {
     flexDirection: 'row',
@@ -348,5 +407,30 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     lineHeight: 20,
     color: COLORS.textSecondary,
+  },
+  bottomNav: {
+    height: 65,
+    flexDirection: 'row',
+    backgroundColor: COLORS.surface,
+    borderTopWidth: 1,
+    borderTopColor: '#EDF1EE',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+  bottomNavItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+  },
+  bottomNavLabel: {
+    color: '#819099',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  bottomNavLabelActive: {
+      color: COLORS.primary,
+    fontWeight: '800',
   },
 });
