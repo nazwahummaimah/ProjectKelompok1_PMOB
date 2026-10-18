@@ -37,34 +37,3 @@ Notulensi:
 10. Rekap pendapatan masih dilakukan secara manual dan terkadang terjadi selisih antara catatan dengan uang yang diterima.
 11. Pemilik membutuhkan laporan pendapatan harian dan bulanan serta pencatatan pengeluaran operasional.
 12. Sistem diharapkan dapat membantu pencatatan transaksi, pengelolaan inventaris, pembaruan status sepeda, pencatatan pembayaran, dan pembuatan laporan.
-
-### Pembagian Tugas ###
-
-1. Abdullah Fattah
-- Membuat tampilan halaman beranda/home
-- Membuat tampilan splash-screen
-
-2. Dzaky Muhammad Nafis
-- Membuat tampilan halaman login
-- Membuat tampilan halaman register
-
-3. Haikal Azkal Azkiya 
-- Membuat tampilan halaman durasi sewa
-
-### Hasil Halaman ###
-
-1. Splash-screen dan beranda/home
-
-<img src="assets/images/video-splashscreen-dan-home.gif" style="width: 30%; height: auto;">
-
-2. Durasi sewa
-
-<img src="assets/images/image-1.png" style="width: 30%; height: auto;">
-
-3. Login
-
-<img src="assets/images/login.gif" style="width: 30%; height: auto;">
-
-4. Register
-
-<img src="assets/images/register.gif" style="width: 30%; height: auto;">

@@ -6,7 +6,7 @@
 3. Haikal Azkal Azkiya (2488010038)
 4. Nazwa Hummaimah Shiddqin (2488010039)
 
-### Progres 1 ###
+## Progres 1 ##
 1. Membuat repository dan invite member
 
 <img src="assets/images/image.png" width="50%">
@@ -53,3 +53,31 @@
 Project yang Dipilih: Penyewaan Sepda
 - Kelompok mengusulkan pembuatan sistem mobile untuk penyewaan dan pengelolaan sepeda.
 - Anggota kelompok berdiskusi dan sepakat memilih project tersebut untuk dikembangkan bersama.
+
+
+## Progres 2 ##
+### Pembagian Tugas ###
+
+1. Abdullah Fattah
+- Membuat tampilan halaman beranda/home
+- Membuat tampilan splash-screen
+- Konfimasi Bukti
+
+<img src="assets/images/video-splashscreen-dan-home.gif" style="width: 30%; height: auto;">
+
+2. Dzaky Muhammad Nafis
+- Membuat tampilan halaman login
+- Konfirmasi Bukti
+
+<img src="assets/images/login.gif" style="width: 30%; height: auto;">
+
+- Membuat tampilan halaman register
+- Konfirmasi Bukti
+
+<img src="assets/images/register.gif" style="width: 30%; height: auto;">
+
+3. Haikal Azkal Azkiya 
+- Membuat tampilan halaman durasi sewa
+- Konfimasi Bukti
+
+<img src="assets/images/image-1.png" style="width: 30%; height: auto;">
