@@ -40,10 +40,35 @@ Notulensi:
 
 ### Pembagian Tugas ###
 
+1. Abdullah Fattah
+- Membuat tampilan halaman beranda
+- Membuat tampilan splash-screen
 
+2. Dzaky Muhammad Nafis
+- Membuat tampilan halaman login
+- Membuat tampilan halaman register
 
-
-
-
+3. Haikal Azkal Azkiya 
+- Membuat tampilan halaman durasi sewa
 
 ### Hasil Halaman ###
+
+1. Splash-screen
+
+<img src="assets/images/image-1.png" width="50%">
+
+2. Beranda
+
+<img src="assets/images/image-1.png" width="50%">
+
+3. Durasi sewa
+
+<img src="assets/images/image-1.png" width="50%">
+
+4. Login
+
+<img src="assets/images/login.gif" width="50%">
+
+5. Register
+
+<img src="assets/images/register.gif" width="50%">
