@@ -41,7 +41,7 @@ Notulensi:
 ### Pembagian Tugas ###
 
 1. Abdullah Fattah
-- Membuat tampilan halaman beranda
+- Membuat tampilan halaman beranda/home
 - Membuat tampilan splash-screen
 
 2. Dzaky Muhammad Nafis
@@ -53,22 +53,18 @@ Notulensi:
 
 ### Hasil Halaman ###
 
-1. Splash-screen
+1. Splash-screen dan beranda/home
 
-<img src="assets/images/image-1.png" width="50%">
+<img src="assets/images/video-splashscreen-dan-home.gif" style="width: 30%; height: auto;">
 
-2. Beranda
+2. Durasi sewa
 
-<img src="assets/images/image-1.png" width="50%">
+<img src="assets/images/image-1.png" style="width: 30%; height: auto;">
 
-3. Durasi sewa
+3. Login
 
-<img src="assets/images/image-1.png" width="50%">
+<img src="assets/images/login.gif" style="width: 30%; height: auto;">
 
-4. Login
+4. Register
 
-<img src="assets/images/login.gif" width="50%">
-
-5. Register
-
-<img src="assets/images/register.gif" width="50%">
+<img src="assets/images/register.gif" style="width: 30%; height: auto;">

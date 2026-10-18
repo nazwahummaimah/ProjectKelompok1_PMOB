@@ -7,11 +7,10 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   View,
   Pressable,
   Dimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -34,13 +33,13 @@ const C = {
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = Math.min(SCREEN_WIDTH * 0.68, 270);
+const CARD_WIDTH = (SCREEN_WIDTH - 36) / 2;
 
 type Bike = {
   id: string;
   name: string;
   type: 'Gunung' | 'Lipat';
-  branch: 'Cabang Perjuangan' | 'Cabang 2';
+  branch: 'Cabang Perjuangan';
   image: string;
   available: boolean;
 };
@@ -59,7 +58,7 @@ const bikes: Bike[] = [
     id: 'LP-012',
     name: 'Sepeda Lipat',
     type: 'Lipat',
-    branch: 'Cabang 2',
+    branch: 'Cabang Perjuangan',
     image:
       'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=900&q=85',
     available: true,
@@ -77,52 +76,28 @@ const bikes: Bike[] = [
     id: 'LP-014',
     name: 'Sepeda Lipat',
     type: 'Lipat',
-    branch: 'Cabang 2',
+    branch: 'Cabang Perjuangan',
     image:
       'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&w=900&q=85',
     available: false,
   },
 ];
 
-const filters = [
-  'Semua',
-  'Gunung',
-  'Lipat',
-  'Cabang Perjuangan',
-  'Cabang 2',
-];
+const filters = ['Semua', 'Gunung', 'Lipat'];
 
 function SectionHeading({
   icon,
   title,
-  action,
-  onPress,
 }: {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   title: string;
-  action?: string;
-  onPress?: () => void;
 }) {
   return (
     <View style={styles.sectionHeading}>
       <View style={styles.headingLeft}>
-        <MaterialCommunityIcons
-          name={icon}
-          size={21}
-          color={C.green}
-        />
+        <MaterialCommunityIcons name={icon} size={21} color={C.green} />
         <Text style={styles.sectionTitle}>{title}</Text>
       </View>
-      {action ? (
-        <Pressable
-          onPress={onPress}
-          style={styles.seeAll}
-          accessibilityRole="button"
-        >
-          <Text style={styles.seeAllText}>{action}</Text>
-          <Ionicons name="arrow-forward" size={15} color={C.green} />
-        </Pressable>
-      ) : null}
     </View>
   );
 }
@@ -173,20 +148,39 @@ export default function PublicHomeScreen() {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
   const sectionPositions = useRef<Record<string, number>>({});
+
   const [activeFilter, setActiveFilter] = useState('Semua');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredBikes = useMemo(() => {
-    if (activeFilter === 'Semua') return bikes;
+    let result = bikes;
+
     if (activeFilter === 'Gunung' || activeFilter === 'Lipat') {
-      return bikes.filter((bike) => bike.type === activeFilter);
+      result = result.filter((bike) => bike.type === activeFilter);
     }
-    return bikes.filter((bike) => bike.branch === activeFilter);
-  }, [activeFilter]);
+
+    const query = searchQuery.trim().toLowerCase();
+
+    if (query) {
+      result = result.filter(
+        (bike) =>
+          bike.id.toLowerCase().includes(query) ||
+          bike.name.toLowerCase().includes(query) ||
+          bike.type.toLowerCase().includes(query)
+      );
+    }
+
+    return result;
+  }, [activeFilter, searchQuery]);
 
   const scrollToSection = (section: string) => {
     const y = sectionPositions.current[section];
+
     if (typeof y === 'number') {
-      scrollRef.current?.scrollTo({ y: Math.max(0, y - 12), animated: true });
+      scrollRef.current?.scrollTo({
+        y: Math.max(0, y - 12),
+        animated: true,
+      });
     }
   };
 
@@ -201,6 +195,7 @@ export default function PublicHomeScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <StatusBar barStyle="dark-content" backgroundColor={C.white} />
 
+      {/* HEADER */}
       <View style={styles.header}>
         <View style={styles.logoIcon}>
           <MaterialCommunityIcons
@@ -209,8 +204,9 @@ export default function PublicHomeScreen() {
             color={C.green}
           />
         </View>
+
         <View style={styles.logoTextWrap}>
-          <Text style={styles.logoTitle}>Jamal Jepret</Text>
+          <Text style={styles.logoTitle}>Jamal Jepret Perjuangan</Text>
           <Text style={styles.logoSubtitle}>Penyewaan Sepeda</Text>
         </View>
       </View>
@@ -221,7 +217,7 @@ export default function PublicHomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* BANNER UTAMA */}
+        {/* HERO */}
         <View style={styles.hero}>
           <ImageBackground
             source={{
@@ -232,21 +228,25 @@ export default function PublicHomeScreen() {
             resizeMode="cover"
           >
             <View style={styles.heroOverlay} />
+
             <View style={styles.heroContent}>
               <Text style={styles.heroTitle}>
                 Jelajahi Sekitar{'\n'}dengan Sepeda{'\n'}Favoritmu
               </Text>
+
               <Text style={styles.heroDescription}>
-                Nikmati pengalaman bersepeda bersama Jamal Jepret.
-                Pilih jenis sepeda yang sesuai dan lihat tarif sewa
-                sebelum datang ke cabang kami.
+                Nikmati pengalaman bersepeda bersama Jamal Jepret
+                Perjuangan. Pilih jenis sepeda yang sesuai dan lihat
+                tarif sewa sebelum datang ke cabang kami.
               </Text>
+
               <View style={styles.heroButtons}>
                 <PrimaryButton
                   title="Lihat Unit Sepeda"
                   icon="arrow-forward"
                   onPress={() => scrollToSection('bikes')}
                 />
+
                 <PrimaryButton
                   title="Lihat Tarif"
                   outlined
@@ -259,16 +259,51 @@ export default function PublicHomeScreen() {
 
         {/* KATALOG SEPEDA */}
         <View
-          onLayout={(e) => recordPosition('bikes', e.nativeEvent.layout.y)}
+          onLayout={(e) =>
+            recordPosition('bikes', e.nativeEvent.layout.y)
+          }
           style={styles.section}
         >
           <SectionHeading
             icon="bicycle"
             title="Unit Sepeda Kami"
-            action="Lihat Semua"
-            onPress={() => setActiveFilter('Semua')}
           />
 
+          <Text style={styles.catalogDescription}>
+            Temukan sepeda yang sesuai dengan kebutuhanmu.
+          </Text>
+
+          {/* PENCARIAN */}
+          <View style={styles.searchContainer}>
+            <Ionicons
+              name="search-outline"
+              size={20}
+              color={C.secondary}
+            />
+
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Cari kode atau jenis sepeda..."
+              placeholderTextColor={C.muted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCapitalize="none"
+              returnKeyType="search"
+              accessibilityLabel="Cari unit sepeda"
+            />
+
+            {searchQuery.length > 0 && (
+              <Pressable onPress={() => setSearchQuery('')}>
+                <Ionicons
+                  name="close-circle"
+                  size={20}
+                  color={C.muted}
+                />
+              </Pressable>
+            )}
+          </View>
+
+          {/* FILTER */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -276,6 +311,7 @@ export default function PublicHomeScreen() {
           >
             {filters.map((filter) => {
               const selected = activeFilter === filter;
+
               return (
                 <Pressable
                   key={filter}
@@ -298,11 +334,12 @@ export default function PublicHomeScreen() {
             })}
           </ScrollView>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.bikeList}
-          >
+          <Text style={styles.resultCount}>
+            {filteredBikes.length} unit ditemukan
+          </Text>
+
+          {/* GRID UNIT */}
+          <View style={styles.bikeGrid}>
             {filteredBikes.map((bike) => (
               <View key={bike.id} style={styles.bikeCard}>
                 <View style={styles.bikeImageWrap}>
@@ -311,6 +348,7 @@ export default function PublicHomeScreen() {
                     style={styles.bikeImage}
                     resizeMode="contain"
                   />
+
                   <View
                     style={[
                       styles.availabilityBadge,
@@ -323,6 +361,7 @@ export default function PublicHomeScreen() {
                         !bike.available && styles.unavailableDot,
                       ]}
                     />
+
                     <Text
                       style={[
                         styles.availabilityText,
@@ -335,18 +374,19 @@ export default function PublicHomeScreen() {
                 </View>
 
                 <Text style={styles.bikeCode}>{bike.id}</Text>
+
                 <View style={styles.bikeInfoRow}>
                   <MaterialCommunityIcons
-                    name={bike.type === 'Lipat' ? 'bicycle' : 'triangle-outline'}
+                    name="bicycle"
                     size={16}
                     color={C.deepGreen}
                   />
-                  <Text style={styles.bikeInfoText}>{`Sepeda ${bike.type}`}</Text>
-                </View>
-                <View style={styles.bikeInfoRow}>
-                  <Ionicons name="location-outline" size={16} color={C.deepGreen} />
-                  <Text style={styles.bikeInfoText} numberOfLines={1}>
-                    {bike.branch}
+
+                  <Text
+                    style={styles.bikeInfoText}
+                    numberOfLines={1}
+                  >
+                    {bike.name}
                   </Text>
                 </View>
 
@@ -354,24 +394,53 @@ export default function PublicHomeScreen() {
                   title="Lihat Detail"
                   small
                   onPress={() =>
-                    router.push(`/public/detail-sepeda/${bike.id}` as never)
+                    router.push(
+                      `/public/detail-sepeda/${bike.id}` as never
+                    )
                   }
                 />
               </View>
             ))}
-          </ScrollView>
+          </View>
+
+          {filteredBikes.length === 0 && (
+            <View style={styles.emptySearch}>
+              <Ionicons
+                name="bicycle-outline"
+                size={38}
+                color={C.muted}
+              />
+
+              <Text style={styles.emptySearchTitle}>
+                Unit tidak ditemukan
+              </Text>
+
+              <Text style={styles.emptySearchText}>
+                Coba gunakan kode atau jenis sepeda yang berbeda.
+              </Text>
+
+              <PrimaryButton
+                title="Reset Pencarian"
+                outlined
+                onPress={() => {
+                  setSearchQuery('');
+                  setActiveFilter('Semua');
+                }}
+              />
+            </View>
+          )}
         </View>
 
-        {/* TARIF PER JAM */}
+        {/* TARIF DAN PAKET SEWA */}
         <View
-          onLayout={(e) => recordPosition('pricing', e.nativeEvent.layout.y)}
+          onLayout={(e) =>
+            recordPosition('pricing', e.nativeEvent.layout.y)
+          }
           style={styles.section}
         >
           <SectionHeading
             icon="cash-multiple"
             title="Tarif & Paket Sewa"
-            action="Lihat Semua"
-            onPress={openDuration}
           />
 
           <View style={styles.pricingPanel}>
@@ -383,28 +452,49 @@ export default function PublicHomeScreen() {
                   color={C.green}
                 />
               </View>
+
               <View style={{ flex: 1 }}>
-                <Text style={styles.pricingIntroTitle}>Tarif per jam</Text>
+                <Text style={styles.pricingIntroTitle}>
+                  Tarif per jam
+                </Text>
                 <Text style={styles.pricingIntroSub}>
-                  Berlaku untuk semua jenis sepeda
+                  Tarif malam ditambah Rp5.000/jam
                 </Text>
               </View>
             </View>
 
             <View style={styles.pricingColumn}>
               <Text style={styles.pricingCategory}>Pelajar</Text>
+
               <Text style={styles.price}>Rp10.000</Text>
               <Text style={styles.priceSub}>/jam (hari biasa)</Text>
-              <Text style={[styles.price, styles.holidayPrice]}>Rp12.000</Text>
+
+              <Text style={[styles.price, styles.holidayPrice]}>
+                Rp12.000
+              </Text>
               <Text style={styles.priceSub}>/jam (hari libur)</Text>
+
+              <Text style={[styles.price, styles.nightPrice]}>
+                +Rp5.000
+              </Text>
+              <Text style={styles.priceSub}>tambahan malam/jam</Text>
             </View>
 
             <View style={styles.pricingColumn}>
               <Text style={styles.pricingCategory}>Umum</Text>
+
               <Text style={styles.price}>Rp12.000</Text>
               <Text style={styles.priceSub}>/jam (hari biasa)</Text>
-              <Text style={[styles.price, styles.holidayPrice]}>Rp15.000</Text>
+
+              <Text style={[styles.price, styles.holidayPrice]}>
+                Rp15.000
+              </Text>
               <Text style={styles.priceSub}>/jam (hari libur)</Text>
+
+              <Text style={[styles.price, styles.nightPrice]}>
+                +Rp5.000
+              </Text>
+              <Text style={styles.priceSub}>tambahan malam/jam</Text>
             </View>
           </View>
 
@@ -414,62 +504,67 @@ export default function PublicHomeScreen() {
               size={21}
               color={C.green}
             />
+
             <View style={{ flex: 1 }}>
-              <Text style={styles.packageHeadingTitle}>Paket Sewa</Text>
+              <Text style={styles.packageHeadingTitle}>
+                Paket Sewa
+              </Text>
               <Text style={styles.packageHeadingSub}>
-                Tersedia paket pagi, siang/sore, malam dan sehari penuh.
+                Pilih periode sewa sesuai kebutuhan.
               </Text>
             </View>
           </View>
 
           <View style={styles.packageGrid}>
             <PackageCard
-              emoji="☀️"
-              title="Pagi"
-              time="06.00 – 10.00"
-              onPress={openDuration}
+              emoji="🌅"
+              title="Pagi – Siang"
+              time="06.00 – 12.00"
             />
+
+            <PackageCard
+              emoji="☀️"
+              title="Siang / Sore"
+              time="12.00 – 18.00"
+            />
+
             <PackageCard
               emoji="🌤️"
-              title="Siang / Sore"
-              time="10.00 – 17.00"
-              onPress={openDuration}
+              title="Pagi – Sore"
+              time="06.00 – 18.00"
             />
-            <PackageCard
-              emoji="🌙"
-              title="Malam"
-              time="17.00 – 22.00"
-              onPress={openDuration}
-            />
+
             <PackageCard
               emoji="🗓️"
               title="Sehari Penuh"
               time="Sesuai ketentuan"
-              onPress={openDuration}
             />
           </View>
 
           <View style={styles.noteRow}>
-            <Ionicons name="information-circle" size={16} color={C.secondary} />
+            <Ionicons
+              name="information-circle"
+              size={16}
+              color={C.secondary}
+            />
+
             <Text style={styles.noteText}>
-              Harga dan ketentuan paket dapat berbeda berdasarkan kategori
-              pelanggan, hari penyewaan, dan paket yang dipilih.
+              Harga dan ketentuan paket dapat berbeda berdasarkan
+              kategori pelanggan, hari penyewaan, dan paket yang dipilih.
+              Tarif malam dikenakan tambahan Rp5.000 per jam.
             </Text>
           </View>
         </View>
 
-        {/* INFORMASI CABANG */}
+        {/* INFORMASI CABANG PERJUANGAN */}
         <View style={styles.section}>
           <SectionHeading
             icon="map-marker"
-            title="Informasi Cabang"
-            action="Lihat Semua"
-            onPress={openLogin}
+            title="Informasi Cabang Perjuangan"
           />
 
           <View style={styles.branchList}>
-            <BranchCard name="Cabang Perjuangan" />
-            <BranchCard name="Cabang 2" />
+            <BranchCard name="Jamal Jepret Perjuangan" />
           </View>
         </View>
 
@@ -478,34 +573,78 @@ export default function PublicHomeScreen() {
           <SectionHeading
             icon="format-list-numbered"
             title="Cara Menyewa"
-            action="Lihat Semua"
-            onPress={openDuration}
           />
 
           <View style={styles.stepsRow}>
-            <Step number="1" title="Pilih Sepeda" text="Lihat katalog dan tentukan jenis sepeda yang diinginkan." />
-            <Step number="2" title="Datang ke Cabang" text="Kunjungi lokasi penyewaan untuk memeriksa unit." />
-            <Step number="3" title="Proses Penyewaan" text="Petugas mencatat data pelanggan, unit, durasi dan jaminan." />
-            <Step number="4" title="Mulai Bersepeda" text="Gunakan sepeda setelah proses penyewaan selesai." />
+            <Step
+              number="1"
+              title="Pilih Sepeda"
+              text="Lihat katalog dan tentukan jenis sepeda yang diinginkan."
+            />
+
+            <Step
+              number="2"
+              title="Datang ke Cabang"
+              text="Kunjungi lokasi penyewaan untuk memeriksa unit."
+            />
+
+            <Step
+              number="3"
+              title="Proses Penyewaan"
+              text="Petugas mencatat data pelanggan, unit, durasi dan jaminan."
+            />
+
+            <Step
+              number="4"
+              title="Mulai Bersepeda"
+              text="Gunakan sepeda setelah proses penyewaan selesai."
+            />
           </View>
         </View>
 
-        {/* KETENTUAN */}
+        {/* KETENTUAN PENYEWAAN */}
         <View style={styles.section}>
           <SectionHeading
             icon="shield-check"
             title="Ketentuan Penyewaan"
-            action="Lihat Ketentuan Lengkap"
-            onPress={openDuration}
           />
 
           <View style={styles.termsPanel}>
-            <TermItem icon="account-outline" title="Kategori pelanggan" text="Pelajar dan umum" />
-            <TermItem icon="shield-check-outline" title="Jaminan penyewaan" text="Sesuai kebijakan cabang" />
-            <TermItem icon="clock-check-outline" title="Pengembalian sepeda" text="Sesuai waktu sewa" />
-            <TermItem icon="phone-outline" title="Keterlambatan" text="Lebih dari 2 jam ditindaklanjuti" />
-            <TermItem icon="wrench-outline" title="Kerusakan berat" text="Dapat dikenakan ganti rugi" />
-            <TermItem icon="credit-card-outline" title="Pembayaran" text="Tunai dan QRIS" />
+            <TermItem
+              icon="account-outline"
+              title="Kategori pelanggan"
+              text="Pelajar dan umum"
+            />
+
+            <TermItem
+              icon="shield-check-outline"
+              title="Jaminan penyewaan"
+              text="Sesuai kebijakan cabang"
+            />
+
+            <TermItem
+              icon="clock-check-outline"
+              title="Pengembalian sepeda"
+              text="Sesuai waktu sewa"
+            />
+
+            <TermItem
+              icon="phone-outline"
+              title="Keterlambatan"
+              text="Lebih dari 2 jam ditindaklanjuti"
+            />
+
+            <TermItem
+              icon="wrench-outline"
+              title="Kerusakan berat"
+              text="Dapat dikenakan ganti rugi"
+            />
+
+            <TermItem
+              icon="credit-card-outline"
+              title="Pembayaran"
+              text="Tunai dan QRIS"
+            />
           </View>
         </View>
 
@@ -517,25 +656,46 @@ export default function PublicHomeScreen() {
               size={31}
               color={C.green}
             />
+
             <View>
-              <Text style={styles.footerBrandTitle}>Jamal Jepret</Text>
-              <Text style={styles.footerBrandSub}>Penyewaan Sepeda</Text>
+              <Text style={styles.footerBrandTitle}>
+                Jamal Jepret Perjuangan
+              </Text>
+              <Text style={styles.footerBrandSub}>
+                Penyewaan Sepeda
+              </Text>
             </View>
           </View>
+
           <Text style={styles.footerDescription}>
-            Nikmati pengalaman bersepeda yang menyenangkan dengan layanan
-            terbaik dari Jamal Jepret.
+            Nikmati pengalaman bersepeda yang menyenangkan dengan
+            layanan terbaik dari Jamal Jepret Perjuangan.
           </Text>
+
           <View style={styles.footerContactRow}>
-            <Ionicons name="location-outline" size={15} color={C.secondary} />
-            <Text style={styles.footerContact}>Cabang Perjuangan & Cabang 2</Text>
+            <Ionicons
+              name="location-outline"
+              size={15}
+              color={C.secondary}
+            />
+            <Text style={styles.footerContact}>
+              Cabang Perjuangan
+            </Text>
           </View>
+
           <View style={styles.footerContactRow}>
-            <Ionicons name="call-outline" size={15} color={C.secondary} />
-            <Text style={styles.footerContact}>Informasi kontak tersedia di cabang</Text>
+            <Ionicons
+              name="call-outline"
+              size={15}
+              color={C.secondary}
+            />
+            <Text style={styles.footerContact}>
+              089 660 778 788
+            </Text>
           </View>
+
           <Text style={styles.copyright}>
-            © 2026 Jamal Jepret. Semua hak dilindungi.
+            © 2026 Jamal Jepret Perjuangan.
           </Text>
         </View>
       </ScrollView>
@@ -546,13 +706,20 @@ export default function PublicHomeScreen() {
           icon="home"
           label="Home"
           active
-          onPress={() => scrollRef.current?.scrollTo({ y: 0, animated: true })}
+          onPress={() =>
+            scrollRef.current?.scrollTo({
+              y: 0,
+              animated: true,
+            })
+          }
         />
+
         <BottomNavItem
           icon="scan-outline"
           label="Durasi Sewa"
           onPress={openDuration}
         />
+
         <BottomNavItem
           icon="person-circle-outline"
           label="Login"
@@ -567,29 +734,17 @@ function PackageCard({
   emoji,
   title,
   time,
-  onPress,
 }: {
   emoji: string;
   title: string;
   time: string;
-  onPress: () => void;
 }) {
   return (
-    <Pressable
-      onPress={onPress}
-      style={styles.packageCard}
-      accessibilityRole="button"
-    >
+    <View style={styles.packageCard}>
       <Text style={styles.packageEmoji}>{emoji}</Text>
       <Text style={styles.packageTitle}>{title}</Text>
       <Text style={styles.packageTime}>{time}</Text>
-      <Ionicons
-        name="arrow-forward"
-        size={13}
-        color={C.green}
-        style={styles.packageArrow}
-      />
-    </Pressable>
+    </View>
   );
 }
 
@@ -597,25 +752,58 @@ function BranchCard({ name }: { name: string }) {
   return (
     <View style={styles.branchCard}>
       <View style={styles.branchImagePlaceholder}>
-        <MaterialCommunityIcons name="storefront-outline" size={43} color={C.green} />
+        <MaterialCommunityIcons
+          name="storefront-outline"
+          size={43}
+          color={C.green}
+        />
       </View>
+
       <View style={styles.branchContent}>
         <Text style={styles.branchName}>{name}</Text>
+
         <View style={styles.branchInfoRow}>
-          <Ionicons name="location-outline" size={13} color={C.secondary} />
-          <Text style={styles.branchInfo}>Alamat belum tersedia</Text>
+          <Ionicons
+            name="location-outline"
+            size={13}
+            color={C.secondary}
+          />
+          <Text style={styles.branchInfo}>
+            sebelah fak. kedokteran UGJ/Unswagati, Jl. Yudhasari II, Sunyaragi, Kec. Kesambi, Kota Cirebon, Jawa Barat 45132
+          </Text>
         </View>
+
         <View style={styles.branchInfoRow}>
-          <Ionicons name="time-outline" size={13} color={C.secondary} />
-          <Text style={styles.branchInfo}>Jam operasional belum tersedia</Text>
+          <Ionicons
+            name="time-outline"
+            size={13}
+            color={C.secondary}
+          />
+          <Text style={styles.branchInfo}>
+            06.00 s.d 22.00 WIB
+          </Text>
         </View>
+
         <View style={styles.branchInfoRow}>
-          <Ionicons name="call-outline" size={13} color={C.secondary} />
-          <Text style={styles.branchInfo}>Kontak belum tersedia</Text>
+          <Ionicons
+            name="call-outline"
+            size={13}
+            color={C.secondary}
+          />
+          <Text style={styles.branchInfo}>
+            089 660 778 788
+          </Text>
         </View>
+
         <View style={styles.locationButton}>
-          <Ionicons name="map-outline" size={14} color={C.green} />
-          <Text style={styles.locationButtonText}>Informasi Lokasi</Text>
+          <Ionicons
+            name="map-outline"
+            size={14}
+            color={C.green}
+          />
+          <Text style={styles.locationButtonText}>
+            Informasi Lokasi
+          </Text>
         </View>
       </View>
     </View>
@@ -636,7 +824,9 @@ function Step({
       <View style={styles.stepNumber}>
         <Text style={styles.stepNumberText}>{number}</Text>
       </View>
+
       <View style={styles.stepLine} />
+
       <Text style={styles.stepTitle}>{title}</Text>
       <Text style={styles.stepText}>{text}</Text>
     </View>
@@ -654,7 +844,12 @@ function TermItem({
 }) {
   return (
     <View style={styles.termItem}>
-      <MaterialCommunityIcons name={icon} size={20} color={C.green} />
+      <MaterialCommunityIcons
+        name={icon}
+        size={20}
+        color={C.green}
+      />
+
       <View style={{ flex: 1 }}>
         <Text style={styles.termTitle}>{title}</Text>
         <Text style={styles.termText}>{text}</Text>
@@ -685,6 +880,7 @@ function BottomNavItem({
         size={23}
         color={active ? C.green : '#87969E'}
       />
+
       <Text
         style={[
           styles.bottomNavLabel,
@@ -703,7 +899,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.white,
   },
   header: {
-    height: 66,
+    minHeight: 66,
     backgroundColor: C.white,
     flexDirection: 'row',
     alignItems: 'center',
@@ -717,11 +913,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoTextWrap: {
+    flex: 1,
     marginLeft: 3,
   },
   logoTitle: {
     fontSize: 18,
-    lineHeight: 22,
+    lineHeight: 23,
     fontWeight: '800',
     color: C.green,
   },
@@ -758,7 +955,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(238, 250, 239, 0.72)',
   },
   heroContent: {
-    width: '76%',
+    width: '90%',
     paddingLeft: 19,
     paddingVertical: 15,
   },
@@ -779,6 +976,7 @@ const styles = StyleSheet.create({
   heroButtons: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
     marginTop: 12,
   },
@@ -806,9 +1004,11 @@ const styles = StyleSheet.create({
     color: C.green,
   },
   smallButton: {
-    minHeight: 31,
-    borderRadius: 11,
+    minHeight: 34,
+    borderRadius: 10,
     marginTop: 12,
+    paddingHorizontal: 8,
+    alignSelf: 'stretch',
   },
   section: {
     marginBottom: 19,
@@ -828,24 +1028,39 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionTitle: {
+    flexShrink: 1,
     fontSize: 16,
     fontWeight: '800',
     color: C.deepGreen,
   },
-  seeAll: {
+  catalogDescription: {
+    fontSize: 11,
+    color: C.secondary,
+    marginHorizontal: 12,
+    marginBottom: 12,
+  },
+  searchContainer: {
+    height: 45,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 5,
+    gap: 9,
+    marginHorizontal: 10,
+    paddingHorizontal: 13,
+    backgroundColor: C.white,
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: 13,
   },
-  seeAllText: {
-    fontSize: 10.5,
-    fontWeight: '700',
-    color: C.darkGreen,
+  searchInput: {
+    flex: 1,
+    fontSize: 12,
+    color: C.text,
+    paddingVertical: 0,
   },
   filterList: {
     paddingHorizontal: 10,
-    paddingBottom: 9,
+    paddingTop: 11,
+    paddingBottom: 10,
     gap: 8,
   },
   filterChip: {
@@ -856,11 +1071,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 31,
     justifyContent: 'center',
-    shadowColor: '#143D27',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
   filterChipActive: {
     backgroundColor: C.green,
@@ -875,15 +1085,23 @@ const styles = StyleSheet.create({
     color: C.white,
     fontWeight: '800',
   },
-  bikeList: {
+  resultCount: {
+    fontSize: 10,
+    color: C.secondary,
+    marginHorizontal: 12,
+    marginBottom: 9,
+  },
+  bikeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     paddingHorizontal: 10,
-    paddingBottom: 4,
-    gap: 13,
+    rowGap: 12,
   },
   bikeCard: {
     width: CARD_WIDTH,
     backgroundColor: C.white,
-    padding: 12,
+    padding: 9,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#EEF2EF',
@@ -894,7 +1112,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   bikeImageWrap: {
-    height: 119,
+    height: 115,
     borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: '#F3F7F4',
@@ -907,21 +1125,21 @@ const styles = StyleSheet.create({
   availabilityBadge: {
     position: 'absolute',
     top: 7,
-    right: 6,
+    right: 5,
     backgroundColor: '#D8FAE9',
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 5,
     borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
   },
   unavailableBadge: {
     backgroundColor: '#FCE8E6',
   },
   statusDot: {
-    height: 8,
-    width: 8,
+    height: 7,
+    width: 7,
     borderRadius: 4,
     backgroundColor: C.success,
   },
@@ -930,14 +1148,14 @@ const styles = StyleSheet.create({
   },
   availabilityText: {
     color: C.success,
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
   },
   unavailableText: {
     color: '#B3261E',
   },
   bikeCode: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
     color: C.deepGreen,
     marginTop: 10,
@@ -950,9 +1168,28 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   bikeInfoText: {
-    fontSize: 11,
+    flex: 1,
+    fontSize: 10,
     color: '#50685C',
-    flexShrink: 1,
+  },
+  emptySearch: {
+    alignItems: 'center',
+    marginHorizontal: 10,
+    padding: 24,
+    backgroundColor: C.white,
+    borderRadius: 15,
+    gap: 9,
+  },
+  emptySearchTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: C.deepGreen,
+  },
+  emptySearchText: {
+    fontSize: 11,
+    color: C.secondary,
+    textAlign: 'center',
+    marginBottom: 5,
   },
   pricingPanel: {
     marginHorizontal: 10,
@@ -960,13 +1197,13 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: '#EDF8F0',
     flexDirection: 'row',
-    gap: 10,
+    gap: 9,
   },
   pricingIntro: {
-    flex: 1.25,
+    flex: 1.1,
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: 6,
     paddingTop: 2,
   },
   pricingIconCircle: {
@@ -984,16 +1221,17 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   pricingIntroSub: {
-    fontSize: 9.5,
+    fontSize: 9,
     color: C.secondary,
     marginTop: 3,
     lineHeight: 13,
   },
   pricingColumn: {
-    flex: 0.9,
+    flex: 1,
+    minWidth: 0,
     borderLeftWidth: 1,
     borderLeftColor: '#D6E9DB',
-    paddingLeft: 10,
+    paddingLeft: 8,
   },
   pricingCategory: {
     fontSize: 11,
@@ -1002,15 +1240,19 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   price: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '900',
     color: C.deepGreen,
   },
   holidayPrice: {
     marginTop: 7,
   },
+  nightPrice: {
+    marginTop: 7,
+    color: '#B77900',
+  },
   priceSub: {
-    fontSize: 9,
+    fontSize: 8.5,
     color: C.secondary,
     marginTop: 1,
   },
@@ -1067,11 +1309,6 @@ const styles = StyleSheet.create({
     color: C.secondary,
     marginTop: 3,
     paddingRight: 5,
-  },
-  packageArrow: {
-    position: 'absolute',
-    right: 10,
-    bottom: 11,
   },
   noteRow: {
     flexDirection: 'row',
@@ -1134,6 +1371,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   locationButton: {
+    alignSelf: 'flex-start',
     marginTop: 2,
     backgroundColor: C.paleGreen,
     borderRadius: 9,
