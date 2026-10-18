@@ -80,4 +80,6 @@ Project yang Dipilih: Penyewaan Sepda
 - Membuat tampilan halaman durasi sewa
 - Konfimasi Bukti
 
+<img src="assets/images/durasi-sewa.gif" style="width: 30%; height: auto;">
+
 <img src="assets/images/image-1.png" style="width: 30%; height: auto;">
