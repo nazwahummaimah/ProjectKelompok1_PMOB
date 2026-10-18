@@ -9,38 +9,44 @@
 ### Progres 1 ###
 1. Membuat repository dan invite member
 
-![alt text](assets/images/image.png)
+<img src="assets/images/image.png" width="50%">
 
 2. Membuat inisiasi project
 
-![alt text](assets/images/image-1.png)
+<img src="assets/images/image-1.png" width="50%">
 
 ### Tugas Member 1 (Abdullah Fattah as Backend) ###
 1. Accept invitation
 2. Konfimasi Bukti
+
+<img src="assets/images/image-2.jpeg" width="50">
+
 3. Clone project 
 4. Konfirmasi Bukti
-![alt text](<assets/images/image-2.jpeg>)
-3. Clone project 
-4. Konfirmasi Bukti
-![alt text](<assets/images/image-3.jpeg>)
+
+<img src="assets/images/image-3.jpeg" width="50%">
 
 ### Tugas Member 2 (Haikal Azkal Azkiya  as Frontend) ###
 1. Accept invitation
 2. Konfimasi Bukti
-![alt text](<assets/images/image-6.png>)
+
+<img src="assets/images/image-6.png" width="50%">
+
 3. Clone project 
 4. Konfirmasi Bukti
-![alt text](assets/images/image-7.png)
+
+<img src="assets/images/image-7.png" width="50%">
 
 ### Tugas Member 3 (Dzaky Muhammad Nafis as Frontend) ###
 1. Accept invitation
 2. Konfimasi Bukti
-![alt text](<assets/images/image-4.png>)
+
+<img src="assets/images/image-4.png" width="50%">
+
 3. Clone project 
 4. Konfirmasi Bukti
-![alt text](assets/images/image-5.png)
 
+<img src="assets/images/image-.5jpeg" width="50">
 
             
 ### Diskusi Penentuan Project ###
