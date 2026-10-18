@@ -18,9 +18,7 @@
 ### Tugas Member 1 (Abdullah Fattah as Backend) ###
 1. Accept invitation
 2. Konfimasi Bukti
-
-<img src="assets/images/image-2.jpeg" width="50%">
-
+![alt text](<assets/images/image-2.jpeg>)
 3. Clone project 
 4. Konfirmasi Bukti
 
@@ -45,8 +43,7 @@
 
 3. Clone project 
 4. Konfirmasi Bukti
-
-<img src="assets/images/image-5.png" width="50%">
+![alt text](assets/images/image-5.png)
 
             
 ### Diskusi Penentuan Project ###
