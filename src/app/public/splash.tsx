@@ -1,15 +1,19 @@
+
 import { useEffect } from 'react';
-import { ActivityIndicator, StatusBar, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { BrandLogo } from '../../components/molecules/BrandLogo';
 
 const COLORS = {
   primary: '#2E7D32',
-  primaryDark: '#1B5E20',
   primaryLight: '#E8F5E9',
-  background: '#F7F8FA',
-  secondary: '#616161',
   white: '#FFFFFF',
 };
 
@@ -26,13 +30,17 @@ export default function SplashScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.primaryLight} />
+      <StatusBar barStyle="dark-content" />
+
       <View style={styles.content}>
-        <View style={styles.logoWrap}>
-          <MaterialCommunityIcons name="bicycle" size={66} color={COLORS.primary} />
-        </View>
-        <Text style={styles.brandName}>Jamal Jepret</Text>
-        <Text style={styles.brandSubtitle}>Penyewaan Sepeda</Text>
+        <BrandLogo
+          title="Jamal Jepret"
+          subtitle="Penyewaan Sepeda"
+          layout="vertical"
+          size="large"
+          iconSize={66}
+        />
+
         <ActivityIndicator
           size="small"
           color={COLORS.primary}
@@ -40,6 +48,7 @@ export default function SplashScreen() {
           accessibilityLabel="Memuat aplikasi"
         />
       </View>
+
       <Text style={styles.footer}>JELAJAHI DENGAN NYAMAN</Text>
     </SafeAreaView>
   );
@@ -56,31 +65,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-  },
-  logoWrap: {
-    width: 120,
-    height: 120,
-    borderRadius: 36,
-    backgroundColor: COLORS.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-    shadowColor: COLORS.primaryDark,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 4,
-  },
-  brandName: {
-    color: COLORS.primaryDark,
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: 0.3,
-  },
-  brandSubtitle: {
-    color: COLORS.secondary,
-    fontSize: 14,
-    marginTop: 5,
   },
   loadingIndicator: {
     marginTop: 32,

@@ -1,20 +1,23 @@
-
 import React, { useMemo, useRef, useState } from 'react';
 import {
-  Image,
+  FlatList,
   ImageBackground,
+  type ScrollViewInstance,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
-  TextInput,
   View,
-  Pressable,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { AppHeader } from '../../components/organisms/AppHeader';
+import { BikeCard } from '../../components/organisms/BikeCard';
+import { BikeCatalogControls } from '../../components/organisms/BikeCatalogControls';
+import { BottomNavigation } from '../../components/organisms/BottomNavigation';
+import { PrimaryButton } from '../../components/molecules/PrimaryButton';
+
 
 const C = {
   green: '#16833B',
@@ -31,9 +34,6 @@ const C = {
   border: '#E5ECE7',
   success: '#10A65A',
 };
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = (SCREEN_WIDTH - 36) / 2;
 
 type Bike = {
   id: string;
@@ -102,51 +102,9 @@ function SectionHeading({
   );
 }
 
-function PrimaryButton({
-  title,
-  onPress,
-  icon,
-  outlined = false,
-  small = false,
-}: {
-  title: string;
-  onPress: () => void;
-  icon?: keyof typeof Ionicons.glyphMap;
-  outlined?: boolean;
-  small?: boolean;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[
-        styles.primaryButton,
-        outlined && styles.outlinedButton,
-        small && styles.smallButton,
-      ]}
-      accessibilityRole="button"
-    >
-      <Text
-        style={[
-          styles.primaryButtonText,
-          outlined && styles.outlinedButtonText,
-        ]}
-      >
-        {title}
-      </Text>
-      {icon ? (
-        <Ionicons
-          name={icon}
-          size={15}
-          color={outlined ? C.green : C.white}
-        />
-      ) : null}
-    </Pressable>
-  );
-}
-
 export default function PublicHomeScreen() {
   const router = useRouter();
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance | null>(null);
   const sectionPositions = useRef<Record<string, number>>({});
 
   const [activeFilter, setActiveFilter] = useState('Semua');
@@ -193,23 +151,13 @@ export default function PublicHomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor={C.white} />
+      <StatusBar barStyle="dark-content"/>
 
       {/* HEADER */}
-      <View style={styles.header}>
-        <View style={styles.logoIcon}>
-          <MaterialCommunityIcons
-            name="bicycle"
-            size={43}
-            color={C.green}
-          />
-        </View>
-
-        <View style={styles.logoTextWrap}>
-          <Text style={styles.logoTitle}>Jamal Jepret Perjuangan</Text>
-          <Text style={styles.logoSubtitle}>Penyewaan Sepeda</Text>
-        </View>
-      </View>
+      <AppHeader
+        title="Jamal Jepret Perjuangan"
+        subtitle="Penyewaan Sepeda"
+      />
 
       <ScrollView
         ref={scrollRef}
@@ -273,162 +221,77 @@ export default function PublicHomeScreen() {
             Temukan sepeda yang sesuai dengan kebutuhanmu.
           </Text>
 
-          {/* PENCARIAN */}
-          <View style={styles.searchContainer}>
-            <Ionicons
-              name="search-outline"
-              size={20}
-              color={C.secondary}
+          {/* PENCARIAN DAN FILTER */}
+          <View style={styles.catalogControls}>
+            <BikeCatalogControls
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              activeFilter={activeFilter}
+              onFilterChange={setActiveFilter}
+              filters={filters}
             />
-
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Cari kode atau jenis sepeda..."
-              placeholderTextColor={C.muted}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoCapitalize="none"
-              returnKeyType="search"
-              accessibilityLabel="Cari unit sepeda"
-            />
-
-            {searchQuery.length > 0 && (
-              <Pressable onPress={() => setSearchQuery('')}>
-                <Ionicons
-                  name="close-circle"
-                  size={20}
-                  color={C.muted}
-                />
-              </Pressable>
-            )}
           </View>
-
-          {/* FILTER */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterList}
-          >
-            {filters.map((filter) => {
-              const selected = activeFilter === filter;
-
-              return (
-                <Pressable
-                  key={filter}
-                  onPress={() => setActiveFilter(filter)}
-                  style={[
-                    styles.filterChip,
-                    selected && styles.filterChipActive,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.filterText,
-                      selected && styles.filterTextActive,
-                    ]}
-                  >
-                    {filter}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
 
           <Text style={styles.resultCount}>
             {filteredBikes.length} unit ditemukan
           </Text>
 
           {/* GRID UNIT */}
-          <View style={styles.bikeGrid}>
-            {filteredBikes.map((bike) => (
-              <View key={bike.id} style={styles.bikeCard}>
-                <View style={styles.bikeImageWrap}>
-                  <Image
-                    source={{ uri: bike.image }}
-                    style={styles.bikeImage}
-                    resizeMode="contain"
-                  />
-
-                  <View
-                    style={[
-                      styles.availabilityBadge,
-                      !bike.available && styles.unavailableBadge,
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.statusDot,
-                        !bike.available && styles.unavailableDot,
-                      ]}
-                    />
-
-                    <Text
-                      style={[
-                        styles.availabilityText,
-                        !bike.available && styles.unavailableText,
-                      ]}
-                    >
-                      {bike.available ? 'Tersedia' : 'Disewa'}
-                    </Text>
-                  </View>
-                </View>
-
-                <Text style={styles.bikeCode}>{bike.id}</Text>
-
-                <View style={styles.bikeInfoRow}>
-                  <MaterialCommunityIcons
-                    name="bicycle"
-                    size={16}
-                    color={C.deepGreen}
-                  />
-
-                  <Text
-                    style={styles.bikeInfoText}
-                    numberOfLines={1}
-                  >
-                    {bike.name}
-                  </Text>
-                </View>
+          <FlatList
+            data={filteredBikes}
+            keyExtractor={(bike) => bike.id}
+            numColumns={2}
+            scrollEnabled={false}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.bikeGrid}
+            columnWrapperStyle={{ justifyContent: 'space-between' }}
+            ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+            renderItem={({ item: bike }) => (
+              <View style={styles.bikeCardWrap}>
+                <BikeCard
+                  bike={bike}
+                  onPress={() =>
+                    router.push(`/public/detail-sepeda/${bike.id}` as never)
+                  }
+                />
 
                 <PrimaryButton
                   title="Lihat Detail"
                   small
                   onPress={() =>
-                    router.push(
-                      `/public/detail-sepeda/${bike.id}` as never
-                    )
+                    router.push(`/public/detail-sepeda/${bike.id}` as never)
                   }
+                  style={styles.bikeDetailButton}
                 />
               </View>
-            ))}
-          </View>
+            )}
+            ListEmptyComponent={
+              <View style={styles.emptySearch}>
+                <Ionicons
+                  name="bicycle-outline"
+                  size={38}
+                  color={C.muted}
+                />
 
-          {filteredBikes.length === 0 && (
-            <View style={styles.emptySearch}>
-              <Ionicons
-                name="bicycle-outline"
-                size={38}
-                color={C.muted}
-              />
+                <Text style={styles.emptySearchTitle}>
+                  Unit tidak ditemukan
+                </Text>
 
-              <Text style={styles.emptySearchTitle}>
-                Unit tidak ditemukan
-              </Text>
+                <Text style={styles.emptySearchText}>
+                  Coba gunakan kode atau jenis sepeda yang berbeda.
+                </Text>
 
-              <Text style={styles.emptySearchText}>
-                Coba gunakan kode atau jenis sepeda yang berbeda.
-              </Text>
-
-              <PrimaryButton
-                title="Reset Pencarian"
-                outlined
-                onPress={() => {
-                  setSearchQuery('');
-                  setActiveFilter('Semua');
-                }}
-              />
-            </View>
-          )}
+                <PrimaryButton
+                  title="Reset Pencarian"
+                  outlined
+                  onPress={() => {
+                    setSearchQuery('');
+                    setActiveFilter('Semua');
+                  }}
+                />
+              </View>
+            }
+          />
         </View>
 
         {/* TARIF DAN PAKET SEWA */}
@@ -701,31 +564,14 @@ export default function PublicHomeScreen() {
       </ScrollView>
 
       {/* NAVIGASI BAWAH */}
-      <View style={styles.bottomNav}>
-        <BottomNavItem
-          icon="home"
-          label="Home"
-          active
-          onPress={() =>
-            scrollRef.current?.scrollTo({
-              y: 0,
-              animated: true,
-            })
-          }
-        />
-
-        <BottomNavItem
-          icon="scan-outline"
-          label="Durasi Sewa"
-          onPress={openDuration}
-        />
-
-        <BottomNavItem
-          icon="person-circle-outline"
-          label="Login"
-          onPress={openLogin}
-        />
-      </View>
+      <BottomNavigation
+        activeTab="home"
+        onHomePress={() =>
+          scrollRef.current?.scrollTo({ y: 0, animated: true })
+        }
+        onDurationPress={openDuration}
+        onLoginPress={openLogin}
+      />
     </SafeAreaView>
   );
 }
@@ -855,41 +701,6 @@ function TermItem({
         <Text style={styles.termText}>{text}</Text>
       </View>
     </View>
-  );
-}
-
-function BottomNavItem({
-  icon,
-  label,
-  active = false,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  active?: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={styles.bottomNavItem}
-      accessibilityRole="button"
-    >
-      <Ionicons
-        name={icon}
-        size={23}
-        color={active ? C.green : '#87969E'}
-      />
-
-      <Text
-        style={[
-          styles.bottomNavLabel,
-          active && styles.bottomNavLabelActive,
-        ]}
-      >
-        {label}
-      </Text>
-    </Pressable>
   );
 }
 
@@ -1039,6 +850,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     marginBottom: 12,
   },
+  catalogControls: {
+    paddingHorizontal: 10,
+  },
   searchContainer: {
     height: 45,
     flexDirection: 'row',
@@ -1098,8 +912,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     rowGap: 12,
   },
+  bikeCardWrap: {
+    width: '48.5%',
+  },
+  bikeDetailButton: {
+    marginTop: 8,
+  },
   bikeCard: {
-    width: CARD_WIDTH,
+    width: '100%',
     backgroundColor: C.white,
     padding: 9,
     borderRadius: 16,
