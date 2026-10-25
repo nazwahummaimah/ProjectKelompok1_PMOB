@@ -10,18 +10,18 @@ Aplikasi Penyewaan Sepeda Jamal Jepret merupakan aplikasi mobile yang dirancang 
 
 Halaman pembuka yang menampilkan identitas aplikasi dan indikator loading sebelum pengguna masuk ke halaman utama.
 
-<img src="splash.jpeg" width="30%" />
+<img src="./splash.jpeg" width="30%" />
 
 
 
 ### 2. Home
 Halaman utama yang menampilkan katalog sepeda, tarif dan paket sewa, serta informasi cabang dan ketentuan penyewaan. Halaman ini membantu pengguna menemukan sepeda yang sesuai, memahami biaya sewa, dan mengetahui prosedur penyewaan sebelum menyewa.
 
- <img src="home.jpeg" width="30%" />
+ <img src="./home.jpeg" width="30%" />
 
- <img src="hometarif.jpeg" width="30%" />
+ <img src="./hometarif.jpeg" width="30%" />
 
-<img src="homeketentuan.jpeg" width="30%" />
+<img src="./homeketentuan.jpeg" width="30%" />
 
 
 
@@ -30,7 +30,7 @@ Halaman utama yang menampilkan katalog sepeda, tarif dan paket sewa, serta infor
 
 Halaman untuk memindai QR Code pada sepeda agar pengguna dapat melihat status sepeda dan informasi durasi penyewaan.
 
-<img src="durasipenyewaan.jpeg" width="30%" />
+<img src="./durasipenyewaan.jpeg" width="30%" />
 
 
 
@@ -38,7 +38,7 @@ Halaman untuk memindai QR Code pada sepeda agar pengguna dapat melihat status se
 
 Halaman untuk pengguna masuk ke akun menggunakan nomor HP atau email dan password agar dapat mengakses fitur khusus pengguna, seperti riwayat penyewaan.
 
-<img src="login.jpeg" width="30%" />
+<img src="./login.jpeg" width="30%" />
 
 
 
@@ -46,7 +46,7 @@ Halaman untuk pengguna masuk ke akun menggunakan nomor HP atau email dan passwor
 
 Halaman untuk pengguna baru membuat akun dengan mengisi nama lengkap, email, password, dan konfirmasi password agar dapat mengakses fitur khusus pengguna.
 
-<img src="register.jpeg" width="30%" />
+<img src="./register.jpeg" width="30%" />
 
 
 
