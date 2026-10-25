@@ -14,7 +14,7 @@ import { BottomNavigation } from '../../components/organisms/BottomNavigation';
    ===================================================== */
 
 const C = {
-  green: '#16833B',
+  green: '#16a445',
   darkGreen: '#07532C',
   deepGreen: '#064426',
 
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
   /* ================= BOTTOM CONTENT ================= */
 
   bottomContentSpace: {
-    height: 11,
+    height: 10,
   },
 
 
