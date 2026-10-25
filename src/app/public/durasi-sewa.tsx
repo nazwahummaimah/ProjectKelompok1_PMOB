@@ -1,7 +1,3 @@
-@. @Dzaki IT UINSSC Sxhneider 
-salin update kode di file yang kalian buat:
-
-durasi-sewa.tsx:
 import {
   ScrollView,
   View,
@@ -18,7 +14,7 @@ import { BottomNavigation } from '../../components/organisms/BottomNavigation';
    ===================================================== */
 
 const C = {
-  green: '#16833B',
+  green: '#16a445',
   darkGreen: '#07532C',
   deepGreen: '#064426',
 
@@ -70,8 +66,9 @@ export default function DurasiSewa() {
               Durasi Penyewaan
             </Text>
 
-            <Text style={styles.headerSubtitle}>
-              Cek durasi sepeda yang ingin anda sewa
+          <View style={styles.headerTextWrap}>
+            <Text style={styles.headerTitle}>
+              Cek durasi sepeda yang ingin disewa
             </Text>
           </View>
         </View>
@@ -90,13 +87,11 @@ export default function DurasiSewa() {
 
           <View style={styles.intro}>
             <Text style={styles.pageTitle}>
-              Scan QR pada sepeda
+              Scan QR code pada sepeda yang tersedia
             </Text>
 
             <Text style={styles.pageDescription}>
-              Arahkan kamera pada QR Code yang terdapat
-              pada sepeda untuk melihat status dan
-              durasi sewa.
+              Arahkan kamera anda pada QR Code yang terdapat pada sepeda, untuk melihat status dan durasi sewa.
             </Text>
           </View>
 
@@ -119,7 +114,7 @@ export default function DurasiSewa() {
                 </Text>
 
                 <Text style={styles.scanSubtitle}>
-                  Posisikan QR di dalam kotak
+                  pastikan posisi QR berada di dalam kotak
                 </Text>
               </View>
             </View>
@@ -148,7 +143,7 @@ export default function DurasiSewa() {
                 />
 
                 <Text style={styles.cameraText}>
-                  Kamera
+                  KAMERA
                 </Text>
 
               </View>
@@ -547,7 +542,9 @@ const styles = StyleSheet.create({
   /* ================= BOTTOM CONTENT ================= */
 
   bottomContentSpace: {
-    height: 11,
+    height: 10,
   },
+
+
 
 });
