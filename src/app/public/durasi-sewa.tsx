@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
   /* ================= BOTTOM CONTENT ================= */
 
   bottomContentSpace: {
-    height: 10,
+    height: 11,
   },
 
 });
