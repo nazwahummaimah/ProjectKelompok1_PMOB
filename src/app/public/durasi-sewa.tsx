@@ -1,17 +1,13 @@
-@. @Dzaki IT UINSSC Sxhneider 
-salin update kode di file yang kalian buat:
-
-durasi-sewa.tsx:
 import {
   ScrollView,
   View,
   Text,
+  Pressable,
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { BottomNavigation } from '../../components/organisms/BottomNavigation';
 
 /* =====================================================
    COLOR
@@ -37,6 +33,45 @@ const C = {
   warning: '#EF6C00',
   error: '#C62828',
 };
+
+/* =====================================================
+   BOTTOM NAV ITEM
+   ===================================================== */
+
+function BottomNavItem({
+  icon,
+  label,
+  active = false,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  active?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={styles.bottomNavItem}
+      accessibilityRole="button"
+    >
+      <Ionicons
+        name={icon}
+        size={23}
+        color={active ? C.green : C.muted}
+      />
+
+      <Text
+        style={[
+          styles.bottomNavLabel,
+          active && styles.bottomNavLabelActive,
+        ]}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
 
 /* =====================================================
    DURASI SEWA
@@ -202,12 +237,32 @@ export default function DurasiSewa() {
            BOTTOM NAVIGATION
            ================================================= */}
 
-        <BottomNavigation
-          activeTab="duration"
-          onHomePress={() => router.replace('/public')}
-          onDurationPress={() => router.replace('/public/durasi-sewa')}
-          onLoginPress={() => router.replace('/public/login')}
-        />
+        <View style={styles.bottomNav}>
+
+          <BottomNavItem
+            icon="home"
+            label="Home"
+            onPress={() => router.replace('/public')}
+          />
+
+          <BottomNavItem
+            icon="scan-outline"
+            label="Durasi Sewa"
+            active
+            onPress={() =>
+              router.replace('/public/durasi-sewa')
+            }
+          />
+
+          <BottomNavItem
+            icon="person-circle-outline"
+            label="Login"
+            onPress={() =>
+              router.replace('/public/login')
+            }
+          />
+
+        </View>
 
       </View>
     </SafeAreaView>
@@ -547,7 +602,48 @@ const styles = StyleSheet.create({
   /* ================= BOTTOM CONTENT ================= */
 
   bottomContentSpace: {
-    height: 11,
+    height: 10,
+  },
+
+  /* ================= BOTTOM NAV ================= */
+
+  bottomNav: {
+    height: 65,
+
+    flexDirection: 'row',
+
+    backgroundColor: C.white,
+
+    borderTopWidth: 1,
+    borderTopColor: '#EDF1EE',
+
+    justifyContent: 'space-around',
+    alignItems: 'center',
+
+    paddingHorizontal: 10,
+  },
+
+  bottomNavItem: {
+    flex: 1,
+
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    gap: 3,
+  },
+
+  bottomNavLabel: {
+    color: '#819099',
+
+    fontSize: 10,
+
+    fontWeight: '600',
+  },
+
+  bottomNavLabelActive: {
+    color: C.green,
+
+    fontWeight: '800',
   },
 
 });
