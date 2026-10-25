@@ -66,8 +66,9 @@ export default function DurasiSewa() {
               Durasi Penyewaan
             </Text>
 
-            <Text style={styles.headerSubtitle}>
-              Cek durasi sepeda yang ingin anda sewa
+          <View style={styles.headerTextWrap}>
+            <Text style={styles.headerTitle}>
+              Cek durasi sepeda yang ingin disewa
             </Text>
           </View>
         </View>
@@ -86,11 +87,11 @@ export default function DurasiSewa() {
 
           <View style={styles.intro}>
             <Text style={styles.pageTitle}>
-              Scan QR pada sepeda yang tersedia
+              Scan QR code pada sepeda yang tersedia
             </Text>
 
             <Text style={styles.pageDescription}>
-              Arahkan kamera anda pada QR Code yang terdapa pada sepeda untuk melihat status dandurasi sewa.
+              Arahkan kamera anda pada QR Code yang terdapat pada sepeda, untuk melihat status dan durasi sewa.
             </Text>
           </View>
 
