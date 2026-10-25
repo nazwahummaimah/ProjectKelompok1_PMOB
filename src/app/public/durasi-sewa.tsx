@@ -2,19 +2,19 @@ import {
   ScrollView,
   View,
   Text,
-  Pressable,
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { BottomNavigation } from '../../components/organisms/BottomNavigation';
 
 /* =====================================================
    COLOR
    ===================================================== */
 
 const C = {
-  green: '#16a445',
+  green: '#16833B',
   darkGreen: '#07532C',
   deepGreen: '#064426',
 
@@ -33,45 +33,6 @@ const C = {
   warning: '#EF6C00',
   error: '#C62828',
 };
-
-/* =====================================================
-   BOTTOM NAV ITEM
-   ===================================================== */
-
-function BottomNavItem({
-  icon,
-  label,
-  active = false,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  active?: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={styles.bottomNavItem}
-      accessibilityRole="button"
-    >
-      <Ionicons
-        name={icon}
-        size={23}
-        color={active ? C.green : C.muted}
-      />
-
-      <Text
-        style={[
-          styles.bottomNavLabel,
-          active && styles.bottomNavLabelActive,
-        ]}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
 
 /* =====================================================
    DURASI SEWA
@@ -105,9 +66,8 @@ export default function DurasiSewa() {
               Durasi Penyewaan
             </Text>
 
-          <View style={styles.headerTextWrap}>
-            <Text style={styles.headerTitle}>
-              Cek durasi sepeda yang ingin disewa
+            <Text style={styles.headerSubtitle}>
+              Cek durasi sepeda yang ingin anda sewa
             </Text>
           </View>
         </View>
@@ -126,11 +86,13 @@ export default function DurasiSewa() {
 
           <View style={styles.intro}>
             <Text style={styles.pageTitle}>
-              Scan QR code pada sepeda yang tersedia
+              Scan QR pada sepeda
             </Text>
 
             <Text style={styles.pageDescription}>
-              Arahkan kamera anda pada QR Code yang terdapat pada sepeda, untuk melihat status dan durasi sewa.
+              Arahkan kamera pada QR Code yang terdapat
+              pada sepeda untuk melihat status dan
+              durasi sewa.
             </Text>
           </View>
 
@@ -153,7 +115,7 @@ export default function DurasiSewa() {
                 </Text>
 
                 <Text style={styles.scanSubtitle}>
-                  pastikan posisi QR berada di dalam kotak
+                  Posisikan QR di dalam kotak
                 </Text>
               </View>
             </View>
@@ -182,7 +144,7 @@ export default function DurasiSewa() {
                 />
 
                 <Text style={styles.cameraText}>
-                  KAMERA
+                  Kamera
                 </Text>
 
               </View>
@@ -236,32 +198,12 @@ export default function DurasiSewa() {
            BOTTOM NAVIGATION
            ================================================= */}
 
-        <View style={styles.bottomNav}>
-
-          <BottomNavItem
-            icon="home"
-            label="Home"
-            onPress={() => router.replace('/public')}
-          />
-
-          <BottomNavItem
-            icon="scan-outline"
-            label="Durasi Sewa"
-            active
-            onPress={() =>
-              router.replace('/public/durasi-sewa')
-            }
-          />
-
-          <BottomNavItem
-            icon="person-circle-outline"
-            label="Login"
-            onPress={() =>
-              router.replace('/public/login')
-            }
-          />
-
-        </View>
+        <BottomNavigation
+          activeTab="duration"
+          onHomePress={() => router.replace('/public')}
+          onDurationPress={() => router.replace('/public/durasi-sewa')}
+          onLoginPress={() => router.replace('/public/login')}
+        />
 
       </View>
     </SafeAreaView>
