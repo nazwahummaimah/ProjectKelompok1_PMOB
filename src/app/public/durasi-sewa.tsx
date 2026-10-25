@@ -1,7 +1,3 @@
-@. @Dzaki IT UINSSC Sxhneider 
-salin update kode di file yang kalian buat:
-
-durasi-sewa.tsx:
 import {
   ScrollView,
   View,
@@ -547,7 +543,9 @@ const styles = StyleSheet.create({
   /* ================= BOTTOM CONTENT ================= */
 
   bottomContentSpace: {
-    height: 11,
+    height: 10,
   },
+
+
 
 });
