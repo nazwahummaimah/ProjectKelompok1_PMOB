@@ -14,7 +14,7 @@ import { BottomNavigation } from '../../components/organisms/BottomNavigation';
    ===================================================== */
 
 const C = {
-  green: '#16a445',
+  green: '#16833B',
   darkGreen: '#07532C',
   deepGreen: '#064426',
 
@@ -66,9 +66,8 @@ export default function DurasiSewa() {
               Durasi Penyewaan
             </Text>
 
-          <View style={styles.headerTextWrap}>
-            <Text style={styles.headerTitle}>
-              Cek durasi sepeda yang ingin disewa
+            <Text style={styles.headerSubtitle}>
+              Cek durasi sepeda yang ingin anda sewa
             </Text>
           </View>
         </View>
@@ -87,11 +86,13 @@ export default function DurasiSewa() {
 
           <View style={styles.intro}>
             <Text style={styles.pageTitle}>
-              Scan QR code pada sepeda yang tersedia
+              Scan QR pada sepeda
             </Text>
 
             <Text style={styles.pageDescription}>
-              Arahkan kamera anda pada QR Code yang terdapat pada sepeda, untuk melihat status dan durasi sewa.
+              Arahkan kamera pada QR Code yang terdapat
+              pada sepeda untuk melihat status dan
+              durasi sewa.
             </Text>
           </View>
 
@@ -114,7 +115,7 @@ export default function DurasiSewa() {
                 </Text>
 
                 <Text style={styles.scanSubtitle}>
-                  pastikan posisi QR berada di dalam kotak
+                  Posisikan QR di dalam kotak
                 </Text>
               </View>
             </View>
@@ -143,7 +144,7 @@ export default function DurasiSewa() {
                 />
 
                 <Text style={styles.cameraText}>
-                  KAMERA
+                  Kamera
                 </Text>
 
               </View>
