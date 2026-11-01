@@ -10,12 +10,14 @@ import {
   StatusBar 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
-import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
+import BottomNavBar, { TabType, UserTabType } from '../../components/molecules/BottomNavBar';
 
 const DurasiSewa: React.FC = () => {
   const router = useRouter();
+  const params = useLocalSearchParams<{ source?: string }>();
+  const isUserFlow = params.source === 'user';
   const [activeTab, setActiveTab] = useState<TabType>('DurasiSewa');
   const [stateView, setStateView] = useState<'Scan' | 'Sukses' | 'Gagal' | 'Izin'>('Scan');
 
@@ -36,9 +38,26 @@ const DurasiSewa: React.FC = () => {
     }
   };
 
+
+  const handleUserTabPress = (tab: UserTabType) => {
+    switch (tab) {
+      case 'Beranda':
+        router.push('/user' as any);
+        break;
+      case 'Riwayat':
+        router.push('/user/riwayat' as any);
+        break;
+      case 'Scan':
+        break;
+      case 'Profil':
+        router.push('/user/profil' as any);
+        break;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1E293B" translucent={false} />
+      <StatusBar barStyle="light-content" />
       
       {/* Top Header Dark Bar dengan Safe Area Fix */}
       <View style={styles.safeHeaderArea}>
@@ -97,7 +116,11 @@ const DurasiSewa: React.FC = () => {
       </View>
 
       {/* Navigasi Bawah Interaktif */}
-      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
+      {isUserFlow ? (
+        <BottomNavBar variant="user" activeTab="Scan" onTabPress={handleUserTabPress} />
+      ) : (
+        <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
+      )}
     </SafeAreaView>
   );
 };

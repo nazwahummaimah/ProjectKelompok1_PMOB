@@ -9,12 +9,22 @@ import {
   TextInput, 
   TouchableOpacity,
   Platform,
-  StatusBar 
+  StatusBar,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
+import ValidationMessage from '../../components/molecules/ValidationMessage';
+import {
+  validateFullName,
+  validateEmail,
+  validateWhatsApp,
+  validateRegistrationPassword,
+  validatePasswordConfirmation,
+  hasValidationErrors,
+} from '../../utils/formValidation';
 
 const Register: React.FC = () => {
   const router = useRouter();
@@ -28,6 +38,55 @@ const Register: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [touched, setTouched] = useState({
+    fullName: false,
+    email: false,
+    phone: false,
+    password: false,
+    confirmPassword: false,
+  });
+  const [submitted, setSubmitted] = useState(false);
+
+  // Field rules are recalculated on each render for immediate feedback.
+  const validation = {
+    fullName: validateFullName(fullName),
+    email: validateEmail(email),
+    phone: validateWhatsApp(phone),
+    password: validateRegistrationPassword(password),
+    confirmPassword: validatePasswordConfirmation(confirmPassword, password),
+  };
+
+  const showField = (field: keyof typeof touched) => touched[field] || submitted;
+  const fieldErrors = {
+    fullName: showField('fullName') ? validation.fullName : undefined,
+    email: showField('email') ? validation.email : undefined,
+    phone: showField('phone') ? validation.phone : undefined,
+    password: showField('password') ? validation.password : undefined,
+    confirmPassword: showField('confirmPassword') ? validation.confirmPassword : undefined,
+  };
+
+  const markTouched = (field: keyof typeof touched) => {
+    setTouched((current) => ({ ...current, [field]: true }));
+  };
+
+  const handleSubmit = () => {
+    setSubmitted(true);
+    setTouched({
+      fullName: true,
+      email: true,
+      phone: true,
+      password: true,
+      confirmPassword: true,
+    });
+    if (!hasValidationErrors(validation)) {
+      Alert.alert(
+        'Mode Demo',
+        'Validasi registrasi berhasil. Data belum disimpan karena backend belum tersedia.',
+      );
+    } else {
+      Alert.alert('Periksa Kembali Data', 'Masih ada kolom yang perlu diperbaiki.');
+    }
+  };
 
   const handleTabPress = (tab: TabType) => {
     setActiveTab(tab);
@@ -49,7 +108,7 @@ const Register: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.surface} translucent={false} />
+      <StatusBar barStyle="dark-content" />
 
       {/* Top Header dengan Safe Area Status Bar Fix */}
       <View style={styles.safeHeaderArea}>
@@ -74,31 +133,41 @@ const Register: React.FC = () => {
         {/* Input Nama Lengkap */}
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Nama Lengkap</Text>
-          <View style={styles.inputBox}>
+          <View style={[styles.inputBox, fieldErrors.fullName && styles.inputBoxError, showField('fullName') && !validation.fullName && styles.inputBoxValid]}>
             <TextInput
               style={styles.textInput}
               value={fullName}
-              onChangeText={setFullName}
+              onChangeText={(value) => { setFullName(value); markTouched('fullName'); }}
+              onBlur={() => markTouched('fullName')}
               placeholder="Masukkan nama lengkap"
               placeholderTextColor={COLORS.textSecondary}
             />
           </View>
+          <ValidationMessage
+            error={fieldErrors.fullName}
+            success={showField('fullName') && !validation.fullName ? 'Nama lengkap valid.' : undefined}
+          />
         </View>
 
         {/* Input Email Aktif */}
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Email Aktif</Text>
-          <View style={styles.inputBox}>
+          <View style={[styles.inputBox, fieldErrors.email && styles.inputBoxError, showField('email') && !validation.email && styles.inputBoxValid]}>
             <TextInput
               style={styles.textInput}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(value) => { setEmail(value); markTouched('email'); }}
+              onBlur={() => markTouched('email')}
               placeholder="contoh@gmail.com"
               placeholderTextColor={COLORS.textSecondary}
               keyboardType="email-address"
               autoCapitalize="none"
             />
           </View>
+          <ValidationMessage
+            error={fieldErrors.email}
+            success={showField('email') && !validation.email ? 'Format email valid.' : undefined}
+          />
         </View>
 
         {/* Input Nomor WhatsApp */}
@@ -108,31 +177,49 @@ const Register: React.FC = () => {
             <View style={styles.countryCodeBox}>
               <Text style={styles.countryCodeText}>+62</Text>
             </View>
-            <View style={[styles.inputBox, { flex: 1, borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }]}>
+            <View style={[
+              styles.inputBox,
+              { flex: 1, borderTopLeftRadius: 0, borderBottomLeftRadius: 0 },
+              fieldErrors.phone && styles.inputBoxError,
+              showField('phone') && !validation.phone && styles.inputBoxValid,
+            ]}>
               <TextInput
                 style={styles.textInput}
                 value={phone}
-                onChangeText={setPhone}
+                onChangeText={(value) => { setPhone(value); markTouched('phone'); }}
+                onBlur={() => markTouched('phone')}
                 placeholder="812 3456 7890"
                 placeholderTextColor={COLORS.textSecondary}
                 keyboardType="phone-pad"
               />
             </View>
           </View>
-          <View style={styles.helperRow}>
-            <Ionicons name="information-circle-outline" size={14} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-            <Text style={styles.helperText}>Digunakan petugas pos rental untuk mencocokkan riwayat sewa fisik Anda.</Text>
-          </View>
+          {showField('phone') ? (
+            <ValidationMessage
+              error={fieldErrors.phone}
+              success={!validation.phone ? 'Nomor WhatsApp valid.' : undefined}
+            />
+          ) : (
+            <View style={styles.helperRow}>
+              <Ionicons name="information-circle-outline" size={14} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
+              <Text style={styles.helperText}>Digunakan petugas pos rental untuk mencocokkan riwayat sewa fisik Anda.</Text>
+            </View>
+          )}
         </View>
 
         {/* Input Kata Sandi */}
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Kata Sandi</Text>
-          <View style={styles.inputBox}>
+          <View style={[styles.inputBox, fieldErrors.password && styles.inputBoxError, showField('password') && !validation.password && styles.inputBoxValid]}>
             <TextInput
               style={styles.textInput}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(value) => {
+                setPassword(value);
+                markTouched('password');
+                if (confirmPassword.length > 0) markTouched('confirmPassword');
+              }}
+              onBlur={() => markTouched('password')}
               placeholder="Masukkan kata sandi"
               placeholderTextColor={COLORS.textSecondary}
               secureTextEntry={!showPassword}
@@ -141,20 +228,28 @@ const Register: React.FC = () => {
               <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={COLORS.textSecondary} />
             </TouchableOpacity>
           </View>
-          <View style={styles.helperRow}>
-            <Ionicons name="checkmark-circle-outline" size={14} color={COLORS.success} style={{ marginRight: 4 }} />
-            <Text style={styles.validText}>Minimal 8 karakter</Text>
-          </View>
+          {showField('password') ? (
+            <ValidationMessage
+              error={fieldErrors.password}
+              success={!validation.password ? 'Password memenuhi minimal 8 karakter.' : undefined}
+            />
+          ) : (
+            <View style={styles.helperRow}>
+              <Ionicons name="checkmark-circle-outline" size={14} color={COLORS.success} style={{ marginRight: 4 }} />
+              <Text style={styles.validText}>Minimal 8 karakter</Text>
+            </View>
+          )}
         </View>
 
         {/* Input Ulangi Kata Sandi */}
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Ulangi Kata Sandi</Text>
-          <View style={styles.inputBox}>
+          <View style={[styles.inputBox, fieldErrors.confirmPassword && styles.inputBoxError, showField('confirmPassword') && !validation.confirmPassword && styles.inputBoxValid]}>
             <TextInput
               style={styles.textInput}
               value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              onChangeText={(value) => { setConfirmPassword(value); markTouched('confirmPassword'); }}
+              onBlur={() => markTouched('confirmPassword')}
               placeholder="Ulangi kata sandi"
               placeholderTextColor={COLORS.textSecondary}
               secureTextEntry={!showConfirmPassword}
@@ -163,14 +258,21 @@ const Register: React.FC = () => {
               <Ionicons name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} size={20} color={COLORS.textSecondary} />
             </TouchableOpacity>
           </View>
-          <View style={styles.helperRow}>
-            <Ionicons name="checkmark-circle-outline" size={14} color={COLORS.success} style={{ marginRight: 4 }} />
-            <Text style={styles.validText}>Kata sandi cocok</Text>
-          </View>
+          {showField('confirmPassword') ? (
+            <ValidationMessage
+              error={fieldErrors.confirmPassword}
+              success={!validation.confirmPassword ? 'Kata sandi cocok.' : undefined}
+            />
+          ) : (
+            <View style={styles.helperRow}>
+              <Ionicons name="checkmark-circle-outline" size={14} color={COLORS.success} style={{ marginRight: 4 }} />
+              <Text style={styles.validText}>Kata sandi cocok</Text>
+            </View>
+          )}
         </View>
 
         {/* Submit Button */}
-        <TouchableOpacity style={styles.submitBtn} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.submitBtn} activeOpacity={0.8} onPress={handleSubmit}>
           <Text style={styles.submitBtnText}>Daftar Akun</Text>
           <Ionicons name="arrow-forward" size={18} color={COLORS.textPrimary} style={{ marginLeft: 6 }} />
         </TouchableOpacity>
@@ -251,6 +353,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     paddingHorizontal: SIZES.medium,
+  },
+  inputBoxError: {
+    borderColor: COLORS.accentCritical,
+  },
+  inputBoxValid: {
+    borderColor: COLORS.success,
   },
   textInput: {
     flex: 1,

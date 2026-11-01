@@ -48,7 +48,7 @@ const DetailUnit: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.surface} translucent={false} />
+      <StatusBar barStyle="dark-content" />
       
       {/* Top Header dengan Status Bar Fix */}
       <View style={styles.safeHeaderArea}>
