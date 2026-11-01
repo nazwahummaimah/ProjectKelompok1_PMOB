@@ -1,178 +1,284 @@
-import { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  View,
+// app/public/LoginPublic.tsx
+import React, { useState } from 'react';
+import { 
+  SafeAreaView, 
+  ScrollView, 
+  View, 
+  Text, 
+  StyleSheet, 
+  TextInput, 
+  TouchableOpacity 
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { BrandLogo } from '../../components/molecules/BrandLogo';
-import { FormField } from '../../components/molecules/FormField';
-import { PrimaryButton } from '../../components/molecules/PrimaryButton';
-import { BottomNavigation } from '../../components/organisms/BottomNavigation';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SIZES, FONTS } from '../../constants/theme';
+import BottomNavBar from '../../components/molecules/BottomNavBar';
 
-const C = {
-  primary: '#16833B',
-  primaryDark: '#07532C',
-  primaryLight: '#E8F6EC',
-  background: '#F7F9F8',
-  surface: '#FFFFFF',
-  text: '#173B29',
-  secondary: '#61766A',
-  border: '#E5ECE7',
-  muted: '#87988E',
-};
-
-export default function LoginScreen() {
-  const router = useRouter();
-  const [phone, setPhone] = useState('');
+const Login: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'Beranda' | 'Katalog' | 'Scan' | 'Login'>('Login');
+  const [email, setEmail] = useState('pelanggan.contoh@domain');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
-  const onLogin = () => {
-    // Placeholder: integrasi layanan login akan ditambahkan pada tahap berikutnya.
-  };
-
-  const openHome = () => router.push('/public');
-  const openDuration = () => router.push('/public/durasi-sewa');
-  const openLogin = () => router.push('/public/login');
+  const [emailError, setEmailError] = useState(true); // Simulasi error seperti pada gambar
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" />
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.topBrand}>
-            <BrandLogo title="Jamal Jepret" subtitle="Penyewaan Sepeda" iconSize={34} />
-          </View>
+    <SafeAreaView style={styles.container}>
+      {/* Top Header */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.closeBtn}>
+          <Ionicons name="close-outline" size={24} color={COLORS.secondaryDark} />
+        </TouchableOpacity>
+        <View style={styles.brandTitleRow}>
+          <Ionicons name="bicycle-outline" size={20} color={COLORS.secondaryDark} style={{ marginRight: 6 }} />
+          <Text style={styles.brandTitle}>Rental Sepeda Mas Joko</Text>
+        </View>
+      </View>
 
-          <View style={styles.heroCard}>
-            <View style={styles.heroBadge}>
-              <MaterialCommunityIcons name="shield-check" size={18} color={C.primary} />
-              <Text style={styles.heroBadgeText}>Akun pengguna</Text>
-            </View>
-            <Text style={styles.heroTitle}>Masuk untuk melihat perjalananmu!</Text>
-            <Text style={styles.heroText}>
-              Kelola riwayat sewa, cek status unit, dan akses layanan cabang dengan cepat.
-            </Text>
-          </View>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Brand Icon Badge */}
+        <View style={styles.logoBadge}>
+          <Ionicons name="bicycle" size={32} color={COLORS.secondaryDark} />
+        </View>
 
-          <View style={styles.formCard}>
-            <Text style={styles.formTitle}>Login</Text>
-            <FormField
-              label="Nomor HP / Email"
-              icon="person-outline"
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="08xxxxxxxxxx atau email"
+        {/* Heading */}
+        <Text style={styles.pageTitle}>Masuk ke Akun</Text>
+        <Text style={styles.pageSubtitle}>Akses riwayat sewa pribadi dan kelola profil Anda.</Text>
+
+        {/* Input Email */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Alamat Email</Text>
+          <View style={[styles.inputBox, emailError && styles.inputBoxError]}>
+            <Ionicons name="mail-outline" size={20} color={emailError ? COLORS.accentCritical : COLORS.textSecondary} style={{ marginRight: 10 }} />
+            <TextInput
+              style={styles.textInput}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Masukkan email Anda"
+              placeholderTextColor={COLORS.textSecondary}
+              keyboardType="email-address"
               autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <View style={styles.passwordGroup}>
-              <View style={styles.labelRow}>
-                <Text style={styles.label}>Password</Text>
-                <Pressable onPress={() => {}} accessibilityRole="button">
-                  <Text style={styles.linkText}>Lupa password?</Text>
-                </Pressable>
-              </View>
-              <FormField
-                label=""
-                icon="lock-closed-outline"
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Masukkan password"
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                autoCorrect={false}
-                trailingIcon={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                onTrailingPress={() => setShowPassword((value) => !value)}
-              />
-            </View>
-
-            <PrimaryButton title="Masuk" onPress={onLogin} style={styles.primaryButton} />
-
-            <View style={styles.dividerRow}>
-              <View style={styles.divider} />
-              <Text style={styles.dividerText}>atau</Text>
-              <View style={styles.divider} />
-            </View>
-
-            <PrimaryButton
-              title="Daftar akun baru"
-              icon="person-add-outline"
-              outlined
-              onPress={() => router.push('/public/register')}
-              style={styles.secondaryButton}
             />
           </View>
+          {emailError && (
+            <View style={styles.errorRow}>
+              <Ionicons name="information-circle-outline" size={14} color={COLORS.accentCritical} style={{ marginRight: 4 }} />
+              <Text style={styles.errorText}>Format email tidak valid atau belum terdaftar</Text>
+            </View>
+          )}
+        </View>
 
-          <View style={styles.infoBox}>
-            <Ionicons name="information-circle-outline" size={18} color={C.primary} />
-            <Text style={styles.infoText}>Buat akun untuk mulai menggunakan layanan Jamal Jepret.</Text>
+        {/* Input Password */}
+        <View style={styles.inputGroup}>
+          <View style={styles.labelWithLink}>
+            <Text style={styles.inputLabel}>Kata Sandi</Text>
+            <TouchableOpacity>
+              <Text style={styles.forgotText}>Lupa kata sandi?</Text>
+            </TouchableOpacity>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
 
-      <BottomNavigation
-        activeTab="login"
-        onHomePress={openHome}
-        onDurationPress={openDuration}
-        onLoginPress={openLogin}
-      />
+          <View style={styles.inputBox}>
+            <Ionicons name="lock-closed-outline" size={20} color={COLORS.textSecondary} style={{ marginRight: 10 }} />
+            <TextInput
+              style={styles.textInput}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Masukkan kata sandi"
+              placeholderTextColor={COLORS.textSecondary}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={COLORS.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Primary Action Button */}
+        <TouchableOpacity style={styles.submitBtn} activeOpacity={0.8}>
+          <Text style={styles.submitBtnText}>Masuk</Text>
+          <Ionicons name="arrow-forward" size={18} color={COLORS.textPrimary} style={{ marginLeft: 6 }} />
+        </TouchableOpacity>
+
+        {/* System Info Box */}
+        <View style={styles.infoBox}>
+          <Ionicons name="shield-checkmark-outline" size={18} color={COLORS.secondaryDark} style={{ marginRight: 8 }} />
+          <Text style={styles.infoBoxText}>
+            Sistem akan otomatis mengarahkan ke dashboard pelanggan atau admin sesuai hak akses akun.
+          </Text>
+        </View>
+
+        {/* Bottom Link to Register */}
+        <View style={styles.registerRow}>
+          <Text style={styles.registerPrompt}>Belum punya akun? </Text>
+          <TouchableOpacity>
+            <Text style={styles.registerLink}>Daftar</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Tagline Footer */}
+        <View style={styles.footerTagline}>
+          <View style={styles.taglineDot} />
+          <Text style={styles.taglineText}>
+            Rental Sepeda Mas Joko • Sewa sepeda yang mudah, cepat, dan jelas.
+          </Text>
+        </View>
+      </ScrollView>
+
+      <BottomNavBar activeTab={activeTab} onTabPress={setActiveTab} />
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: C.background },
-  container: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 30 },
-  topBrand: { marginBottom: 18 },
-  heroCard: {
-    backgroundColor: C.surface, borderRadius: 20, padding: 18,
-    borderWidth: 1, borderColor: C.border, marginBottom: 20,
-    shadowColor: '#164123', shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08, shadowRadius: 18, elevation: 3,
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
   },
-  heroBadge: {
-    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: C.primaryLight, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999,
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SIZES.large,
+    paddingVertical: SIZES.medium,
+    backgroundColor: COLORS.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
-  heroBadgeText: { color: C.primaryDark, fontSize: 11, fontWeight: '700' },
-  heroTitle: { fontSize: 28, lineHeight: 34, fontWeight: '800', color: C.text, marginTop: 14 },
-  heroText: { fontSize: 14, lineHeight: 22, color: C.secondary, marginTop: 10 },
-  formCard: {
-    backgroundColor: C.surface, borderRadius: 20, padding: 20,
-    borderWidth: 1, borderColor: C.border,
-    shadowColor: '#164123', shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08, shadowRadius: 18, elevation: 3,
+  closeBtn: {
+    padding: 4,
   },
-  formTitle: { fontSize: 24, fontWeight: '700', color: C.text, marginBottom: 18 },
-  passwordGroup: { marginTop: 0 },
-  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
-  label: { fontSize: 13, fontWeight: '700', color: C.text, marginBottom: 6 },
-  linkText: { color: C.primary, fontSize: 12, fontWeight: '600' },
-  primaryButton: { minHeight: 48, marginTop: 4 },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 18 },
-  divider: { flex: 1, height: 1, backgroundColor: C.border },
-  dividerText: { fontSize: 12, color: C.secondary, paddingHorizontal: 12 },
-  secondaryButton: { minHeight: 48, backgroundColor: C.primaryLight },
+  brandTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: SIZES.medium,
+  },
+  brandTitle: {
+    ...FONTS.headline3,
+    color: COLORS.secondaryDark,
+  },
+  scrollContent: {
+    padding: SIZES.large,
+  },
+  logoBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: SIZES.radiusMedium,
+    backgroundColor: '#E0F2FE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SIZES.large,
+  },
+  pageTitle: {
+    ...FONTS.headline1,
+    color: COLORS.secondaryDark,
+    marginBottom: 4,
+  },
+  pageSubtitle: {
+    ...FONTS.body,
+    color: COLORS.textSecondary,
+    marginBottom: SIZES.xlarge,
+  },
+  inputGroup: {
+    marginBottom: SIZES.large,
+  },
+  inputLabel: {
+    ...FONTS.labelMedium,
+    color: COLORS.textPrimary,
+    marginBottom: SIZES.small,
+  },
+  labelWithLink: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  forgotText: {
+    ...FONTS.caption,
+    color: COLORS.secondaryDark,
+  },
+  inputBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 48,
+    backgroundColor: COLORS.surface,
+    borderRadius: SIZES.radiusMedium,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: SIZES.medium,
+  },
+  inputBoxError: {
+    borderColor: COLORS.accentCritical,
+  },
+  textInput: {
+    flex: 1,
+    ...FONTS.body,
+    color: COLORS.textPrimary,
+  },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  errorText: {
+    ...FONTS.caption,
+    color: COLORS.accentCritical,
+  },
+  submitBtn: {
+    flexDirection: 'row',
+    height: 48,
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: SIZES.radiusMedium,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SIZES.large,
+  },
+  submitBtnText: {
+    ...FONTS.labelMedium,
+    color: COLORS.textPrimary,
+    fontWeight: 'bold',
+  },
   infoBox: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#EEF6EF',
-    borderRadius: 14, padding: 14, marginTop: 18, borderWidth: 1, borderColor: '#D6EAD9',
+    flexDirection: 'row',
+    backgroundColor: '#F0F9FF',
+    borderRadius: SIZES.radiusMedium,
+    padding: SIZES.medium,
+    alignItems: 'flex-start',
+    marginBottom: SIZES.xlarge,
   },
-  infoText: { flex: 1, fontSize: 12.5, lineHeight: 20, color: C.secondary },
+  infoBoxText: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+    flex: 1,
+    lineHeight: 18,
+  },
+  registerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: SIZES.xxlarge,
+  },
+  registerPrompt: {
+    ...FONTS.body,
+    color: COLORS.textSecondary,
+  },
+  registerLink: {
+    ...FONTS.body,
+    fontWeight: 'bold',
+    color: COLORS.secondaryDark,
+  },
+  footerTagline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: SIZES.large,
+  },
+  taglineDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.primaryLight,
+    marginRight: 6,
+  },
+  taglineText: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+    fontSize: 11,
+  },
 });
+
+export default Login;
