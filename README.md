@@ -2,55 +2,77 @@
 
 ## Deskripsi Aplikasi
 
-Aplikasi Penyewaan Sepeda Jamal Jepret merupakan aplikasi mobile yang dirancang untuk memudahkan pelanggan dalam memperoleh informasi penyewaan sepeda serta membantu pengelola dalam mengatur operasional penyewaan. Aplikasi ini memiliki tiga jenis akses, yaitu Public, User, dan Admin. Public dapat melihat katalog, harga, dan ketersediaan sepeda tanpa login. User dapat mengakses fitur tersebut setelah login serta melihat riwayat penyewaan pribadi. Sementara itu, Admin memiliki akses untuk mengelola data sepeda dan pengguna, mencatat transaksi penyewaan dan pengembalian, memantau status sepeda, serta mengelola laporan operasional. Aplikasi ini diharapkan dapat membuat proses penyewaan lebih teratur, efisien, dan mudah dipantau.
+Aplikasi Penyewaan Sepeda Jamal Jepret merupakan aplikasi mobile yang dirancang untuk memudahkan pelanggan dalam memperoleh informasi penyewaan sepeda serta membantu pengelola dalam mengatur operasional penyewaan. Aplikasi ini memiliki tiga jenis akses, yaitu Public, User, dan Admin. Aplikasi ini diharapkan dapat membuat proses penyewaan lebih teratur, efisien, dan mudah dipantau.
 
-# Daftar Screen
+### Fitur Aplikasi
+- Public: Melihat beranda, katalog, tarif, dan ketersediaan sepeda.
+
+- User: Registrasi, login, scan QR Code, dashboard, riwayat sewa, dan profil.
+
+- Admin: Mengelola inventaris, transaksi penyewaan, dan laporan.
+
+# Daftar Screen dan Fitur
 
 ### 1. Splash Screen
 
-Halaman pembuka yang menampilkan identitas aplikasi dan indikator loading sebelum pengguna masuk ke halaman utama.
+ Menampilkan logo dan identitas aplikasi sebelum pengguna masuk ke halaman utama.
 
-<img src="./splash.jpeg" width="30%" />
+### 2. Beranda (Public)
+ Menampilkan informasi rental, lokasi rental, metode penyewaan, dan armada sepeda unggulan.
 
+### 3. Katalog Sepeda
+ Menampilkan daftar sepeda, pencarian berdasarkan ID atau tipe, filter status, tarif, spesifikasi, dan lokasi unit.
 
+### 4. Sca4n QR Code
+ Memindai QR Code untuk mengenali ID sepeda serta melihat status dan durasi sewa.
 
-### 2. Home
-Halaman utama yang menampilkan katalog sepeda, tarif dan paket sewa, serta informasi cabang dan ketentuan penyewaan. Halaman ini membantu pengguna menemukan sepeda yang sesuai, memahami biaya sewa, dan mengetahui prosedur penyewaan sebelum menyewa.
+### 5. Login
+ Menyediakan halaman masuk menggunakan email dan kata sandi.
 
- <img src="./home.jpeg" width="30%" />
+### 6. Registrasi 
+ Menyediakan halaman pendaftaran akun baru dengan mengisi data pengguna.
 
- <img src="./hometarif.jpeg" width="30%" />
+### 7. Beranda User
+ Menampilkan ringkasan aktivitas dan informasi penyewaan aktif.
 
-<img src="./homeketentuan.jpeg" width="30%" />
+### 8. Riwayat Sewa
+ Menampilkan daftar transaksi penyewaan berdasarkan status berlangsung dan selesai
 
+### 9. Profil Pengguna
+ Menampilkan informasi akun pengguna seperti nama, email, dan nomor WhatsApp.
 
-
-
-### 3. Durasi Sewa
-
-Halaman untuk memindai QR Code pada sepeda agar pengguna dapat melihat status sepeda dan informasi durasi penyewaan.
-
-<img src="./durasipenyewaan.jpeg" width="30%" />
-
-
-
-### 4. Login
-
-Halaman untuk pengguna masuk ke akun menggunakan nomor HP atau email dan password agar dapat mengakses fitur khusus pengguna, seperti riwayat penyewaan.
-
-<img src="./login.jpeg" width="30%" />
-
-
-
-### 5. Registrasi
-
-Halaman untuk pengguna baru membuat akun dengan mengisi nama lengkap, email, password, dan konfirmasi password agar dapat mengakses fitur khusus pengguna.
-
-<img src="./register.jpeg" width="30%" />
-
-
-
-
+<table>
+  <tr>
+    <th>Splash Screen</th>
+    <th>Beranda</th>
+    <th>Katalog</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="./splashscreen.jpeg" width="150"></td>
+    <td align="center"><img src="./beranda.jpeg" width="150"></td>
+    <td align="center"><img src="./katalog.jpeg" width="150"></td>
+  </tr>
+  <tr>
+    <th>Scan QR Code</th>
+    <th>Login</th>
+    <th>Registrasi</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="./scan.jpeg" width="150"></td>
+    <td align="center"><img src="./loginn.jpeg" width="150"></td>
+    <td align="center"><img src="./registrasi.jpeg" width="150"></td>
+  </tr>
+  <tr>
+    <th>Dashboard</th>
+    <th>Riwayat Sewa</th>
+    <th>Profil</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="./berandauser.jpeg" width="150"></td>
+    <td align="center"><img src="./riwayat.jpeg" width="150"></td>
+    <td align="center"><img src="./profil.jpeg" width="150"></td>
+  </tr>
+</table>
 
 # Cara Menjalankan Proyek
 
