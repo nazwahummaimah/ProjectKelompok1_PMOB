@@ -24,6 +24,48 @@ export const Colors = {
   },
 } as const;
 
+export const COLORS = {
+  primaryLight: '#38BDF8',
+  secondaryDark: '#075985',
+  accentCritical: '#EF4444',
+  success: '#16A34A',
+  warning: '#F59E0B',
+  background: '#F8FAFC',
+  surface: '#FFFFFF',
+  textPrimary: '#0F172A',
+  textSecondary: '#64748B',
+  border: '#E2E8F0',
+  successBg: '#DCFCE7',
+  successText: '#15803D',
+  rentedBg: '#E0F2FE',
+  rentedText: '#0369A1'
+} as const;
+
+export const SIZES = {
+  base: 4,
+  small: 8,
+  medium: 12,
+  large: 16,
+  xlarge: 24,
+  xxlarge: 32,
+  radiusSmall: 8,
+  radiusMedium: 12,
+  radiusLarge: 16,
+  radiusPill: 9999,
+} as const;
+
+export const FONTS = {
+  display: { fontSize: 32, fontWeight: '700' as const, lineHeight: 40 },
+  headline1: { fontSize: 24, fontWeight: '700' as const, lineHeight: 32 },
+  headline2: { fontSize: 20, fontWeight: '600' as const, lineHeight: 28 },
+  headline3: { fontSize: 18, fontWeight: '600' as const, lineHeight: 24 },
+  bodyLarge: { fontSize: 16, fontWeight: '400' as const, lineHeight: 24 },
+  body: { fontSize: 14, fontWeight: '400' as const, lineHeight: 20 },
+  labelLarge: { fontSize: 16, fontWeight: '600' as const, lineHeight: 24 },
+  labelMedium: { fontSize: 14, fontWeight: '600' as const, lineHeight: 20 },
+  caption: { fontSize: 12, fontWeight: '500' as const, lineHeight: 16 },
+};
+
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({
