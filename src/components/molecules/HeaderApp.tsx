@@ -22,7 +22,7 @@ const HeaderApp: React.FC<HeaderAppProps> = ({
 }) => {
   return (
     <View style={styles.safeContainer}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.surface} translucent={false} />
+      <StatusBar barStyle="dark-content" />
       <View style={styles.headerContainer}>
         <View style={styles.brandRow}>
           <View style={styles.logoIcon}>

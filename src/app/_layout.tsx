@@ -21,10 +21,13 @@
 // import React from 'react';
 import { Stack } from 'expo-router';
 
+export const unstable_settings = {
+  anchor: 'index',
+};
+
 export default function RootLayout() {
   return (
     <Stack
-      initialRouteName="index"
       screenOptions={{
         headerShown: false,
         animation: 'fade',
@@ -32,6 +35,7 @@ export default function RootLayout() {
     >
       <Stack.Screen name="index" />
       <Stack.Screen name="public" />
+      <Stack.Screen name="user" />
     </Stack>
   );
 }

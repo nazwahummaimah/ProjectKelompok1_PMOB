@@ -1,39 +1,70 @@
-// components/molecules/BottomNavBar.tsx
+// Shared bottom navigation for public visitors and authenticated users.
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SIZES, FONTS } from '../../constants/theme';
+import { COLORS, FONTS } from '../../constants/theme';
 
 export type TabType = 'Beranda' | 'Katalog' | 'DurasiSewa' | 'Login';
+export type UserTabType = 'Beranda' | 'Riwayat' | 'Scan' | 'Profil';
 
-interface BottomNavBarProps {
+type PublicBottomNavProps = {
+  variant?: 'public';
   activeTab: TabType;
   onTabPress: (tab: TabType) => void;
-}
+};
 
-const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeTab, onTabPress }) => {
-  const tabs = [
-    { name: 'Beranda' as TabType, icon: 'home-outline', activeIcon: 'home' },
-    { name: 'Katalog' as TabType, icon: 'bicycle-outline', activeIcon: 'bicycle' },
-    { name: 'DurasiSewa' as TabType, icon: 'qr-code-outline', activeIcon: 'qr-code' },
-    { name: 'Login' as TabType, icon: 'person-outline', activeIcon: 'person' },
-  ];
+type UserBottomNavProps = {
+  variant: 'user';
+  activeTab: UserTabType;
+  onTabPress: (tab: UserTabType) => void;
+};
+
+type BottomNavBarProps = PublicBottomNavProps | UserBottomNavProps;
+
+const PUBLIC_TABS = [
+  { name: 'Beranda', icon: 'home-outline', activeIcon: 'home' },
+  { name: 'Katalog', icon: 'bicycle-outline', activeIcon: 'bicycle' },
+  { name: 'DurasiSewa', label: 'Scan', icon: 'qr-code-outline', activeIcon: 'qr-code' },
+  { name: 'Login', icon: 'person-outline', activeIcon: 'person' },
+] as const;
+
+const USER_TABS = [
+  { name: 'Beranda', icon: 'home-outline', activeIcon: 'home' },
+  { name: 'Riwayat', icon: 'receipt-outline', activeIcon: 'receipt' },
+  { name: 'Scan', icon: 'qr-code-outline', activeIcon: 'qr-code' },
+  { name: 'Profil', icon: 'person-outline', activeIcon: 'person' },
+] as const;
+
+const BottomNavBar: React.FC<BottomNavBarProps> = (props) => {
+  const tabs = props.variant === 'user' ? USER_TABS : PUBLIC_TABS;
+
+  const handlePress = (tabName: string) => {
+    if (props.variant === 'user') {
+      props.onTabPress(tabName as UserTabType);
+    } else {
+      props.onTabPress(tabName as TabType);
+    }
+  };
 
   return (
     <View style={styles.navContainer}>
       {tabs.map((tab) => {
-        const isActive = activeTab === tab.name;
+        const isActive = props.activeTab === tab.name;
+        const tabLabel = 'label' in tab ? tab.label : tab.name;
         return (
           <TouchableOpacity
             key={tab.name}
             style={styles.tabItem}
             activeOpacity={0.6}
-            onPress={() => onTabPress(tab.name)}
+            onPress={() => handlePress(tab.name)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isActive }}
+            accessibilityLabel={tabLabel}
           >
             {isActive && <View style={styles.activeIndicator} />}
             <Ionicons
-              name={(isActive ? tab.activeIcon : tab.icon) as any}
+              name={(isActive ? tab.activeIcon : tab.icon) as keyof typeof Ionicons.glyphMap}
               size={22}
               color={isActive ? COLORS.secondaryDark : COLORS.textSecondary}
             />
@@ -44,7 +75,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeTab, onTabPress }) =>
                 isActive && styles.activeTabLabel,
               ]}
             >
-              {tab.name}
+              {tabLabel}
             </Text>
           </TouchableOpacity>
         );
@@ -88,9 +119,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 4,
   },
-  activeTabLabel: {
-    fontWeight: '700',
-  },
+  activeTabLabel: { fontWeight: '700' },
 });
 
 export default BottomNavBar;

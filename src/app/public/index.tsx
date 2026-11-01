@@ -14,7 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router'; // Navigasi Expo Router
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import HeaderApp from '../../components/molecules/HeaderApp';
-import BikeCard, { BikeData } from '../../components/organisms/BikeCard';
+import BikeCard from '../../components/organisms/BikeCard';
+import type { BikeData } from '../../constants/bikes';
 import HowToRentSection from '../../components/organisms/HowToRentSection';
 import PosRentalSection from '../../components/organisms/PosRentalSection';
 import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';

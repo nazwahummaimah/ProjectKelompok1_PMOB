@@ -1,5 +1,6 @@
 // app/public/login.tsx
 import React, { useState } from 'react';
+import { Alert } from 'react-native';
 import { 
   SafeAreaView, 
   ScrollView, 
@@ -15,14 +16,39 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
+import ValidationMessage from '../../components/molecules/ValidationMessage';
+import { validateEmail, validateLoginPassword, hasValidationErrors } from '../../utils/formValidation';
 
 const Login: React.FC = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('Login');
-  const [email, setEmail] = useState('pelanggan.contoh@domain');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [emailError, setEmailError] = useState(true);
+  const [touched, setTouched] = useState({ email: false, password: false });
+  const [submitted, setSubmitted] = useState(false);
+
+  // Derived on every render so feedback updates as the user types.
+  const emailValidation = validateEmail(email);
+  const passwordValidation = validateLoginPassword(password);
+  const showEmailValidation = touched.email || submitted;
+  const showPasswordValidation = touched.password || submitted;
+  const emailError = showEmailValidation ? emailValidation : undefined;
+  const passwordError = showPasswordValidation ? passwordValidation : undefined;
+  const emailValid = showEmailValidation && !emailValidation;
+  const passwordValid = showPasswordValidation && !passwordValidation;
+
+  const handleSubmit = () => {
+    setSubmitted(true);
+    setTouched({ email: true, password: true });
+    if (!hasValidationErrors({ email: emailValidation, password: passwordValidation })) {
+      Alert.alert(
+        'Mode Demo',
+        'Format input valid. Karena autentikasi belum terhubung ke backend, kamu akan diarahkan ke halaman Pengguna demo.',
+        [{ text: 'Lanjut', onPress: () => router.replace('/user' as any) }],
+      );
+    }
+  };
 
   const handleTabPress = (tab: TabType) => {
     setActiveTab(tab);
@@ -43,7 +69,7 @@ const Login: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.surface} translucent={false} />
+      <StatusBar barStyle="dark-content" />
       
       {/* Top Bar dengan Safe Area Fix */}
       <View style={styles.safeTopBarArea}>
@@ -71,27 +97,26 @@ const Login: React.FC = () => {
         {/* Input Email */}
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Alamat Email</Text>
-          <View style={[styles.inputBox, emailError && styles.inputBoxError]}>
-            <Ionicons name="mail-outline" size={20} color={emailError ? COLORS.accentCritical : COLORS.textSecondary} style={{ marginRight: 10 }} />
+          <View style={[styles.inputBox, emailError && styles.inputBoxError, emailValid && styles.inputBoxValid]}>
+            <Ionicons name="mail-outline" size={20} color={emailError ? COLORS.accentCritical : emailValid ? COLORS.success : COLORS.textSecondary} style={{ marginRight: 10 }} />
             <TextInput
               style={styles.textInput}
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
-                setEmailError(false);
+                setTouched((current) => ({ ...current, email: true }));
               }}
+              onBlur={() => setTouched((current) => ({ ...current, email: true }))}
               placeholder="Masukkan email Anda"
               placeholderTextColor={COLORS.textSecondary}
               keyboardType="email-address"
               autoCapitalize="none"
             />
           </View>
-          {emailError && (
-            <View style={styles.errorRow}>
-              <Ionicons name="information-circle-outline" size={14} color={COLORS.accentCritical} style={{ marginRight: 4 }} />
-              <Text style={styles.errorText}>Format email tidak valid atau belum terdaftar</Text>
-            </View>
-          )}
+          <ValidationMessage
+            error={emailError}
+            success={emailValid ? 'Format email valid.' : undefined}
+          />
         </View>
 
         {/* Input Password */}
@@ -103,12 +128,16 @@ const Login: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.inputBox}>
-            <Ionicons name="lock-closed-outline" size={20} color={COLORS.textSecondary} style={{ marginRight: 10 }} />
+          <View style={[styles.inputBox, passwordError && styles.inputBoxError, passwordValid && styles.inputBoxValid]}>
+            <Ionicons name="lock-closed-outline" size={20} color={passwordError ? COLORS.accentCritical : passwordValid ? COLORS.success : COLORS.textSecondary} style={{ marginRight: 10 }} />
             <TextInput
               style={styles.textInput}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                setTouched((current) => ({ ...current, password: true }));
+              }}
+              onBlur={() => setTouched((current) => ({ ...current, password: true }))}
               placeholder="Masukkan kata sandi"
               placeholderTextColor={COLORS.textSecondary}
               secureTextEntry={!showPassword}
@@ -117,10 +146,14 @@ const Login: React.FC = () => {
               <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={COLORS.textSecondary} />
             </TouchableOpacity>
           </View>
+          <ValidationMessage
+            error={passwordError}
+            success={passwordValid ? 'Kata sandi sudah diisi.' : undefined}
+          />
         </View>
 
         {/* Action Button */}
-        <TouchableOpacity style={styles.submitBtn} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.submitBtn} activeOpacity={0.8} onPress={handleSubmit}>
           <Text style={styles.submitBtnText}>Masuk</Text>
           <Ionicons name="arrow-forward" size={18} color={COLORS.textPrimary} style={{ marginLeft: 6 }} />
         </TouchableOpacity>
@@ -229,6 +262,9 @@ const styles = StyleSheet.create({
   },
   inputBoxError: {
     borderColor: COLORS.accentCritical,
+  },
+  inputBoxValid: {
+    borderColor: COLORS.success,
   },
   textInput: {
     flex: 1,
