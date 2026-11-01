@@ -1,551 +1,246 @@
-import {
-  ScrollView,
-  View,
-  Text,
-  StyleSheet,
+// app/public/durasi-sewa.tsx
+import React, { useState } from 'react';
+import { 
+  SafeAreaView, 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity,
+  Platform,
+  StatusBar 
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { BottomNavigation } from '../../components/organisms/BottomNavigation';
+import { COLORS, SIZES, FONTS } from '../../constants/theme';
+import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
 
-/* =====================================================
-   COLOR
-   ===================================================== */
-
-const C = {
-  green: '#16833B',
-  darkGreen: '#07532C',
-  deepGreen: '#064426',
-
-  lightGreen: '#E8F6EC',
-  paleGreen: '#F1FAF3',
-
-  white: '#FFFFFF',
-  background: '#F7F9F8',
-
-  secondary: '#61766A',
-  muted: '#87988E',
-
-  border: '#E5ECE7',
-
-  success: '#10A65A',
-  warning: '#EF6C00',
-  error: '#C62828',
-};
-
-/* =====================================================
-   DURASI SEWA
-   ===================================================== */
-
-export default function DurasiSewa() {
+const DurasiSewa: React.FC = () => {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabType>('DurasiSewa');
+  const [stateView, setStateView] = useState<'Scan' | 'Sukses' | 'Gagal' | 'Izin'>('Scan');
+
+  const handleTabPress = (tab: TabType) => {
+    setActiveTab(tab);
+    switch (tab) {
+      case 'Beranda':
+        router.push('/public/' as any);
+        break;
+      case 'Katalog':
+        router.push('/public/katalog' as any);
+        break;
+      case 'DurasiSewa':
+        break;
+      case 'Login':
+        router.push('/public/login' as any);
+        break;
+    }
+  };
 
   return (
-    <SafeAreaView
-      style={styles.safeArea}
-      edges={['top']}
-    >
-      <View style={styles.container}>
-
-        {/* =================================================
-           HEADER
-           ================================================= */}
-
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#1E293B" translucent={false} />
+      
+      {/* Top Header Dark Bar dengan Safe Area Fix */}
+      <View style={styles.safeHeaderArea}>
         <View style={styles.header}>
-          <View style={styles.headerIcon}>
-            <Ionicons
-              name="qr-code-outline"
-              size={27}
-              color={C.green}
-            />
+          <TouchableOpacity style={styles.headerBtn} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Pindai QR Sepeda</Text>
+          <TouchableOpacity style={styles.headerBtn}>
+            <Ionicons name="flash-outline" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+
+        {/* State View Switcher Bar */}
+        <View style={styles.stateSwitcherBar}>
+          <Text style={styles.stateLabel}>State View:</Text>
+          <View style={styles.pillsRow}>
+            {(['Scan', 'Sukses', 'Gagal', 'Izin'] as const).map((view) => (
+              <TouchableOpacity
+                key={view}
+                style={[styles.statePill, stateView === view && styles.statePillActive]}
+                onPress={() => setStateView(view)}
+              >
+                <Text style={[styles.stateText, stateView === view && styles.stateTextActive]}>
+                  {view}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
+        </View>
+      </View>
 
-          <View style={styles.headerTextWrap}>
-            <Text style={styles.headerTitle}>
-              Durasi Penyewaan
-            </Text>
+      {/* Camera Viewfinder Area */}
+      <View style={styles.cameraArea}>
+        <View style={styles.scanTargetFrame}>
+          <View style={[styles.corner, styles.topLeft]} />
+          <View style={[styles.corner, styles.topRight]} />
+          <View style={[styles.corner, styles.bottomLeft]} />
+          <View style={[styles.corner, styles.bottomRight]} />
 
-            <Text style={styles.headerSubtitle}>
-              Cek durasi sepeda yang ingin anda sewa
-            </Text>
+          <View style={styles.innerQrFrame}>
+            <Ionicons name="qr-code" size={48} color="rgba(56, 189, 248, 0.6)" />
           </View>
         </View>
 
-        {/* =================================================
-           CONTENT
-           ================================================= */}
+        <Text style={styles.instructionText}>
+          Arahkan kamera ke QR sepeda Mas Joko yang terpasang di stang atau rangka.
+        </Text>
 
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-
-          {/* ================= INTRO ================= */}
-
-          <View style={styles.intro}>
-            <Text style={styles.pageTitle}>
-              Scan QR pada sepeda
-            </Text>
-
-            <Text style={styles.pageDescription}>
-              Arahkan kamera pada QR Code yang terdapat
-              pada sepeda untuk melihat status dan
-              durasi sewa.
-            </Text>
-          </View>
-
-          {/* ================= SCAN CARD ================= */}
-
-          <View style={styles.scanCard}>
-
-            <View style={styles.scanCardHeader}>
-              <View style={styles.scanIconCircle}>
-                <Ionicons
-                  name="scan-outline"
-                  size={22}
-                  color={C.green}
-                />
-              </View>
-
-              <View style={styles.scanCardHeaderText}>
-                <Text style={styles.scanTitle}>
-                  Scan QR Code
-                </Text>
-
-                <Text style={styles.scanSubtitle}>
-                  Posisikan QR di dalam kotak
-                </Text>
-              </View>
-            </View>
-
-            {/* ================= CAMERA ================= */}
-
-            <View style={styles.cameraContainer}>
-              <View style={styles.scanFrame}>
-
-                {/* Top Left */}
-                <View style={styles.cornerTopLeft} />
-
-                {/* Top Right */}
-                <View style={styles.cornerTopRight} />
-
-                {/* Bottom Left */}
-                <View style={styles.cornerBottomLeft} />
-
-                {/* Bottom Right */}
-                <View style={styles.cornerBottomRight} />
-
-                <Ionicons
-                  name="camera-outline"
-                  size={38}
-                  color="#FFFFFF"
-                />
-
-                <Text style={styles.cameraText}>
-                  Kamera
-                </Text>
-
-              </View>
-            </View>
-
-            {/* ================= CAMERA STATUS ================= */}
-
-            <View style={styles.cameraStatus}>
-              <View style={styles.statusDot} />
-
-              <Text style={styles.statusText}>
-                Kamera siap digunakan
-              </Text>
-            </View>
-
-          </View>
-
-          {/* ================= INFO ================= */}
-
-          <View style={styles.infoCard}>
-
-            <View style={styles.infoIcon}>
-              <Ionicons
-                name="information-circle-outline"
-                size={22}
-                color={C.green}
-              />
-            </View>
-
-            <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>
-                Cara menggunakan
-              </Text>
-
-              <Text style={styles.infoText}>
-                Scan QR Code pada sepeda. Setelah QR
-                berhasil dibaca, informasi status sepeda
-                dan durasi sewa akan ditampilkan.
-              </Text>
-            </View>
-
-          </View>
-
-          {/* ================= EXTRA SPACE ================= */}
-
-          <View style={styles.bottomContentSpace} />
-
-        </ScrollView>
-
-        {/* =================================================
-           BOTTOM NAVIGATION
-           ================================================= */}
-
-        <BottomNavigation
-          activeTab="duration"
-          onHomePress={() => router.replace('/public')}
-          onDurationPress={() => router.replace('/public/durasi-sewa')}
-          onLoginPress={() => router.replace('/public/login')}
-        />
-
+        <View style={styles.infoCallout}>
+          <Ionicons name="information-circle-outline" size={18} color={COLORS.primaryLight} style={{ marginRight: 8 }} />
+          <Text style={styles.infoCalloutText}>
+            QR akan langsung membuka halaman info & status unit sepeda.
+          </Text>
+        </View>
       </View>
+
+      {/* Navigasi Bawah Interaktif */}
+      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
     </SafeAreaView>
   );
-}
-
-/* =====================================================
-   STYLES
-   ===================================================== */
+};
 
 const styles = StyleSheet.create({
-
-  /* ================= MAIN LAYOUT ================= */
-
-  safeArea: {
-    flex: 1,
-    backgroundColor: C.white,
-  },
-
   container: {
     flex: 1,
-    backgroundColor: C.background,
+    backgroundColor: '#0F172A',
   },
-
-  scroll: {
-    flex: 1,
-    backgroundColor: C.background,
+  safeHeaderArea: {
+    backgroundColor: '#1E293B',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
-
-  scrollContent: {
-    paddingBottom: 22,
-  },
-
-  /* ================= HEADER ================= */
-
   header: {
-    minHeight: 66,
-    backgroundColor: C.white,
-
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-
-    paddingHorizontal: 18,
-
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F3F1',
+    paddingHorizontal: SIZES.large,
+    paddingVertical: SIZES.medium,
+    height: 56,
   },
-
-  headerIcon: {
-    width: 42,
-    height: 42,
-
-    borderRadius: 12,
-
-    backgroundColor: C.lightGreen,
-
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  headerTextWrap: {
-    flex: 1,
-    marginLeft: 10,
-  },
-
   headerTitle: {
-    fontSize: 18,
-    lineHeight: 22,
-    fontWeight: '800',
-    color: C.green,
-  },
-
-  headerSubtitle: {
-    fontSize: 10,
-    color: C.secondary,
-    marginTop: 1,
-  },
-
-  /* ================= INTRO ================= */
-
-  intro: {
-    marginHorizontal: 12,
-    marginTop: 10,
-    marginBottom: 12,
-  },
-
-  pageTitle: {
-    fontSize: 20,
-    lineHeight: 24,
-    fontWeight: '800',
-    color: C.deepGreen,
-  },
-
-  pageDescription: {
-    fontSize: 11,
-    lineHeight: 17,
-    color: C.secondary,
-    marginTop: 5,
-    maxWidth: 330,
-  },
-
-  /* ================= SCAN CARD ================= */
-
-  scanCard: {
-    marginHorizontal: 10,
-
-    padding: 13,
-
-    borderRadius: 15,
-
-    backgroundColor: C.white,
-
-    borderWidth: 1,
-    borderColor: '#EEF2EF',
-
-    shadowColor: '#203E2C',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-
-    elevation: 2,
-  },
-
-  scanCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-
-    marginBottom: 12,
-  },
-
-  scanIconCircle: {
-    width: 38,
-    height: 38,
-
-    borderRadius: 19,
-
-    backgroundColor: C.lightGreen,
-
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  scanCardHeaderText: {
-    marginLeft: 9,
-  },
-
-  scanTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: C.deepGreen,
-  },
-
-  scanSubtitle: {
-    fontSize: 9.5,
-    color: C.secondary,
-    marginTop: 2,
-  },
-
-  /* ================= CAMERA ================= */
-
-  cameraContainer: {
-    width: '100%',
-    aspectRatio: 1,
-
-    maxHeight: 310,
-
-    borderRadius: 14,
-
-    backgroundColor: '#202522',
-
-    overflow: 'hidden',
-
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  scanFrame: {
-    width: '66%',
-    aspectRatio: 1,
-
-    alignItems: 'center',
-    justifyContent: 'center',
-
-    position: 'relative',
-  },
-
-  cameraText: {
+    ...FONTS.headline3,
     color: '#FFFFFF',
-
-    fontSize: 10,
-
-    fontWeight: '600',
-
-    marginTop: 5,
   },
-
-  /* ================= SCAN CORNERS ================= */
-
-  cornerTopLeft: {
-    position: 'absolute',
-
-    top: 0,
-    left: 0,
-
-    width: 32,
-    height: 32,
-
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
-
-    borderColor: C.green,
+  headerBtn: {
+    padding: 6,
   },
-
-  cornerTopRight: {
-    position: 'absolute',
-
-    top: 0,
-    right: 0,
-
-    width: 32,
-    height: 32,
-
-    borderTopWidth: 3,
-    borderRightWidth: 3,
-
-    borderColor: C.green,
-  },
-
-  cornerBottomLeft: {
-    position: 'absolute',
-
-    bottom: 0,
-    left: 0,
-
-    width: 32,
-    height: 32,
-
-    borderBottomWidth: 3,
-    borderLeftWidth: 3,
-
-    borderColor: C.green,
-  },
-
-  cornerBottomRight: {
-    position: 'absolute',
-
-    bottom: 0,
-    right: 0,
-
-    width: 32,
-    height: 32,
-
-    borderBottomWidth: 3,
-    borderRightWidth: 3,
-
-    borderColor: C.green,
-  },
-
-  /* ================= CAMERA STATUS ================= */
-
-  cameraStatus: {
+  stateSwitcherBar: {
     flexDirection: 'row',
-
     alignItems: 'center',
-    justifyContent: 'center',
-
-    marginTop: 10,
+    backgroundColor: '#1E293B',
+    paddingHorizontal: SIZES.large,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#334155',
   },
-
-  statusDot: {
-    width: 7,
-    height: 7,
-
-    borderRadius: 4,
-
-    backgroundColor: C.success,
-
-    marginRight: 5,
+  stateLabel: {
+    ...FONTS.caption,
+    color: '#94A3B8',
+    marginRight: SIZES.small,
   },
-
-  statusText: {
-    fontSize: 9.5,
-    color: C.secondary,
-  },
-
-  /* ================= INFO ================= */
-
-  infoCard: {
-    marginHorizontal: 10,
-    marginTop: 10,
-
-    padding: 12,
-
-    borderRadius: 15,
-
-    backgroundColor: '#EAF7ED',
-
+  pillsRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-
-  infoIcon: {
-    width: 32,
-    height: 32,
-
-    borderRadius: 16,
-
-    backgroundColor: '#D5EFD9',
-
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  infoContent: {
     flex: 1,
-    marginLeft: 9,
+    justifyContent: 'space-between',
   },
-
-  infoTitle: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: C.deepGreen,
+  statePill: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: SIZES.radiusPill,
+    backgroundColor: 'transparent',
   },
-
-  infoText: {
-    fontSize: 9.5,
-    lineHeight: 14,
-
-    color: C.secondary,
-
-    marginTop: 3,
+  statePillActive: {
+    backgroundColor: COLORS.primaryLight,
   },
-
-  /* ================= BOTTOM CONTENT ================= */
-
-  bottomContentSpace: {
-    height: 10,
+  stateText: {
+    ...FONTS.caption,
+    color: '#94A3B8',
   },
-
-
-
+  stateTextActive: {
+    color: COLORS.textPrimary,
+    fontWeight: 'bold',
+  },
+  cameraArea: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: SIZES.xlarge,
+  },
+  scanTargetFrame: {
+    width: 240,
+    height: 240,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SIZES.xlarge,
+  },
+  corner: {
+    position: 'absolute',
+    width: 32,
+    height: 32,
+    borderColor: COLORS.primaryLight,
+  },
+  topLeft: {
+    top: 0,
+    left: 0,
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderTopLeftRadius: 12,
+  },
+  topRight: {
+    top: 0,
+    right: 0,
+    borderTopWidth: 4,
+    borderRightWidth: 4,
+    borderTopRightRadius: 12,
+  },
+  bottomLeft: {
+    bottom: 0,
+    left: 0,
+    borderBottomWidth: 4,
+    borderLeftWidth: 4,
+    borderBottomLeftRadius: 12,
+  },
+  bottomRight: {
+    bottom: 0,
+    right: 0,
+    borderBottomWidth: 4,
+    borderRightWidth: 4,
+    borderBottomRightRadius: 12,
+  },
+  innerQrFrame: {
+    width: 140,
+    height: 140,
+    borderRadius: SIZES.radiusMedium,
+    borderWidth: 2,
+    borderColor: 'rgba(56, 189, 248, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  instructionText: {
+    ...FONTS.body,
+    color: '#F8FAFC',
+    textAlign: 'center',
+    marginBottom: SIZES.large,
+    lineHeight: 22,
+  },
+  infoCallout: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(30, 41, 59, 0.8)',
+    borderRadius: SIZES.radiusMedium,
+    borderWidth: 1,
+    borderColor: '#334155',
+    paddingHorizontal: SIZES.large,
+    paddingVertical: SIZES.medium,
+  },
+  infoCalloutText: {
+    ...FONTS.caption,
+    color: '#94A3B8',
+    flex: 1,
+  },
 });
+
+export default DurasiSewa;

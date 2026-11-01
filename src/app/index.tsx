@@ -1,287 +1,152 @@
-
+// app/public/SplashScreenPublic.tsx
 import React, { useEffect, useRef } from 'react';
-import {
-  Animated,
-  StatusBar,
-  StyleSheet,
-  Text,
-  View,
+import { 
+  SafeAreaView, 
+  View, 
+  Text, 
+  StyleSheet, 
+  ActivityIndicator, 
+  Animated 
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SIZES, FONTS } from '../constants/theme';
+import { router } from 'expo-router';
 
-const C = {
-  green: '#16833B',
-  darkGreen: '#07532C',
-  deepGreen: '#064426',
-  lightGreen: '#E8F6EC',
-  paleGreen: '#F1FAF3',
-  white: '#FFFFFF',
-  secondary: '#61766A',
-};
-
-export default function SplashScreen() {
-  const router = useRouter();
-
+const SplashScreen: React.FC = () => {
+  // Animasi Fade-In & Scale Up untuk Logo
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const loadingAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.85)).current;
 
-  useEffect(() => {
-    const entranceAnimation = Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 5,
-        tension: 50,
-        useNativeDriver: true,
-      }),
-      Animated.timing(loadingAnim, {
-        toValue: 1,
-        duration: 2500,
-        useNativeDriver: false,
-      }),
-    ]);
+ useEffect(() => {
+  Animated.parallel([
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }),
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 6,
+      tension: 40,
+      useNativeDriver: true,
+    }),
+  ]).start();
 
-    entranceAnimation.start();
+  const timer = setTimeout(() => {
+    router.replace('/public');
+  }, 2500);
 
-    const timer = setTimeout(() => {
-      router.replace('/public');
-    }, 3000);
-
-    return () => {
-      clearTimeout(timer);
-      entranceAnimation.stop();
-    };
-  }, [fadeAnim, scaleAnim, loadingAnim, router]);
+  return () => clearTimeout(timer);
+}, [fadeAnim, scaleAnim]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={C.paleGreen}
-      />
+    <SafeAreaView style={styles.container}>
+      {/* Container Tengah untuk Logo & Brand */}
+      <Animated.View 
+        style={[
+          styles.contentContainer, 
+          { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }
+        ]}
+      >
+        {/* Logo Icon Box (Sesuai screen_logo.png) */}
+        <View style={styles.logoCard}>
+          <Ionicons name="bicycle" size={64} color={COLORS.secondaryDark} />
+        </View>
 
-      <View style={styles.container}>
-        <View style={styles.decorCircleTop} />
-        <View style={styles.decorCircleBottom} />
+        {/* Brand Text Header */}
+        <View style={styles.textContainer}>
+          <Text style={styles.brandTitleMain}>Jamal_Jepret</Text>
+          <Text style={styles.brandTitleSub}>RENTAL SEPEDA</Text>
+          <Text style={styles.taglineText}>Mudah • Cepat • Jelas</Text>
+        </View>
+      </Animated.View>
 
-        <Animated.View
-          style={[
-            styles.content,
-            {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
-          <View style={styles.logoOuter}>
-            <View style={styles.logoInner}>
-              <MaterialCommunityIcons
-                name="bicycle"
-                size={76}
-                color={C.green}
-              />
-            </View>
-          </View>
-
-          <Text style={styles.brandName}>Jamal Jepret</Text>
-          <Text style={styles.brandLocation}>PERJUANGAN</Text>
-
-          <View style={styles.divider} />
-
-          <Text style={styles.tagline}>
-            Temukan pengalaman{'\n'}bersepeda yang menyenangkan
-          </Text>
-
-          <View style={styles.features}>
-            <View style={styles.featureItem}>
-              <MaterialCommunityIcons
-                name="bike-fast"
-                size={19}
-                color={C.green}
-              />
-              <Text style={styles.featureText}>Pilihan Sepeda</Text>
-            </View>
-
-            <View style={styles.featureDot} />
-
-            <View style={styles.featureItem}>
-              <MaterialCommunityIcons
-                name="cash-check"
-                size={19}
-                color={C.green}
-              />
-              <Text style={styles.featureText}>Tarif Terjangkau</Text>
-            </View>
-          </View>
-        </Animated.View>
-
-        <View style={styles.bottom}>
-          <View style={styles.loadingTrack}>
-            <Animated.View
-              style={[
-                styles.loadingBar,
-                {
-                  width: loadingAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0%', '100%'],
-                  }),
-                },
-              ]}
-            />
-          </View>
-
-          <Text style={styles.loadingText}>
-            Menyiapkan pengalaman bersepeda...
-          </Text>
-
-          <Text style={styles.copyright}>
-            © 2026 Jamal Jepret Perjuangan
-          </Text>
+      {/* Area Bawah: Loading Indicator & Footer Badge */}
+      <View style={styles.footerContainer}>
+        <ActivityIndicator size="small" color={COLORS.secondaryDark} style={styles.spinner} />
+        
+        <View style={styles.footerBadge}>
+          <Ionicons name="location-outline" size={14} color={COLORS.secondaryDark} style={{ marginRight: 4 }} />
+          <Text style={styles.footerBadgeText}>Pos Rental Sepeda Resmi • Cirebon</Text>
         </View>
       </View>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: C.paleGreen,
-  },
   container: {
     flex: 1,
-    backgroundColor: C.paleGreen,
+    backgroundColor: COLORS.background, // Canvas #F8FAFC
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: SIZES.xxlarge,
+  },
+  contentContainer: {
+    flex: 1,
     justifyContent: 'center',
-    overflow: 'hidden',
-    paddingHorizontal: 24,
-  },
-  decorCircleTop: {
-    position: 'absolute',
-    width: 290,
-    height: 290,
-    borderRadius: 145,
-    backgroundColor: '#E2F3E6',
-    top: -125,
-    right: -115,
-  },
-  decorCircleBottom: {
-    position: 'absolute',
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: '#E2F3E6',
-    bottom: -105,
-    left: -105,
-  },
-  content: {
     alignItems: 'center',
-    width: '100%',
-    marginBottom: 35,
+    paddingHorizontal: SIZES.large,
   },
-  logoOuter: {
-    width: 148,
-    height: 148,
-    borderRadius: 74,
-    backgroundColor: '#D5EFD9',
-    alignItems: 'center',
+  logoCard: {
+    width: 120,
+    height: 120,
+    borderRadius: 28,
+    backgroundColor: COLORS.primaryLight, // #38BDF8
     justifyContent: 'center',
-    marginBottom: 27,
-  },
-  logoInner: {
-    width: 118,
-    height: 118,
-    borderRadius: 59,
-    backgroundColor: C.white,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#C6E7CE',
+    marginBottom: SIZES.large,
+    shadowColor: COLORS.secondaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 6,
   },
-  brandName: {
-    fontSize: 31,
-    fontWeight: '900',
-    color: C.deepGreen,
-    letterSpacing: -0.7,
+  textContainer: {
+    alignItems: 'center',
   },
-  brandLocation: {
-    fontSize: 12,
+  brandTitleMain: {
+    fontSize: 32,
     fontWeight: '800',
-    color: C.green,
-    letterSpacing: 5,
-    marginTop: 7,
+    color: COLORS.secondaryDark, // #075985
+    letterSpacing: 1.5,
   },
-  divider: {
-    width: 55,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#A7D8B4',
-    marginVertical: 22,
-  },
-  tagline: {
-    fontSize: 16,
-    lineHeight: 25,
-    color: C.secondary,
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  features: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    marginTop: 28,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  featureText: {
-    color: C.darkGreen,
-    fontSize: 11,
+  brandTitleSub: {
+    fontSize: 20,
     fontWeight: '700',
+    color: '#0284C7',
+    letterSpacing: 2,
+    marginTop: -2,
+    marginBottom: SIZES.small,
   },
-  featureDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#A7C8AF',
+  taglineText: {
+    ...FONTS.body,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
-  bottom: {
-    position: 'absolute',
-    bottom: 30,
-    left: 30,
-    right: 30,
+  footerContainer: {
     alignItems: 'center',
+    paddingBottom: SIZES.large,
   },
-  loadingTrack: {
-    width: 150,
-    height: 4,
-    backgroundColor: '#D8EBDD',
-    borderRadius: 4,
-    overflow: 'hidden',
+  spinner: {
+    marginBottom: SIZES.medium,
   },
-  loadingBar: {
-    height: '100%',
-    backgroundColor: C.green,
-    borderRadius: 4,
+  footerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E0F2FE',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: SIZES.radiusPill,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  loadingText: {
-    fontSize: 11,
-    color: C.secondary,
-    marginTop: 12,
-  },
-  copyright: {
-    fontSize: 10,
-    color: '#8AA092',
-    marginTop: 18,
+  footerBadgeText: {
+    ...FONTS.caption,
+    color: COLORS.secondaryDark,
+    fontWeight: '600',
   },
 });
+
+export default SplashScreen;

@@ -1,62 +1,191 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+// components/organisms/BikeCard.tsx
+import React from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import { COLORS, SIZES, FONTS } from '../../constants/theme';
+import StatusBadge from '../molecules/StatusBadge';
+import FeatureTag from '../molecules/FeatureTag';
+import { BikeData } from '../../constants/bikes';
 
-export type Bike = {
-  id: string;
-  name: string;
-  type: 'Gunung' | 'Lipat';
-  branch: string;
-  image: string;
-  available: boolean;
-};
+interface BikeCardProps {
+  bike: BikeData;
+}
 
-type BikeCardProps = {
-  bike: Bike;
-  onPress?: () => void;
-};
+const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
+  const router = useRouter();
+  const isAvailable = bike.status.toLowerCase() === 'tersedia';
 
-export function BikeCard({ bike, onPress }: BikeCardProps) {
-  const Container = onPress ? Pressable : View;
+  // Handler klik kartu -> Pindah ke detail membawa parameter ID
+  const handlePressCard = () => {
+    router.push({
+      pathname: '/public/DetailUnit' as any,
+      params: { id: bike.id },
+    });
+  };
 
   return (
-    <Container {...(onPress ? { onPress } : {})} style={styles.card}>
-      <Image source={{ uri: bike.image }} style={styles.image} resizeMode="cover" />
-      <View style={styles.content}>
-        <View style={styles.topRow}>
-          <Text style={styles.id}>{bike.id}</Text>
-          <View style={[styles.status, bike.available ? styles.available : styles.unavailable]}>
-            <Text style={[styles.statusText, !bike.available && styles.unavailableText]}>
-              {bike.available ? 'Tersedia' : 'Disewa'}
+    <TouchableOpacity 
+      style={styles.cardContainer} 
+      activeOpacity={0.85}
+      onPress={handlePressCard}
+    >
+      <View style={styles.imageContainer}>
+        <Image source={{ uri: bike.image }} style={styles.image} />
+        <View style={styles.topBadges}>
+          <View style={styles.unitIdBadge}>
+            <Text style={styles.unitIdText}>{bike.id}</Text>
+          </View>
+          <StatusBadge status={bike.status} />
+        </View>
+      </View>
+
+      <View style={styles.detailsContainer}>
+        <View style={styles.headerRow}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.categoryText}>{bike.category}</Text>
+            <Text style={styles.nameText}>{bike.name}</Text>
+          </View>
+          <View style={styles.priceContainer}>
+            <Text style={styles.priceLabel}>Tarif</Text>
+            <Text style={styles.priceText}>
+              Rp {bike.price}<Text style={styles.priceUnit}>/jam</Text>
             </Text>
           </View>
         </View>
-        <Text style={styles.name}>{bike.name}</Text>
-        <View style={styles.typeRow}>
-          <MaterialCommunityIcons name="bicycle" size={15} color="#61766A" />
-          <Text style={styles.type}>{bike.type}</Text>
+
+        <View style={styles.locationRow}>
+          <Text style={styles.locationText}>
+            {isAvailable ? `📍 ${bike.location}` : `⏱️ Estimasi kembali ~ ${bike.returnTime}`}
+          </Text>
         </View>
-        <Text style={styles.branch}>{bike.branch}</Text>
+
+        <View style={styles.featuresRow}>
+          {bike.features.map((feature, index) => (
+            <FeatureTag key={index} label={feature} />
+          ))}
+        </View>
+
+        <View style={styles.footerRow}>
+          <Text style={styles.footerText}>
+            {isAvailable ? '⏱️ Sewa langsung di lokasi pos' : `⏱️ ${bike.returnLocationNote || 'Kembali sore ini'}`}
+          </Text>
+          <Text style={[
+            styles.availabilityText, 
+            { color: isAvailable ? COLORS.secondaryDark : COLORS.textSecondary }
+          ]}>
+            {isAvailable ? 'Tersedia di Pos' : 'Tidak Tersedia'}
+          </Text>
+        </View>
       </View>
-    </Container>
+    </TouchableOpacity>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  card: {
-    flex: 1, minWidth: 0, overflow: 'hidden', backgroundColor: '#FFFFFF',
-    borderRadius: 14, borderWidth: 1, borderColor: '#E5ECE7',
+  cardContainer: {
+    backgroundColor: COLORS.surface,
+    borderRadius: SIZES.radiusLarge,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: SIZES.large,
+    overflow: 'hidden',
   },
-  image: { width: '100%', height: 125, backgroundColor: '#F1FAF3' },
-  content: { padding: 11, gap: 6 },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
-  id: { color: '#61766A', fontSize: 10, fontWeight: '700' },
-  status: { borderRadius: 10, paddingHorizontal: 7, paddingVertical: 3 },
-  available: { backgroundColor: '#E8F6EC' },
-  unavailable: { backgroundColor: '#FDECEA' },
-  statusText: { color: '#16833B', fontSize: 10, fontWeight: '700' },
-  unavailableText: { color: '#C62828' },
-  name: { color: '#173B29', fontSize: 14, fontWeight: '700' },
-  typeRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  type: { color: '#61766A', fontSize: 12 },
-  branch: { color: '#87988E', fontSize: 11 },
+  imageContainer: {
+    height: 180,
+    width: '100%',
+    backgroundColor: '#E2E8F0',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  topBadges: {
+    position: 'absolute',
+    top: SIZES.medium,
+    left: SIZES.medium,
+    right: SIZES.medium,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  unitIdBadge: {
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: SIZES.radiusSmall,
+  },
+  unitIdText: {
+    ...FONTS.caption,
+    color: COLORS.surface,
+    fontSize: 11,
+  },
+  detailsContainer: {
+    padding: SIZES.large,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: SIZES.small,
+  },
+  headerLeft: {
+    flex: 1,
+    paddingRight: SIZES.small,
+  },
+  categoryText: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+    fontSize: 11,
+    textTransform: 'uppercase',
+  },
+  nameText: {
+    ...FONTS.headline2,
+    color: COLORS.secondaryDark,
+  },
+  priceContainer: {
+    alignItems: 'flex-end',
+  },
+  priceLabel: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+    fontSize: 11,
+  },
+  priceText: {
+    ...FONTS.labelLarge,
+    color: COLORS.textPrimary,
+  },
+  priceUnit: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+    fontWeight: 'normal',
+  },
+  locationRow: {
+    marginBottom: SIZES.medium,
+  },
+  locationText: {
+    ...FONTS.body,
+    color: COLORS.textSecondary,
+  },
+  featuresRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: SIZES.medium,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingTop: SIZES.medium,
+  },
+  footerText: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+  },
+  availabilityText: {
+    ...FONTS.caption,
+    fontWeight: 'bold',
+  }
 });
+
+export default BikeCard;
