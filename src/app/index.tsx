@@ -10,40 +10,34 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, FONTS } from '../constants/theme';
+import { router } from 'expo-router';
 
-interface SplashScreenProps {
-  onFinish?: () => void;
-}
-
-const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
+const SplashScreen: React.FC = () => {
   // Animasi Fade-In & Scale Up untuk Logo
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.85)).current;
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 6,
-        tension: 40,
-        useNativeDriver: true,
-      }),
-    ]).start();
+ useEffect(() => {
+  Animated.parallel([
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }),
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 6,
+      tension: 40,
+      useNativeDriver: true,
+    }),
+  ]).start();
 
-    // Timer simulasi berpindah ke halaman utama (misal 2.5 detik)
-    const timer = setTimeout(() => {
-      if (onFinish) {
-        onFinish();
-      }
-    }, 2500);
+  const timer = setTimeout(() => {
+    router.replace('/public');
+  }, 2500);
 
-    return () => clearTimeout(timer);
-  }, [fadeAnim, scaleAnim, onFinish]);
+  return () => clearTimeout(timer);
+}, [fadeAnim, scaleAnim]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -61,7 +55,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
 
         {/* Brand Text Header */}
         <View style={styles.textContainer}>
-          <Text style={styles.brandTitleMain}>MAS JOKO</Text>
+          <Text style={styles.brandTitleMain}>Jamal_Jepret</Text>
           <Text style={styles.brandTitleSub}>RENTAL SEPEDA</Text>
           <Text style={styles.taglineText}>Mudah • Cepat • Jelas</Text>
         </View>
@@ -73,7 +67,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
         
         <View style={styles.footerBadge}>
           <Ionicons name="location-outline" size={14} color={COLORS.secondaryDark} style={{ marginRight: 4 }} />
-          <Text style={styles.footerBadgeText}>Pos Rental Sepeda Resmi • Jogja</Text>
+          <Text style={styles.footerBadgeText}>Pos Rental Sepeda Resmi • Cirebon</Text>
         </View>
       </View>
     </SafeAreaView>

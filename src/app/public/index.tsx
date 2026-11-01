@@ -1,13 +1,23 @@
-// app//index.tsx
+// app/public/BerandaPublic.tsx
 import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { 
+  SafeAreaView, 
+  ScrollView, 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity,
+  StatusBar,
+  Platform 
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router'; // Navigasi Expo Router
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import HeaderApp from '../../components/molecules/HeaderApp';
 import BikeCard, { BikeData } from '../../components/organisms/BikeCard';
 import HowToRentSection from '../../components/organisms/HowToRentSection';
 import PosRentalSection from '../../components/organisms/PosRentalSection';
-import BottomNavBar from '../../components/molecules/BottomNavBar';
+import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
 
 const DUMMY_BIKES: BikeData[] = [
   {
@@ -45,11 +55,33 @@ const DUMMY_BIKES: BikeData[] = [
 ];
 
 const Beranda: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'Beranda' | 'Katalog' | 'Scan' | 'Login'>('Beranda');
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabType>('Beranda');
+
+  // Handler Klik Tab Bottom Navigation
+  const handleTabPress = (tab: TabType) => {
+    setActiveTab(tab);
+    
+    // Navigasi rute Expo Router sesuai tab yang diklik
+    switch (tab) {
+      case 'Beranda':
+        // Tetap di halaman beranda
+        break;
+      case 'Katalog':
+        router.push('/public/katalog' as any);
+        break;
+      case 'DurasiSewa':
+        router.push('/public/durasi-sewa' as any);
+        break;
+      case 'Login':
+        router.push('/public/login' as any);
+        break;
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Header App Bar */}
+      {/* Top Header App Bar dengan Safe Area Notch Fix */}
       <HeaderApp notificationCount={0} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -65,10 +97,19 @@ const Beranda: React.FC = () => {
           </Text>
           
           <View style={styles.heroActions}>
-            <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8}>
-              <Text style={styles.primaryButtonText}>Lihat Sepeda →</Text>
+            <TouchableOpacity 
+              style={styles.secondaryButton} 
+              activeOpacity={0.8}
+              onPress={() => handleTabPress('Katalog')}
+            >
+              <Text style={styles.primaryButtonText}>Lihat Sepeda</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.8}>
+            
+            <TouchableOpacity 
+              style={styles.secondaryButton} 
+              activeOpacity={0.8}
+              onPress={() => handleTabPress('DurasiSewa')}
+            >
               <Ionicons name="qr-code-outline" size={16} color={COLORS.textPrimary} style={{ marginRight: 6 }} />
               <Text style={styles.secondaryButtonText}>Scan QR</Text>
             </TouchableOpacity>
@@ -118,8 +159,8 @@ const Beranda: React.FC = () => {
 
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <BottomNavBar activeTab={activeTab} onTabPress={(tab) => setActiveTab(tab)} />
+      {/* Bottom Navigation Interaktif */}
+      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
     </SafeAreaView>
   );
 };

@@ -1,4 +1,4 @@
-// app/public/RegisterPublic.tsx
+// app/public/Register.tsx
 import React, { useState } from 'react';
 import { 
   SafeAreaView, 
@@ -7,12 +7,19 @@ import {
   Text, 
   StyleSheet, 
   TextInput, 
-  TouchableOpacity 
+  TouchableOpacity,
+  Platform,
+  StatusBar 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
+import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
 
 const Register: React.FC = () => {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabType>('Login');
+  
   const [fullName, setFullName] = useState('Budi Santoso');
   const [email, setEmail] = useState('budi.santoso@gmail.com');
   const [phone, setPhone] = useState('813 9876 5432');
@@ -22,16 +29,38 @@ const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const handleTabPress = (tab: TabType) => {
+    setActiveTab(tab);
+    switch (tab) {
+      case 'Beranda':
+        router.push('/public/' as any);
+        break;
+      case 'Katalog':
+        router.push('/public/katalog' as any);
+        break;
+      case 'DurasiSewa':
+        router.push('/public/durasi-sewa' as any);
+        break;
+      case 'Login':
+        router.push('/public/login' as any);
+        break;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Header */}
-      <View style={styles.topHeader}>
-        <TouchableOpacity style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={COLORS.secondaryDark} />
-        </TouchableOpacity>
-        <View style={styles.brandHeader}>
-          <Ionicons name="bicycle-outline" size={20} color={COLORS.secondaryDark} style={{ marginRight: 6 }} />
-          <Text style={styles.brandHeaderText}>Mas Joko Rental</Text>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.surface} translucent={false} />
+
+      {/* Top Header dengan Safe Area Status Bar Fix */}
+      <View style={styles.safeHeaderArea}>
+        <View style={styles.topHeader}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={22} color={COLORS.secondaryDark} />
+          </TouchableOpacity>
+          <View style={styles.brandHeader}>
+            <Ionicons name="bicycle-outline" size={20} color={COLORS.secondaryDark} style={{ marginRight: 6 }} />
+            <Text style={styles.brandHeaderText}>Mas Joko Rental</Text>
+          </View>
         </View>
       </View>
 
@@ -149,11 +178,14 @@ const Register: React.FC = () => {
         {/* Login Redirect */}
         <View style={styles.loginRow}>
           <Text style={styles.loginPrompt}>Sudah punya akun? </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/public/login' as any)}>
             <Text style={styles.loginLink}>Masuk</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Added Bottom Navigation Bar */}
+      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
     </SafeAreaView>
   );
 };
@@ -163,14 +195,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  safeHeaderArea: {
+    backgroundColor: COLORS.surface,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
   topHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: SIZES.large,
     paddingVertical: SIZES.medium,
-    backgroundColor: COLORS.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    height: 56,
   },
   backBtn: {
     padding: 4,

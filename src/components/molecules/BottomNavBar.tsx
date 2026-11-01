@@ -4,18 +4,20 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 
+export type TabType = 'Beranda' | 'Katalog' | 'DurasiSewa' | 'Login';
+
 interface BottomNavBarProps {
-  activeTab: 'Beranda' | 'Katalog' | 'Scan' | 'Login';
-  onTabPress: (tab: 'Beranda' | 'Katalog' | 'Scan' | 'Login') => void;
+  activeTab: TabType;
+  onTabPress: (tab: TabType) => void;
 }
 
 const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeTab, onTabPress }) => {
   const tabs = [
-    { name: 'Beranda', icon: 'home-outline', activeIcon: 'home' },
-    { name: 'Katalog', icon: 'bicycle-outline', activeIcon: 'bicycle' },
-    { name: 'Scan', icon: 'qr-code-outline', activeIcon: 'qr-code' },
-    { name: 'Login', icon: 'person-outline', activeIcon: 'person' },
-  ] as const;
+    { name: 'Beranda' as TabType, icon: 'home-outline', activeIcon: 'home' },
+    { name: 'Katalog' as TabType, icon: 'bicycle-outline', activeIcon: 'bicycle' },
+    { name: 'DurasiSewa' as TabType, icon: 'qr-code-outline', activeIcon: 'qr-code' },
+    { name: 'Login' as TabType, icon: 'person-outline', activeIcon: 'person' },
+  ];
 
   return (
     <View style={styles.navContainer}>
@@ -25,8 +27,9 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeTab, onTabPress }) =>
           <TouchableOpacity
             key={tab.name}
             style={styles.tabItem}
-            activeOpacity={0.8}
-            onPress={() => onTabPress(tab.name as any)}
+            activeOpacity={0.6}
+            onPress={() => onTabPress(tab.name)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             {isActive && <View style={styles.activeIndicator} />}
             <Ionicons
@@ -38,7 +41,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeTab, onTabPress }) =>
               style={[
                 styles.tabLabel,
                 { color: isActive ? COLORS.secondaryDark : COLORS.textSecondary },
-                isActive && { fontWeight: 'bold' },
+                isActive && styles.activeTabLabel,
               ]}
             >
               {tab.name}
@@ -59,18 +62,22 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.border,
     justifyContent: 'space-around',
     alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
     height: '100%',
   },
   activeIndicator: {
     position: 'absolute',
     top: 0,
-    width: 24,
+    width: 28,
     height: 3,
     backgroundColor: COLORS.secondaryDark,
     borderBottomLeftRadius: 3,
@@ -79,7 +86,10 @@ const styles = StyleSheet.create({
   tabLabel: {
     ...FONTS.caption,
     fontSize: 11,
-    marginTop: 2,
+    marginTop: 4,
+  },
+  activeTabLabel: {
+    fontWeight: '700',
   },
 });
 

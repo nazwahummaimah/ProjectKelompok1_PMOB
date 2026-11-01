@@ -1,4 +1,4 @@
-// app/public/LoginPublic.tsx
+// app/public/login.tsx
 import React, { useState } from 'react';
 import { 
   SafeAreaView, 
@@ -7,34 +7,59 @@ import {
   Text, 
   StyleSheet, 
   TextInput, 
-  TouchableOpacity 
+  TouchableOpacity,
+  Platform,
+  StatusBar 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
-import BottomNavBar from '../../components/molecules/BottomNavBar';
+import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
 
 const Login: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'Beranda' | 'Katalog' | 'Scan' | 'Login'>('Login');
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabType>('Login');
   const [email, setEmail] = useState('pelanggan.contoh@domain');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [emailError, setEmailError] = useState(true); // Simulasi error seperti pada gambar
+  const [emailError, setEmailError] = useState(true);
+
+  const handleTabPress = (tab: TabType) => {
+    setActiveTab(tab);
+    switch (tab) {
+      case 'Beranda':
+        router.push('/public/' as any);
+        break;
+      case 'Katalog':
+        router.push('/public/katalog' as any);
+        break;
+      case 'DurasiSewa':
+        router.push('/public/durasi-sewa' as any);
+        break;
+      case 'Login':
+        break;
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Header */}
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.closeBtn}>
-          <Ionicons name="close-outline" size={24} color={COLORS.secondaryDark} />
-        </TouchableOpacity>
-        <View style={styles.brandTitleRow}>
-          <Ionicons name="bicycle-outline" size={20} color={COLORS.secondaryDark} style={{ marginRight: 6 }} />
-          <Text style={styles.brandTitle}>Rental Sepeda Mas Joko</Text>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.surface} translucent={false} />
+      
+      {/* Top Bar dengan Safe Area Fix */}
+      <View style={styles.safeTopBarArea}>
+        <View style={styles.topBar}>
+          <TouchableOpacity style={styles.closeBtn} onPress={() => router.push('/public/' as any)}>
+            <Ionicons name="close-outline" size={24} color={COLORS.secondaryDark} />
+          </TouchableOpacity>
+          <View style={styles.brandTitleRow}>
+            <Ionicons name="bicycle-outline" size={20} color={COLORS.secondaryDark} style={{ marginRight: 6 }} />
+            <Text style={styles.brandTitle}>Rental Sepeda Mas Joko</Text>
+          </View>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Brand Icon Badge */}
+        {/* Logo Badge */}
         <View style={styles.logoBadge}>
           <Ionicons name="bicycle" size={32} color={COLORS.secondaryDark} />
         </View>
@@ -51,7 +76,10 @@ const Login: React.FC = () => {
             <TextInput
               style={styles.textInput}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                setEmailError(false);
+              }}
               placeholder="Masukkan email Anda"
               placeholderTextColor={COLORS.textSecondary}
               keyboardType="email-address"
@@ -91,24 +119,16 @@ const Login: React.FC = () => {
           </View>
         </View>
 
-        {/* Primary Action Button */}
+        {/* Action Button */}
         <TouchableOpacity style={styles.submitBtn} activeOpacity={0.8}>
           <Text style={styles.submitBtnText}>Masuk</Text>
           <Ionicons name="arrow-forward" size={18} color={COLORS.textPrimary} style={{ marginLeft: 6 }} />
         </TouchableOpacity>
 
-        {/* System Info Box */}
-        <View style={styles.infoBox}>
-          <Ionicons name="shield-checkmark-outline" size={18} color={COLORS.secondaryDark} style={{ marginRight: 8 }} />
-          <Text style={styles.infoBoxText}>
-            Sistem akan otomatis mengarahkan ke dashboard pelanggan atau admin sesuai hak akses akun.
-          </Text>
-        </View>
-
-        {/* Bottom Link to Register */}
+        {/* Register Navigation Link */}
         <View style={styles.registerRow}>
           <Text style={styles.registerPrompt}>Belum punya akun? </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/public/register' as any)}>
             <Text style={styles.registerLink}>Daftar</Text>
           </TouchableOpacity>
         </View>
@@ -122,7 +142,8 @@ const Login: React.FC = () => {
         </View>
       </ScrollView>
 
-      <BottomNavBar activeTab={activeTab} onTabPress={setActiveTab} />
+      {/* Navigasi Bawah Interaktif */}
+      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
     </SafeAreaView>
   );
 };
@@ -132,14 +153,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  safeTopBarArea: {
+    backgroundColor: COLORS.surface,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: SIZES.large,
     paddingVertical: SIZES.medium,
-    backgroundColor: COLORS.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    height: 56,
   },
   closeBtn: {
     padding: 4,

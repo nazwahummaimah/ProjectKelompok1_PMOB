@@ -1,40 +1,81 @@
 // app/public/DetailUnit.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   SafeAreaView, 
   ScrollView, 
   View, 
   Text, 
   StyleSheet, 
-  TouchableOpacity 
+  TouchableOpacity,
+  Platform,
+  StatusBar,
+  Image 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import StatusBadge from '../../components/molecules/StatusBadge';
 import FeatureTag from '../../components/molecules/FeatureTag';
+import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
+import { getBikeById } from '../../constants/bikes';
 
-const DetailUnit: React.FC = () => {    
+const DetailUnit: React.FC = () => {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ id?: string }>();
+  const [activeTab, setActiveTab] = useState<TabType>('Katalog');
+
+  // Mengambil data sepeda secara dinamis berdasarkan parameter ID
+  const bike = getBikeById(params.id);
+  const isAvailable = bike.status.toLowerCase() === 'tersedia';
+
+  const handleTabPress = (tab: TabType) => {
+    setActiveTab(tab);
+    switch (tab) {
+      case 'Beranda':
+        router.push('/public/' as any);
+        break;
+      case 'Katalog':
+        router.push('/public/katalog' as any);
+        break;
+      case 'DurasiSewa':
+        router.push('/public/durasi-sewa' as any);
+        break;
+      case 'Login':
+        router.push('/public/login' as any);
+        break;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Header */}
-      <View style={styles.topHeader}>
-        <TouchableOpacity style={styles.iconBtn}>
-          <Ionicons name="arrow-back" size={22} color={COLORS.secondaryDark} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Detail Sepeda</Text>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="share-social-outline" size={20} color={COLORS.secondaryDark} />
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.surface} translucent={false} />
+      
+      {/* Top Header dengan Status Bar Fix */}
+      <View style={styles.safeHeaderArea}>
+        <View style={styles.topHeader}>
+          <TouchableOpacity 
+            style={styles.iconBtn} 
+            onPress={() => router.back()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="arrow-back" size={22} color={COLORS.secondaryDark} />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.iconBtn, { marginLeft: 8 }]}>
-            <Ionicons name="information-circle-outline" size={22} color={COLORS.secondaryDark} />
-          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Detail Sepeda</Text>
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={styles.iconBtn}>
+              <Ionicons name="share-social-outline" size={20} color={COLORS.secondaryDark} />
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.iconBtn, { marginLeft: 8 }]}>
+              <Ionicons name="information-circle-outline" size={22} color={COLORS.secondaryDark} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Banner Gambar & Badges */}
+        {/* Banner Gambar & Badges Dinamis */}
         <View style={styles.bannerContainer}>
+          <Image source={{ uri: bike.image }} style={styles.bannerImage} />
           <View style={styles.verifiedBadge}>
             <Ionicons name="qr-code-outline" size={14} color={COLORS.secondaryDark} style={{ marginRight: 4 }} />
             <Text style={styles.verifiedText}>Terverifikasi QR</Text>
@@ -42,25 +83,25 @@ const DetailUnit: React.FC = () => {
 
           <View style={styles.bannerBottomOverlay}>
             <View style={styles.unitIdTag}>
-              <Text style={styles.unitIdText}># Unit B-001</Text>
+              <Text style={styles.unitIdText}># {bike.id}</Text>
             </View>
             <View style={styles.unitTitleTag}>
-              <Text style={styles.unitTitleText}>Polygon Cascade 4</Text>
+              <Text style={styles.unitTitleText}>{bike.name}</Text>
             </View>
           </View>
         </View>
 
-        {/* Info Utama Title & Price */}
+        {/* Info Utama Title & Price Dinamis */}
         <View style={styles.mainInfoRow}>
           <View style={styles.titleCol}>
             <Text style={styles.categoryTitle}>KATEGORI SEPEDA</Text>
-            <Text style={styles.mainTitle}>Mountain Bike (MTB)</Text>
-            <Text style={styles.subTitle}>Polygon Cascade 4 Series • Rangka Alloy Ringan</Text>
+            <Text style={styles.mainTitle}>{bike.category}</Text>
+            <Text style={styles.subTitle}>{bike.name} Series</Text>
           </View>
           <View style={styles.priceCol}>
             <Text style={styles.priceMeta}>Tarif Sewa Pos</Text>
             <Text style={styles.priceAmount}>
-              <Text style={styles.currency}>Rp </Text>25.000<Text style={styles.priceUnit}> / jam</Text>
+              <Text style={styles.currency}>Rp </Text>{bike.price}<Text style={styles.priceUnit}> / jam</Text>
             </Text>
             <Text style={styles.paymentNote}>Bayar langsung di kasir</Text>
           </View>
@@ -68,29 +109,37 @@ const DetailUnit: React.FC = () => {
 
         {/* Mode Selector Display */}
         <View style={styles.modeContainer}>
-          <View style={[styles.modePill, styles.modeActive]}>
-            <View style={[styles.dot, { backgroundColor: COLORS.success }]} />
-            <Text style={styles.modeActiveText}>Mode: Tersedia</Text>
-          </View>
-          <View style={styles.modePill}>
-            <View style={[styles.dot, { backgroundColor: COLORS.textSecondary }]} />
-            <Text style={styles.modeInactiveText}>Mode: Sedang Disewa</Text>
+          <View style={[styles.modePill, isAvailable && styles.modeActive]}>
+            <View style={[styles.dot, { backgroundColor: isAvailable ? COLORS.success : COLORS.textSecondary }]} />
+            <Text style={isAvailable ? styles.modeActiveText : styles.modeInactiveText}>
+              {isAvailable ? 'Mode: Tersedia' : 'Mode: Sedang Disewa'}
+            </Text>
           </View>
         </View>
 
-        {/* Status Operational Box */}
+        {/* Status Operational Box Dinamis */}
         <View style={styles.operationalBox}>
           <View style={styles.opHeader}>
             <Text style={styles.opLabel}>Status Operasional Unit</Text>
-            <StatusBadge status="Tersedia" />
+            <StatusBadge status={bike.status} />
           </View>
 
           <View style={styles.opContent}>
-            <Ionicons name="checkmark-circle-outline" size={24} color={COLORS.success} style={{ marginRight: 10 }} />
+            <Ionicons 
+              name={isAvailable ? "checkmark-circle-outline" : "time-outline"} 
+              size={24} 
+              color={isAvailable ? COLORS.success : COLORS.warning} 
+              style={{ marginRight: 10 }} 
+            />
             <View style={{ flex: 1 }}>
-              <Text style={styles.opTitle}>Siap Disewa di Lokasi</Text>
+              <Text style={[styles.opTitle, !isAvailable && { color: COLORS.warning }]}>
+                {isAvailable ? 'Siap Disewa di Lokasi' : `Unit Sedang Disewa (~ ${bike.returnTime || 'Sore ini'})`}
+              </Text>
               <Text style={styles.opDesc}>
-                Sepeda ini sedang standby dan siap disewa langsung di <Text style={{ fontWeight: 'bold' }}>Pos Stasiun Tugu</Text>. Silakan datangi pos dan konfirmasi ke kasir/petugas armada.
+                {isAvailable 
+                  ? `Sepeda ini sedang standby dan siap disewa langsung di ${bike.location}. Silakan datangi pos dan konfirmasi ke kasir.`
+                  : `Sepeda ini sedang dalam sesi sewa. ${bike.returnLocationNote || 'Diperkirakan akan kembali ke pos sore ini.'}`
+                }
               </Text>
             </View>
           </View>
@@ -112,11 +161,11 @@ const DetailUnit: React.FC = () => {
             </View>
             <View>
               <Text style={styles.cardBoxMeta}>Pos Pangkalan Resmi</Text>
-              <Text style={styles.cardBoxTitle}>Pos Stasiun Tugu</Text>
+              <Text style={styles.cardBoxTitle}>{bike.location}</Text>
             </View>
           </View>
-          <Text style={styles.cardBoxAddress}>Jl. Pasar Kembang (Pintu Keluar Selatan, 30m dari loket)</Text>
-          <Text style={styles.cardBoxHours}>⏱️ Buka setiap hari: 06:00 - 22:00 WIB</Text>
+          <Text style={styles.cardBoxAddress}>{bike.address || 'Jl. Pasar Kembang, Malioboro, Titik Nol KM Jogja'}</Text>
+          <Text style={styles.cardBoxHours}>⏱️ {bike.hours || 'Buka setiap hari: 06:00 - 22:00 WIB'}</Text>
         </View>
 
         {/* Card Kondisi Teknis */}
@@ -130,74 +179,69 @@ const DetailUnit: React.FC = () => {
               <Text style={styles.cardBoxTitle}>Sangat Baik</Text>
             </View>
           </View>
-          <Text style={styles.cardBoxAddress}>Servis berkala, rem, serta tekanan ban diperiksa 2 hari lalu oleh mekanik Mas Joko.</Text>
+          <Text style={styles.cardBoxAddress}>{bike.techCondition || 'Servis berkala, rem, serta tekanan ban diperiksa oleh mekanik.'}</Text>
         </View>
 
-        {/* Specs Grid 2x2 */}
+        {/* Specs Grid 2x2 Dinamis */}
         <Text style={styles.specsSubLabel}>Kelengkapan & Fitur Teknis</Text>
         <View style={styles.specsGrid}>
           <View style={styles.specTile}>
             <Ionicons name="options-outline" size={18} color={COLORS.secondaryDark} />
-            <View style={{ marginLeft: 8 }}>
+            <View style={{ marginLeft: 8, flex: 1 }}>
               <Text style={styles.specLabel}>Ukuran Ban</Text>
-              <Text style={styles.specValue}>27.5 Inch MTB</Text>
+              <Text style={styles.specValue}>{bike.tireSize || 'Standard'}</Text>
             </View>
           </View>
 
           <View style={styles.specTile}>
             <Ionicons name="disc-outline" size={18} color={COLORS.secondaryDark} />
-            <View style={{ marginLeft: 8 }}>
+            <View style={{ marginLeft: 8, flex: 1 }}>
               <Text style={styles.specLabel}>Pengereman</Text>
-              <Text style={styles.specValue}>Rem Hidrolik Shimano</Text>
+              <Text style={styles.specValue}>{bike.brakes || 'Standard'}</Text>
             </View>
           </View>
 
           <View style={styles.specTile}>
             <Ionicons name="speedometer-outline" size={18} color={COLORS.secondaryDark} />
-            <View style={{ marginLeft: 8 }}>
+            <View style={{ marginLeft: 8, flex: 1 }}>
               <Text style={styles.specLabel}>Transmisi</Text>
-              <Text style={styles.specValue}>3 × 8 Kecepatan</Text>
+              <Text style={styles.specValue}>{bike.transmission || 'Multi-Speed'}</Text>
             </View>
           </View>
 
           <View style={styles.specTile}>
             <Ionicons name="shield-checkmark-outline" size={18} color={COLORS.secondaryDark} />
-            <View style={{ marginLeft: 8 }}>
+            <View style={{ marginLeft: 8, flex: 1 }}>
               <Text style={styles.specLabel}>Fasilitas Unit</Text>
-              <Text style={styles.specValue}>Helm SNI & Kunci</Text>
+              <Text style={styles.specValue}>{bike.facilities || 'Helm & Kunci'}</Text>
             </View>
           </View>
         </View>
 
-        {/* Additional Tags */}
-        <View style={styles.tagsContainer}>
-          <FeatureTag label="✓ Kunci Spiral Baja" />
-          <FeatureTag label="✓ Lampu Reflektor Depan-Belakang" />
-          <FeatureTag label="✓ Tempat Botol Minum (Bottle Cage)" />
-        </View>
+        {/* Action Callout Section dalam Scroll View */}
+        <View style={styles.actionRowCard}>
+          <TouchableOpacity 
+            style={styles.outlineBtn} 
+            activeOpacity={0.8}
+            onPress={() => router.push('/public/' as any)}
+          >
+            <Ionicons name="navigate-outline" size={16} color={COLORS.secondaryDark} style={{ marginRight: 6 }} />
+            <Text style={styles.outlineBtnText}>Arah ke Pos</Text>
+          </TouchableOpacity>
 
-        {/* Prosedur Sewa */}
-        <View style={styles.procedureBox}>
-          <Text style={styles.procedureTitle}>📋 Prosedur Sewa Langsung di Pos</Text>
-          <Text style={styles.procedureStep}>1. Tunjukkan KTP / Kartu Identitas asli kepada petugas pos.</Text>
-          <Text style={styles.procedureStep}>2. Petugas akan memeriksa kelayakan fisik sepeda di hadapan Anda.</Text>
-          <Text style={styles.procedureStep}>3. Pembayaran sewa dilakukan langsung (Tunai / QRIS Semua Bank).</Text>
-          <Text style={styles.procedureStep}>4. Sepeda dapat langsung digunakan berkeliling Jogja.</Text>
+          <TouchableOpacity 
+            style={styles.filledBtn} 
+            activeOpacity={0.8}
+            onPress={() => router.push('/public/durasi-sewa' as any)}
+          >
+            <Ionicons name="qr-code-outline" size={16} color={COLORS.textPrimary} style={{ marginRight: 6 }} />
+            <Text style={styles.filledBtnText}>Scan QR Unit</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* Sticky Bottom Action Bar */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.outlineBtn} activeOpacity={0.8}>
-          <Ionicons name="navigate-outline" size={16} color={COLORS.secondaryDark} style={{ marginRight: 6 }} />
-          <Text style={styles.outlineBtnText}>Arah ke Pos Tugu</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.filledBtn} activeOpacity={0.8}>
-          <Ionicons name="qr-code-outline" size={16} color={COLORS.textPrimary} style={{ marginRight: 6 }} />
-          <Text style={styles.filledBtnText}>Scan Unit Lain</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Replaced dengan Bottom Navigation Bar standar yang lebih berguna */}
+      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
     </SafeAreaView>
   );
 };
@@ -207,15 +251,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  safeHeaderArea: {
+    backgroundColor: COLORS.surface,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
   topHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: SIZES.large,
     paddingVertical: SIZES.medium,
-    backgroundColor: COLORS.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    height: 56,
   },
   headerTitle: {
     ...FONTS.headline3,
@@ -225,11 +273,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   iconBtn: {
-    padding: 4,
+    padding: 6,
   },
   scrollContent: {
     padding: SIZES.large,
-    paddingBottom: 100,
+    paddingBottom: SIZES.large,
   },
   bannerContainer: {
     height: 200,
@@ -237,6 +285,12 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.radiusLarge,
     position: 'relative',
     marginBottom: SIZES.large,
+    overflow: 'hidden',
+  },
+  bannerImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   verifiedBadge: {
     position: 'absolute',
@@ -486,41 +540,10 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     fontSize: 11,
   },
-  tagsContainer: {
+  actionRowCard: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    marginTop: SIZES.medium,
     marginBottom: SIZES.large,
-  },
-  procedureBox: {
-    backgroundColor: '#F0F9FF',
-    borderRadius: SIZES.radiusLarge,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SIZES.large,
-  },
-  procedureTitle: {
-    ...FONTS.labelMedium,
-    color: COLORS.secondaryDark,
-    marginBottom: SIZES.medium,
-  },
-  procedureStep: {
-    ...FONTS.caption,
-    color: COLORS.textSecondary,
-    marginBottom: 6,
-    lineHeight: 18,
-  },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 72,
-    backgroundColor: COLORS.surface,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    flexDirection: 'row',
-    paddingHorizontal: SIZES.large,
-    alignItems: 'center',
   },
   outlineBtn: {
     flex: 1,
@@ -532,6 +555,7 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.radiusMedium,
     height: 48,
     marginRight: SIZES.small,
+    backgroundColor: COLORS.surface,
   },
   outlineBtnText: {
     ...FONTS.labelMedium,

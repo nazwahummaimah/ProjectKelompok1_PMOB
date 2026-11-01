@@ -1,32 +1,34 @@
 // components/organisms/BikeCard.tsx
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import StatusBadge from '../molecules/StatusBadge';
 import FeatureTag from '../molecules/FeatureTag';
-
-export interface BikeData {
-  id: string;
-  category: string;
-  name: string;
-  price: string;
-  status: string;
-  location: string;
-  features: string[];
-  image: string;
-  returnTime?: string;
-  returnLocationNote?: string;
-}
+import { BikeData } from '../../constants/bikes';
 
 interface BikeCardProps {
   bike: BikeData;
 }
 
 const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
+  const router = useRouter();
   const isAvailable = bike.status.toLowerCase() === 'tersedia';
 
+  // Handler klik kartu -> Pindah ke detail membawa parameter ID
+  const handlePressCard = () => {
+    router.push({
+      pathname: '/public/DetailUnit' as any,
+      params: { id: bike.id },
+    });
+  };
+
   return (
-    <TouchableOpacity style={styles.cardContainer} activeOpacity={0.8}>
+    <TouchableOpacity 
+      style={styles.cardContainer} 
+      activeOpacity={0.85}
+      onPress={handlePressCard}
+    >
       <View style={styles.imageContainer}>
         <Image source={{ uri: bike.image }} style={styles.image} />
         <View style={styles.topBadges}>
@@ -65,7 +67,7 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
 
         <View style={styles.footerRow}>
           <Text style={styles.footerText}>
-            {isAvailable ? '⏱️ Sewa langsung di lokasi pos' : `⏱️ ${bike.returnLocationNote || 'Kembali sore ini di Pos Tugu'}`}
+            {isAvailable ? '⏱️ Sewa langsung di lokasi pos' : `⏱️ ${bike.returnLocationNote || 'Kembali sore ini'}`}
           </Text>
           <Text style={[
             styles.availabilityText, 

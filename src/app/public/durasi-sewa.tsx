@@ -1,76 +1,93 @@
-// app/public/DurasiSewa.tsx
+// app/public/durasi-sewa.tsx
 import React, { useState } from 'react';
 import { 
   SafeAreaView, 
   View, 
   Text, 
   StyleSheet, 
-  TouchableOpacity 
+  TouchableOpacity,
+  Platform,
+  StatusBar 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
-import BottomNavBar from '../../components/molecules/BottomNavBar';
+import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
 
 const DurasiSewa: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'Beranda' | 'Katalog' | 'Scan' | 'Login'>('Scan');
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabType>('DurasiSewa');
   const [stateView, setStateView] = useState<'Scan' | 'Sukses' | 'Gagal' | 'Izin'>('Scan');
+
+  const handleTabPress = (tab: TabType) => {
+    setActiveTab(tab);
+    switch (tab) {
+      case 'Beranda':
+        router.push('/public/' as any);
+        break;
+      case 'Katalog':
+        router.push('/public/katalog' as any);
+        break;
+      case 'DurasiSewa':
+        break;
+      case 'Login':
+        router.push('/public/login' as any);
+        break;
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Header Dark Bar */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn}>
-          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Pindai QR Sepeda</Text>
-        <TouchableOpacity style={styles.headerBtn}>
-          <Ionicons name="flash-outline" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
+      <StatusBar barStyle="light-content" backgroundColor="#1E293B" translucent={false} />
+      
+      {/* Top Header Dark Bar dengan Safe Area Fix */}
+      <View style={styles.safeHeaderArea}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.headerBtn} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Pindai QR Sepeda</Text>
+          <TouchableOpacity style={styles.headerBtn}>
+            <Ionicons name="flash-outline" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
 
-      {/* State View Switcher Pill */}
-      <View style={styles.stateSwitcherBar}>
-        <Text style={styles.stateLabel}>State View:</Text>
-        <View style={styles.pillsRow}>
-          {(['Scan', 'Sukses', 'Gagal', 'Izin'] as const).map((view) => (
-            <TouchableOpacity
-              key={view}
-              style={[styles.statePill, stateView === view && styles.statePillActive]}
-              onPress={() => setStateView(view)}
-            >
-              <Text style={[styles.stateText, stateView === view && styles.stateTextActive]}>
-                {view}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        {/* State View Switcher Bar */}
+        <View style={styles.stateSwitcherBar}>
+          <Text style={styles.stateLabel}>State View:</Text>
+          <View style={styles.pillsRow}>
+            {(['Scan', 'Sukses', 'Gagal', 'Izin'] as const).map((view) => (
+              <TouchableOpacity
+                key={view}
+                style={[styles.statePill, stateView === view && styles.statePillActive]}
+                onPress={() => setStateView(view)}
+              >
+                <Text style={[styles.stateText, stateView === view && styles.stateTextActive]}>
+                  {view}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </View>
 
       {/* Camera Viewfinder Area */}
       <View style={styles.cameraArea}>
-        {/* Outer Scanner Frame */}
         <View style={styles.scanTargetFrame}>
-          {/* Top Left Corner */}
           <View style={[styles.corner, styles.topLeft]} />
-          {/* Top Right Corner */}
           <View style={[styles.corner, styles.topRight]} />
-          {/* Bottom Left Corner */}
           <View style={[styles.corner, styles.bottomLeft]} />
-          {/* Bottom Right Corner */}
           <View style={[styles.corner, styles.bottomRight]} />
 
-          {/* Inner Simulated QR Frame */}
           <View style={styles.innerQrFrame}>
             <Ionicons name="qr-code" size={48} color="rgba(56, 189, 248, 0.6)" />
           </View>
         </View>
 
-        {/* Instruction Message */}
         <Text style={styles.instructionText}>
           Arahkan kamera ke QR sepeda Mas Joko yang terpasang di stang atau rangka.
         </Text>
 
-        {/* Info Callout Box */}
         <View style={styles.infoCallout}>
           <Ionicons name="information-circle-outline" size={18} color={COLORS.primaryLight} style={{ marginRight: 8 }} />
           <Text style={styles.infoCalloutText}>
@@ -79,7 +96,8 @@ const DurasiSewa: React.FC = () => {
         </View>
       </View>
 
-      <BottomNavBar activeTab={activeTab} onTabPress={setActiveTab} />
+      {/* Navigasi Bawah Interaktif */}
+      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
     </SafeAreaView>
   );
 };
@@ -87,7 +105,11 @@ const DurasiSewa: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A', // Dark Slate Canvas untuk mode camera
+    backgroundColor: '#0F172A',
+  },
+  safeHeaderArea: {
+    backgroundColor: '#1E293B',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   header: {
     flexDirection: 'row',
@@ -95,14 +117,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: SIZES.large,
     paddingVertical: SIZES.medium,
-    backgroundColor: '#1E293B',
+    height: 56,
   },
   headerTitle: {
     ...FONTS.headline3,
     color: '#FFFFFF',
   },
   headerBtn: {
-    padding: 4,
+    padding: 6,
   },
   stateSwitcherBar: {
     flexDirection: 'row',

@@ -1,4 +1,4 @@
-// app/public/KatalogPublic.tsx
+// app/public/Katalog.tsx
 import React, { useState } from 'react';
 import { 
   SafeAreaView, 
@@ -10,11 +10,12 @@ import {
   TouchableOpacity 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import HeaderApp from '../../components/molecules/HeaderApp';
 import StatusBadge from '../../components/molecules/StatusBadge';
 import FeatureTag from '../../components/molecules/FeatureTag';
-import BottomNavBar from '../../components/molecules/BottomNavBar';
+import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
 
 export interface CatalogBikeItem {
   id: string;
@@ -80,13 +81,32 @@ const CATALOG_DATA: CatalogBikeItem[] = [
   },
 ];
 
-const KatalogPublic: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'Beranda' | 'Katalog' | 'Scan' | 'Login'>('Katalog');
+const Katalog: React.FC = () => {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabType>('Katalog');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'Semua' | 'Tersedia' | 'Sedang Disewa'>('Semua');
 
+  const handleTabPress = (tab: TabType) => {
+    setActiveTab(tab);
+    switch (tab) {
+      case 'Beranda':
+        router.push('/public/' as any);
+        break;
+      case 'Katalog':
+        break;
+      case 'DurasiSewa':
+        router.push('/public/durasi-sewa' as any);
+        break;
+      case 'Login':
+        router.push('/public/login' as any);
+        break;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
+      {/* HeaderApp sudah termasuk Safe Area / Status Bar height fix */}
       <HeaderApp notificationCount={0} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -186,9 +206,16 @@ const KatalogPublic: React.FC = () => {
                   ))}
                 </View>
 
-                <TouchableOpacity style={styles.detailButton} activeOpacity={0.7}>
-                  <Text style={styles.detailButtonText}>Lihat Detail Unit</Text>
-                  <Ionicons name="chevron-forward" size={16} color={COLORS.secondaryDark} />
+                <TouchableOpacity 
+                    style={styles.detailButton} 
+                    activeOpacity={0.7}
+                    onPress={() => router.push({
+                        pathname: '/public/DetailUnit' as any,
+                        params: { id: item.id }
+                    })}
+                    >
+                    <Text style={styles.detailButtonText}>Lihat Detail Unit</Text>
+                    <Ionicons name="chevron-forward" size={16} color={COLORS.secondaryDark} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -196,7 +223,8 @@ const KatalogPublic: React.FC = () => {
         </View>
       </ScrollView>
 
-      <BottomNavBar activeTab={activeTab} onTabPress={setActiveTab} />
+      {/* Navigasi Bawah Interaktif */}
+      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
     </SafeAreaView>
   );
 };
@@ -396,4 +424,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default KatalogPublic;
+export default Katalog;
