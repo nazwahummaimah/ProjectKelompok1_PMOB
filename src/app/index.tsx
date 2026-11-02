@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, FONTS } from '../constants/theme';
 import { router } from 'expo-router';
+import JamalJepretLogo from '@/components/molecules/JamalJepretLogo';
 
 const SplashScreen: React.FC = () => {
   // Animasi Fade-In & Scale Up untuk Logo
@@ -50,7 +51,10 @@ const SplashScreen: React.FC = () => {
       >
         {/* Logo Icon Box (Sesuai screen_logo.png) */}
         <View style={styles.logoCard}>
-          <Ionicons name="bicycle" size={64} color={COLORS.secondaryDark} />
+          <JamalJepretLogo
+            width={190}
+            height={61}
+          />
         </View>
 
         {/* Brand Text Header */}
@@ -89,12 +93,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: SIZES.large,
   },
   logoCard: {
-    width: 120,
-    height: 120,
+    width: 220,
+    height: 100,
     borderRadius: 28,
-    backgroundColor: COLORS.primaryLight, // #38BDF8
+    backgroundColor: COLORS.background, // #F8FAFC
     justifyContent: 'center',
     alignItems: 'center',
+    alignSelf: 'center',
     marginBottom: SIZES.large,
     shadowColor: COLORS.secondaryDark,
     shadowOffset: { width: 0, height: 8 },

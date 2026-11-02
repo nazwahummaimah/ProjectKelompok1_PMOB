@@ -6,6 +6,7 @@ import { COLORS, FONTS } from '../../constants/theme';
 
 export type TabType = 'Beranda' | 'Katalog' | 'DurasiSewa' | 'Login';
 export type UserTabType = 'Beranda' | 'Riwayat' | 'Scan' | 'Profil';
+export type AdminTabType = 'Dashboard' | 'Inventaris' | 'Transaksi' | 'Lainnya';
 
 type PublicBottomNavProps = {
   variant?: 'public';
@@ -19,7 +20,13 @@ type UserBottomNavProps = {
   onTabPress: (tab: UserTabType) => void;
 };
 
-type BottomNavBarProps = PublicBottomNavProps | UserBottomNavProps;
+type AdminBottomNavProps = {
+  variant: 'admin';
+  activeTab: AdminTabType;
+  onTabPress: (tab: AdminTabType) => void;
+};
+
+type BottomNavBarProps = PublicBottomNavProps | UserBottomNavProps | AdminBottomNavProps;
 
 const PUBLIC_TABS = [
   { name: 'Beranda', icon: 'home-outline', activeIcon: 'home' },
@@ -35,12 +42,21 @@ const USER_TABS = [
   { name: 'Profil', icon: 'person-outline', activeIcon: 'person' },
 ] as const;
 
+const ADMIN_TABS = [
+  { name: 'Dashboard', icon: 'grid-outline', activeIcon: 'grid' },
+  { name: 'Inventaris', icon: 'bicycle-outline', activeIcon: 'bicycle' },
+  { name: 'Transaksi', icon: 'receipt-outline', activeIcon: 'receipt' },
+  { name: 'Lainnya', icon: 'ellipsis-horizontal-circle-outline', activeIcon: 'ellipsis-horizontal-circle' },
+] as const;
+
 const BottomNavBar: React.FC<BottomNavBarProps> = (props) => {
-  const tabs = props.variant === 'user' ? USER_TABS : PUBLIC_TABS;
+  const tabs = props.variant === 'user' ? USER_TABS : props.variant === 'admin' ? ADMIN_TABS : PUBLIC_TABS;
 
   const handlePress = (tabName: string) => {
     if (props.variant === 'user') {
       props.onTabPress(tabName as UserTabType);
+    } else if (props.variant === 'admin') {
+      props.onTabPress(tabName as AdminTabType);
     } else {
       props.onTabPress(tabName as TabType);
     }

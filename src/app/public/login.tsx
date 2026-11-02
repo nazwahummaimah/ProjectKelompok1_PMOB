@@ -18,6 +18,8 @@ import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
 import ValidationMessage from '../../components/molecules/ValidationMessage';
 import { validateEmail, validateLoginPassword, hasValidationErrors } from '../../utils/formValidation';
+import HeaderApp from '@/components/molecules/HeaderApp';
+import { ADMIN_DEMO_EMAIL } from '../../constants/adminDemo';
 
 const Login: React.FC = () => {
   const router = useRouter();
@@ -42,10 +44,13 @@ const Login: React.FC = () => {
     setSubmitted(true);
     setTouched({ email: true, password: true });
     if (!hasValidationErrors({ email: emailValidation, password: passwordValidation })) {
+      const isAdminDemo = email.trim().toLowerCase() === ADMIN_DEMO_EMAIL;
       Alert.alert(
         'Mode Demo',
-        'Format input valid. Karena autentikasi belum terhubung ke backend, kamu akan diarahkan ke halaman Pengguna demo.',
-        [{ text: 'Lanjut', onPress: () => router.replace('/user' as any) }],
+        isAdminDemo
+          ? 'Akun demo terdeteksi sebagai Admin. Kamu akan diarahkan ke Panel Admin.'
+          : 'Format input valid. Karena autentikasi belum terhubung ke backend, kamu akan diarahkan ke halaman Pengguna demo.',
+        [{ text: 'Lanjut', onPress: () => router.replace(isAdminDemo ? '/admin' as any : '/user' as any) }],
       );
     }
   };
@@ -71,25 +76,11 @@ const Login: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Top Bar dengan Safe Area Fix */}
-      <View style={styles.safeTopBarArea}>
-        <View style={styles.topBar}>
-          <TouchableOpacity style={styles.closeBtn} onPress={() => router.push('/public/' as any)}>
-            <Ionicons name="close-outline" size={24} color={COLORS.secondaryDark} />
-          </TouchableOpacity>
-          <View style={styles.brandTitleRow}>
-            <Ionicons name="bicycle-outline" size={20} color={COLORS.secondaryDark} style={{ marginRight: 6 }} />
-            <Text style={styles.brandTitle}>Rental Sepeda Mas Joko</Text>
-          </View>
-        </View>
-      </View>
+      {/* Top Header App Bar dengan Safe Area Notch Fix */}
+      <HeaderApp notificationCount={0} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Logo Badge */}
-        <View style={styles.logoBadge}>
-          <Ionicons name="bicycle" size={32} color={COLORS.secondaryDark} />
-        </View>
-
+      
         {/* Heading */}
         <Text style={styles.pageTitle}>Masuk ke Akun</Text>
         <Text style={styles.pageSubtitle}>Akses riwayat sewa pribadi dan kelola profil Anda.</Text>

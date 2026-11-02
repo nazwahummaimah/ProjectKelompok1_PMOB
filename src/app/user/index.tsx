@@ -7,14 +7,15 @@ import BottomNavBar, { UserTabType } from '../../components/molecules/BottomNavB
 import RentalStatusBadge from '../../components/molecules/RentalStatusBadge';
 import RentalHistoryCard from '../../components/organisms/RentalHistoryCard';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
-import { DEMO_RENTAL_HISTORY, DEMO_RENTAL_SUMMARY } from '../../constants/userDemo';
+import { useUserRentalHistory } from '../../hooks/use-user-rental-history';
 import { useUserProfile } from '../../context/UserProfileContext';
 
 export default function UserHomeScreen() {
   const router = useRouter();
   const { profile } = useUserProfile();
-  const activeRental = DEMO_RENTAL_HISTORY.find((item) => item.status === 'Sedang Berlangsung');
-  const recentRentals = DEMO_RENTAL_HISTORY.filter((item) => item.status === 'Selesai').slice(0, 2);
+  const { history, summary } = useUserRentalHistory();
+  const activeRental = history.find((item) => item.status === 'Sedang Berlangsung');
+  const recentRentals = history.filter((item) => item.status === 'Selesai').slice(0, 2);
 
   const handleTabPress = (tab: UserTabType) => {
     switch (tab) {
@@ -53,21 +54,21 @@ export default function UserHomeScreen() {
             <View style={[styles.summaryIcon, { backgroundColor: '#E0F2FE' }]}>
               <Ionicons name="bicycle-outline" size={19} color={COLORS.secondaryDark} />
             </View>
-            <Text style={styles.summaryValue}>{DEMO_RENTAL_SUMMARY.total}</Text>
+            <Text style={styles.summaryValue}>{summary.total}</Text>
             <Text style={styles.summaryLabel}>Total Sewa</Text>
           </View>
           <View style={styles.summaryCard}>
             <View style={[styles.summaryIcon, { backgroundColor: '#DBEAFE' }]}>
               <Ionicons name="time-outline" size={19} color="#0369A1" />
             </View>
-            <Text style={styles.summaryValue}>{DEMO_RENTAL_SUMMARY.ongoing}</Text>
+            <Text style={styles.summaryValue}>{summary.ongoing}</Text>
             <Text style={styles.summaryLabel}>Berlangsung</Text>
           </View>
           <View style={styles.summaryCard}>
             <View style={[styles.summaryIcon, { backgroundColor: '#DCFCE7' }]}>
               <Ionicons name="checkmark-circle-outline" size={19} color={COLORS.success} />
             </View>
-            <Text style={styles.summaryValue}>{DEMO_RENTAL_SUMMARY.completed}</Text>
+            <Text style={styles.summaryValue}>{summary.completed}</Text>
             <Text style={styles.summaryLabel}>Selesai</Text>
           </View>
         </View>

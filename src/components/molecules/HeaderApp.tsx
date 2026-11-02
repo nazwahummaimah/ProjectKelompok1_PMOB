@@ -9,7 +9,8 @@ import {
   StatusBar 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SIZES, FONTS } from '../../constants/theme';
+import { COLORS, SIZES } from '../../constants/theme';
+import JamalJepretLogo from './JamalJepretLogo';
 
 interface HeaderAppProps {
   notificationCount?: number;
@@ -25,10 +26,7 @@ const HeaderApp: React.FC<HeaderAppProps> = ({
       <StatusBar barStyle="dark-content" />
       <View style={styles.headerContainer}>
         <View style={styles.brandRow}>
-          <View style={styles.logoIcon}>
-            <Ionicons name="bicycle" size={20} color={COLORS.secondaryDark} />
-          </View>
-          <Text style={styles.brandTitle}>Rental Sepeda Mas Joko</Text>
+          <JamalJepretLogo width={145} />
         </View>
 
         <TouchableOpacity 
@@ -59,25 +57,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: SIZES.large,
-    paddingVertical: SIZES.medium,
-    height: 60,
+    paddingVertical: 8,
+    height: 64,
   },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  logoIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#E0F2FE',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: SIZES.small,
-  },
-  brandTitle: {
-    ...FONTS.headline3,
-    color: COLORS.secondaryDark,
+    flex: 1,
   },
   notificationBtn: {
     position: 'relative',
