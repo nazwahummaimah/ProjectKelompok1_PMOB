@@ -6,13 +6,12 @@ import HeaderApp from '../../components/molecules/HeaderApp';
 import BottomNavBar, { UserTabType } from '../../components/molecules/BottomNavBar';
 import RentalStatusBadge from '../../components/molecules/RentalStatusBadge';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
-import { DEMO_RENTAL_HISTORY } from '../../constants/userDemo';
+import { useUserRentalHistory } from '../../hooks/use-user-rental-history';
 
 export default function RentalHistoryDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
-  const rental = DEMO_RENTAL_HISTORY.find((item) => item.id === params.id) || DEMO_RENTAL_HISTORY[0];
-  const isOngoing = rental.status === 'Sedang Berlangsung';
+  const { history } = useUserRentalHistory();
 
   const handleTabPress = (tab: UserTabType) => {
     switch (tab) {
@@ -22,6 +21,26 @@ export default function RentalHistoryDetailScreen() {
       case 'Profil': router.push('/user/profil' as any); break;
     }
   };
+
+  const rental = history.find((item) => item.id === params.id) || history[0];
+  if (!rental) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+        <HeaderApp notificationCount={0} />
+        <View style={styles.emptyState}>
+          <Text style={styles.pageTitle}>Transaksi tidak ditemukan</Text>
+          <TouchableOpacity style={styles.backLink} onPress={() => router.replace('/user/riwayat' as any)}>
+            <Ionicons name="arrow-back" size={18} color={COLORS.secondaryDark} />
+            <Text style={styles.backText}>Kembali ke Riwayat</Text>
+          </TouchableOpacity>
+        </View>
+        <BottomNavBar variant="user" activeTab="Riwayat" onTabPress={handleTabPress} />
+      </SafeAreaView>
+    );
+  }
+  const isOngoing = rental.status === 'Sedang Berlangsung';
+  const isPending = rental.status === 'Menunggu Serah Terima';
 
   const InfoRow = ({ label, value }: { label: string; value?: string }) => (
     <View style={styles.infoRow}>
@@ -58,10 +77,10 @@ export default function RentalHistoryDetailScreen() {
           </View>
         </View>
 
-        {isOngoing && (
+        {(isOngoing || isPending) && (
           <View style={styles.notice}>
             <Ionicons name="information-circle-outline" size={19} color={COLORS.secondaryDark} />
-            <Text style={styles.noticeText}>Penyewaan ini masih berlangsung. Selesaikan pengembalian langsung kepada petugas di lokasi rental.</Text>
+            <Text style={styles.noticeText}>{isPending ? 'Pembayaran sudah dicatat. Serah terima unit dilakukan langsung oleh petugas di lokasi rental.' : 'Penyewaan ini masih berlangsung. Selesaikan pengembalian langsung kepada petugas di lokasi rental.'}</Text>
           </View>
         )}
 
@@ -69,7 +88,7 @@ export default function RentalHistoryDetailScreen() {
           <Text style={styles.sectionTitle}>Informasi Penyewaan</Text>
           <InfoRow label="Tanggal" value={rental.date} />
           <InfoRow label="Waktu mulai" value={rental.startTime} />
-          <InfoRow label="Waktu selesai" value={rental.endTime || (isOngoing ? 'Belum dikembalikan' : undefined)} />
+          <InfoRow label="Waktu selesai" value={rental.endTime || (isOngoing ? 'Belum dikembalikan' : isPending ? 'Belum dimulai' : undefined)} />
           <InfoRow label="Durasi" value={rental.duration} />
           <InfoRow label="Kategori penyewa" value={rental.customerType} />
           <InfoRow label="Tarif" value={rental.hourlyRate} />
@@ -83,7 +102,7 @@ export default function RentalHistoryDetailScreen() {
           {!isOngoing && <InfoRow label="Total pembayaran" value={rental.total} />}
         </View>
 
-        {!isOngoing && (
+        {rental.status === 'Selesai' && (
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Informasi Pengembalian</Text>
             <InfoRow label="Kondisi unit" value={rental.returnCondition} />
@@ -100,6 +119,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   scrollContent: { padding: SIZES.large, paddingBottom: SIZES.large },
   backLink: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginBottom: SIZES.large, gap: 6 },
+  emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: SIZES.large },
   backText: { ...FONTS.labelMedium, color: COLORS.secondaryDark },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: SIZES.large },
   titleCopy: { flex: 1 },

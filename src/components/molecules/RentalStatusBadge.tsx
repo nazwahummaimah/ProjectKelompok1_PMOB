@@ -9,10 +9,14 @@ interface RentalStatusBadgeProps {
 
 const RentalStatusBadge: React.FC<RentalStatusBadgeProps> = ({ status }) => {
   const isOngoing = status === 'Sedang Berlangsung';
+  const isPending = status === 'Menunggu Serah Terima';
+  const stateStyle = isOngoing ? styles.ongoing : isPending ? styles.pending : styles.completed;
+  const dotColor = isOngoing ? COLORS.primaryLight : isPending ? COLORS.warning : COLORS.success;
+  const textColor = isOngoing ? COLORS.rentedText : isPending ? '#92400E' : COLORS.successText;
   return (
-    <View style={[styles.container, isOngoing ? styles.ongoing : styles.completed]}>
-      <View style={[styles.dot, { backgroundColor: isOngoing ? COLORS.primaryLight : COLORS.success }]} />
-      <Text style={[styles.label, { color: isOngoing ? COLORS.rentedText : COLORS.successText }]}>{status}</Text>
+    <View style={[styles.container, stateStyle]}>
+      <View style={[styles.dot, { backgroundColor: dotColor }]} />
+      <Text style={[styles.label, { color: textColor }]}>{status}</Text>
     </View>
   );
 };
@@ -27,6 +31,7 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.radiusPill,
   },
   ongoing: { backgroundColor: COLORS.rentedBg },
+  pending: { backgroundColor: '#FEF3C7' },
   completed: { backgroundColor: COLORS.successBg },
   dot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
   label: { ...FONTS.caption, fontWeight: '700' },

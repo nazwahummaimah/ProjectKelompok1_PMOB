@@ -12,6 +12,7 @@ interface RentalHistoryCardProps {
 
 const RentalHistoryCard: React.FC<RentalHistoryCardProps> = ({ rental, onPress }) => {
   const isOngoing = rental.status === 'Sedang Berlangsung';
+  const isPending = rental.status === 'Menunggu Serah Terima';
 
   return (
     <TouchableOpacity style={styles.card} activeOpacity={0.82} onPress={onPress}>
@@ -41,8 +42,8 @@ const RentalHistoryCard: React.FC<RentalHistoryCardProps> = ({ rental, onPress }
           <Ionicons name="time-outline" size={15} color={COLORS.textSecondary} />
           <Text style={styles.bottomText}>{rental.duration}</Text>
         </View>
-        <Text style={[styles.amount, isOngoing && styles.ongoingAmount]}>
-          {isOngoing ? 'Sedang berjalan' : rental.total || 'Lihat detail'}
+        <Text style={[styles.amount, (isOngoing || isPending) && styles.ongoingAmount]}>
+          {isOngoing ? 'Sedang berjalan' : isPending ? 'Menunggu serah terima' : rental.total || 'Lihat detail'}
         </Text>
       </View>
     </TouchableOpacity>

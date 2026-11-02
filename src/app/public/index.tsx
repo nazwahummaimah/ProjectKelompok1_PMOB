@@ -90,28 +90,33 @@ const Beranda: React.FC = () => {
         {/* Hero Card Section */}
         <View style={styles.heroSection}>
           <View style={styles.heroBadge}>
-            <Text style={styles.heroBadgeText}>📍 Pos Resmi Jogja</Text>
+            <Text style={styles.heroBadgeText}>📍Jl. Yudhasari 2, Sunyaragi, Kota Cirebon. </Text>
           </View>
           <Text style={styles.heroTitle}>Sewa Sepeda Lebih Mudah</Text>
           <Text style={styles.heroSubtitle}>
-            Jelajahi armada sepeda yang siap pakai langsung di lokasi pos rental Mas Joko. Cek ketersediaan secara real-time.
+            Jelajahi armada sepeda yang siap pakai langsung di lokasi pos rental Jamal_Jepret. Cek ketersediaan secara real-time.
           </Text>
           
           <View style={styles.heroActions}>
-            <TouchableOpacity 
-              style={styles.secondaryButton} 
+            <TouchableOpacity
+              style={[styles.primaryButton, styles.heroButton]}
               activeOpacity={0.8}
               onPress={() => handleTabPress('Katalog')}
             >
               <Text style={styles.primaryButtonText}>Lihat Sepeda</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.secondaryButton} 
+
+            <TouchableOpacity
+              style={[styles.secondaryButton, styles.heroButton]}
               activeOpacity={0.8}
               onPress={() => handleTabPress('DurasiSewa')}
             >
-              <Ionicons name="qr-code-outline" size={16} color={COLORS.textPrimary} style={{ marginRight: 6 }} />
+              <Ionicons
+                name="qr-code-outline"
+                size={16}
+                color={COLORS.textPrimary}
+                style={{ marginRight: 6 }}
+              />
               <Text style={styles.secondaryButtonText}>Scan QR</Text>
             </TouchableOpacity>
           </View>
@@ -119,17 +124,17 @@ const Beranda: React.FC = () => {
           <View style={styles.heroStats}>
             <View style={styles.statBox}>
               <View style={styles.statHeader}>
-                <Ionicons name="location-outline" size={14} color={COLORS.secondaryDark} style={{ marginRight: 4 }} />
-                <Text style={styles.statLabel}>Lokasi Aktif</Text>
+                <Ionicons name="bicycle-outline" size={14} color={COLORS.secondaryDark} style={{ marginRight: 4 }} />
+                <Text style={styles.statLabel}>Unit</Text>
               </View>
-              <Text style={styles.statValue}>3 Pos Rental</Text>
+              <Text style={styles.statValue}>20 Unit Tersedia</Text>
             </View>
             <View style={styles.statBox}>
               <View style={styles.statHeader}>
                 <Ionicons name="storefront-outline" size={14} color={COLORS.secondaryDark} style={{ marginRight: 4 }} />
                 <Text style={styles.statLabel}>Metode Sewa</Text>
               </View>
-              <Text style={styles.statValue}>Walk-in Langsung</Text>
+              <Text style={styles.statValue}>Datang ke Lokasi</Text>
             </View>
           </View>
         </View>
@@ -155,8 +160,6 @@ const Beranda: React.FC = () => {
         {/* Section Cara Sewa */}
         <HowToRentSection />
 
-        {/* Section Pos Rental Mas Joko */}
-        <PosRentalSection />
 
       </ScrollView>
 
@@ -206,30 +209,51 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.large,
     lineHeight: 20,
   },
+
+  heroButton: {
+    minWidth: 0,
+    minHeight: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+
+  // HERO ACTIONS
   heroActions: {
     flexDirection: 'row',
+    alignItems: 'stretch',
+    justifyContent: 'center',
+    width: '100%',
+    gap: 12,
     marginBottom: SIZES.large,
   },
   primaryButton: {
     flex: 1,
+    minWidth: 0,
+    minHeight: 46,
     backgroundColor: COLORS.primaryLight,
     paddingVertical: 12,
+    paddingHorizontal: 10,
     borderRadius: SIZES.radiusMedium,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: SIZES.small,
   },
   primaryButtonText: {
     ...FONTS.labelMedium,
     color: COLORS.textPrimary,
+    textAlign: 'center',
   },
   secondaryButton: {
     flex: 1,
+    minWidth: 0,
+    minHeight: 46,
     flexDirection: 'row',
     backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.border,
     paddingVertical: 12,
+    paddingHorizontal: 10,
     borderRadius: SIZES.radiusMedium,
     alignItems: 'center',
     justifyContent: 'center',
@@ -237,33 +261,45 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     ...FONTS.labelMedium,
     color: COLORS.textPrimary,
+    textAlign: 'center',
   },
+
+  // HERO STATS
   heroStats: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'stretch',
+    width: '100%',
+    gap: 12,
   },
   statBox: {
     flex: 1,
+    minWidth: 0,
     backgroundColor: COLORS.surface,
     padding: SIZES.medium,
     borderRadius: SIZES.radiusMedium,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginRight: 8,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
   statHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    justifyContent: 'flex-start',
+    marginBottom: 5,
   },
   statLabel: {
     ...FONTS.caption,
     color: COLORS.textSecondary,
+    textAlign: 'left',
   },
   statValue: {
     ...FONTS.labelMedium,
     color: COLORS.textPrimary,
+    textAlign: 'left',
   },
+
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -25,6 +25,8 @@ import {
   validatePasswordConfirmation,
   hasValidationErrors,
 } from '../../utils/formValidation';
+import HeaderApp from '@/components/molecules/HeaderApp';
+import JamalJepretLogo from '@/components/molecules/JamalJepretLogo';
 
 const Register: React.FC = () => {
   const router = useRouter();
@@ -117,8 +119,9 @@ const Register: React.FC = () => {
             <Ionicons name="arrow-back" size={22} color={COLORS.secondaryDark} />
           </TouchableOpacity>
           <View style={styles.brandHeader}>
-            <Ionicons name="bicycle-outline" size={20} color={COLORS.secondaryDark} style={{ marginRight: 6 }} />
-            <Text style={styles.brandHeaderText}>Mas Joko Rental</Text>
+            <View style={{ marginRight: 6 }}>
+              <JamalJepretLogo width={130} />
+            </View>
           </View>
         </View>
       </View>

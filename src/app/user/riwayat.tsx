@@ -6,19 +6,18 @@ import HeaderApp from '../../components/molecules/HeaderApp';
 import BottomNavBar, { UserTabType } from '../../components/molecules/BottomNavBar';
 import RentalHistoryCard from '../../components/organisms/RentalHistoryCard';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
-import { DEMO_RENTAL_HISTORY } from '../../constants/userDemo';
+import { useUserRentalHistory } from '../../hooks/use-user-rental-history';
 
 type HistoryFilter = 'Semua' | 'Sedang Berlangsung' | 'Selesai';
 
 export default function RentalHistoryScreen() {
   const router = useRouter();
   const [filter, setFilter] = useState<HistoryFilter>('Semua');
+  const { history } = useUserRentalHistory();
 
   const filteredRentals = useMemo(
-    () => filter === 'Semua'
-      ? DEMO_RENTAL_HISTORY
-      : DEMO_RENTAL_HISTORY.filter((rental) => rental.status === filter),
-    [filter],
+    () => filter === 'Semua' ? history : history.filter((rental) => rental.status === filter),
+    [history, filter],
   );
 
   const handleTabPress = (tab: UserTabType) => {
@@ -43,17 +42,17 @@ export default function RentalHistoryScreen() {
 
         <View style={styles.summaryStrip}>
           <View style={styles.summaryCell}>
-            <Text style={styles.summaryValue}>{DEMO_RENTAL_HISTORY.length}</Text>
+            <Text style={styles.summaryValue}>{history.length}</Text>
             <Text style={styles.summaryLabel}>Ditampilkan</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryCell}>
-            <Text style={styles.summaryValue}>{DEMO_RENTAL_HISTORY.filter((r) => r.status === 'Sedang Berlangsung').length}</Text>
+            <Text style={styles.summaryValue}>{history.filter((r) => r.status === 'Sedang Berlangsung').length}</Text>
             <Text style={styles.summaryLabel}>Berlangsung</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryCell}>
-            <Text style={styles.summaryValue}>{DEMO_RENTAL_HISTORY.filter((r) => r.status === 'Selesai').length}</Text>
+            <Text style={styles.summaryValue}>{history.filter((r) => r.status === 'Selesai').length}</Text>
             <Text style={styles.summaryLabel}>Selesai</Text>
           </View>
         </View>

@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { DEMO_USER_PROFILE } from '../constants/userDemo';
 import type { DemoUserProfile } from '../constants/userDemo';
+import { useAdmin } from './AdminContext';
 
 type EditableProfile = Pick<DemoUserProfile, 'fullName' | 'phone'>;
 
@@ -14,11 +15,18 @@ const UserProfileContext = createContext<UserProfileContextValue | undefined>(un
 
 export function UserProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<DemoUserProfile>(DEMO_USER_PROFILE);
+  const { updateCustomerProfile } = useAdmin();
 
-  const value = useMemo<UserProfileContextValue>(() => ({
-    profile,
-    updateProfile: (updates) => setProfile((current) => ({ ...current, ...updates })),
-  }), [profile]);
+  const updateProfile = useCallback((updates: Partial<EditableProfile>) => {
+    // Customer identity is linked by WhatsApp in this frontend demo.
+    updateCustomerProfile(profile.phone, {
+      customerName: updates.fullName?.trim(),
+      phone: updates.phone?.trim(),
+    });
+    setProfile((current) => ({ ...current, ...updates }));
+  }, [profile.phone, updateCustomerProfile]);
+
+  const value = useMemo<UserProfileContextValue>(() => ({ profile, updateProfile }), [profile, updateProfile]);
 
   return (
     <UserProfileContext.Provider value={value}>
