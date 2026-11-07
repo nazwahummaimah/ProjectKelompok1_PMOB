@@ -5,11 +5,13 @@ import { useRouter } from 'expo-router';
 import HeaderApp from '../../components/molecules/HeaderApp';
 import BottomNavBar, { UserTabType } from '../../components/molecules/BottomNavBar';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
-import { useUserProfile } from '../../context/UserProfileContext';
+import { useAuth } from '../../context/AuthContext';
+import { ActivityIndicator } from 'react-native';
+import { supabase } from '../../lib/supabase';
 
 export default function UserProfileScreen() {
-  const router = useRouter();
-  const { profile } = useUserProfile();
+const router = useRouter();
+const { user, profile, loading, refreshProfile } = useAuth();
 
   const handleTabPress = (tab: UserTabType) => {
     switch (tab) {
@@ -20,12 +22,61 @@ export default function UserProfileScreen() {
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert('Keluar dari akun?', 'Kamu akan kembali ke halaman login.', [
-      { text: 'Batal', style: 'cancel' },
-      { text: 'Keluar', style: 'destructive', onPress: () => router.replace('/public/login' as any) },
-    ]);
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error) throw error;
+
+      router.replace('/public/login' as any);
+
+    } catch (error: any) {
+      Alert.alert('Logout Gagal', error.message);
+    }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator
+          size="large"
+          color={COLORS.secondaryDark}
+          style={{ flex: 1 }}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (!user || !profile) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+          <Ionicons
+            name="person-circle-outline"
+            size={56}
+            color={COLORS.textSecondary}
+          />
+
+          <Text style={{ ...FONTS.body, color: COLORS.textPrimary, marginTop: 12 }}>
+            Data profil tidak ditemukan.
+          </Text>
+
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={async () => {
+              try {
+                await refreshProfile();
+              } catch (error: any) {
+                Alert.alert('Gagal Memuat Profil', error.message);
+              }
+            }}
+          >
+            <Text style={styles.editText}>Coba Lagi</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -42,11 +93,17 @@ export default function UserProfileScreen() {
           <View style={styles.avatar}>
             <Ionicons name="person" size={34} color={COLORS.secondaryDark} />
           </View>
-          <Text style={styles.fullName}>{profile.fullName}</Text>
-          <Text style={styles.email}>{profile.email}</Text>
+          <Text style={styles.fullName}>{profile.full_name}</Text>
+          <Text style={styles.email}>{user.email}</Text>
           <View style={styles.memberBadge}>
             <Ionicons name="ribbon-outline" size={14} color={COLORS.secondaryDark} />
-            <Text style={styles.memberText}>Pengguna sejak {profile.memberSince}</Text>
+            <Text style={styles.memberText}>
+              Pengguna sejak{' '}
+              {new Date(user.created_at).toLocaleDateString('id-ID', {
+                month: 'long',
+                year: 'numeric',
+              })}
+            </Text>
           </View>
         </View>
 
@@ -63,28 +120,28 @@ export default function UserProfileScreen() {
             <View style={styles.infoIcon}><Ionicons name="person-outline" size={18} color={COLORS.secondaryDark} /></View>
             <View style={styles.infoCopy}>
               <Text style={styles.infoLabel}>Nama Lengkap</Text>
-              <Text style={styles.infoValue}>{profile.fullName}</Text>
+              <Text style={styles.infoValue}>{profile.full_name}</Text>
             </View>
           </View>
           <View style={styles.infoRow}>
             <View style={styles.infoIcon}><Ionicons name="mail-outline" size={18} color={COLORS.secondaryDark} /></View>
             <View style={styles.infoCopy}>
               <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>{profile.email}</Text>
+              <Text style={styles.infoValue}>{user.email}</Text>
             </View>
           </View>
           <View style={styles.infoRow}>
             <View style={styles.infoIcon}><Ionicons name="logo-whatsapp" size={18} color={COLORS.secondaryDark} /></View>
             <View style={styles.infoCopy}>
               <Text style={styles.infoLabel}>Nomor WhatsApp</Text>
-              <Text style={styles.infoValue}>{profile.phone}</Text>
+              <Text style={styles.infoValue}>{profile.phone ?? '-'}</Text>
             </View>
           </View>
           <View style={[styles.infoRow, styles.lastInfoRow]}>
             <View style={styles.infoIcon}><Ionicons name="school-outline" size={18} color={COLORS.secondaryDark} /></View>
             <View style={styles.infoCopy}>
               <Text style={styles.infoLabel}>Kategori Penyewa</Text>
-              <Text style={styles.infoValue}>{profile.customerType}</Text>
+              <Text style={styles.infoValue}>{profile.customer_type}</Text>
             </View>
           </View>
         </View>

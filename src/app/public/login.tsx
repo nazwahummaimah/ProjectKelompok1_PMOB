@@ -19,7 +19,7 @@ import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
 import ValidationMessage from '../../components/molecules/ValidationMessage';
 import { validateEmail, validateLoginPassword, hasValidationErrors } from '../../utils/formValidation';
 import HeaderApp from '@/components/molecules/HeaderApp';
-import { ADMIN_DEMO_EMAIL } from '../../constants/adminDemo';
+import { supabase } from '../../lib/supabase';
 
 const Login: React.FC = () => {
   const router = useRouter();
@@ -40,17 +40,50 @@ const Login: React.FC = () => {
   const emailValid = showEmailValidation && !emailValidation;
   const passwordValid = showPasswordValidation && !passwordValidation;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setSubmitted(true);
-    setTouched({ email: true, password: true });
-    if (!hasValidationErrors({ email: emailValidation, password: passwordValidation })) {
-      const isAdminDemo = email.trim().toLowerCase() === ADMIN_DEMO_EMAIL;
+    setTouched({
+      email: true,
+      password: true,
+    });
+
+    if (
+      hasValidationErrors({
+        email: emailValidation,
+        password: passwordValidation,
+      })
+    ) {
+      return;
+    }
+
+    try {
+      const { data, error } =
+        await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password,
+        });
+
+      if (error) throw error;
+
+      const { data: profile, error: profileError } =
+        await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+
+      if (profileError) throw profileError;
+
+      if (profile.role === 'admin') {
+        router.replace('/admin' as any);
+      } else {
+        router.replace('/user' as any);
+      }
+
+    } catch (error: any) {
       Alert.alert(
-        'Mode Demo',
-        isAdminDemo
-          ? 'Akun demo terdeteksi sebagai Admin. Kamu akan diarahkan ke Panel Admin.'
-          : 'Format input valid. Karena autentikasi belum terhubung ke backend, kamu akan diarahkan ke halaman Pengguna demo.',
-        [{ text: 'Lanjut', onPress: () => router.replace(isAdminDemo ? '/admin' as any : '/user' as any) }],
+        'Login Gagal',
+        error.message || 'Email atau password tidak sesuai.'
       );
     }
   };

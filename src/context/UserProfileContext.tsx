@@ -1,32 +1,66 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
-import { DEMO_USER_PROFILE } from '../constants/userDemo';
-import type { DemoUserProfile } from '../constants/userDemo';
-import { useAdmin } from './AdminContext';
 
-type EditableProfile = Pick<DemoUserProfile, 'fullName' | 'phone'>;
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+} from 'react';
+
+import type { ReactNode } from 'react';
+import type { Profile } from './AuthContext';
+
+import { useAuth } from './AuthContext';
+import { supabase } from '../lib/supabase';
+
+type EditableProfile = {
+  full_name: string;
+  phone: string | null;
+};
 
 interface UserProfileContextValue {
-  profile: DemoUserProfile;
-  updateProfile: (updates: Partial<EditableProfile>) => void;
+  profile: Profile | null;
+  updateProfile: (updates: Partial<EditableProfile>) => Promise<void>;
 }
 
-const UserProfileContext = createContext<UserProfileContextValue | undefined>(undefined);
+const UserProfileContext = createContext<
+  UserProfileContextValue | undefined
+>(undefined);
 
-export function UserProfileProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState<DemoUserProfile>(DEMO_USER_PROFILE);
-  const { updateCustomerProfile } = useAdmin();
+export function UserProfileProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const { profile: authProfile, refreshProfile } = useAuth();
 
-  const updateProfile = useCallback((updates: Partial<EditableProfile>) => {
-    // Customer identity is linked by WhatsApp in this frontend demo.
-    updateCustomerProfile(profile.phone, {
-      customerName: updates.fullName?.trim(),
-      phone: updates.phone?.trim(),
-    });
-    setProfile((current) => ({ ...current, ...updates }));
-  }, [profile.phone, updateCustomerProfile]);
+  const updateProfile = useCallback(
+    async (updates: Partial<EditableProfile>) => {
+      if (!authProfile?.id) {
+        throw new Error('Profil pengguna tidak ditemukan.');
+      }
 
-  const value = useMemo<UserProfileContextValue>(() => ({ profile, updateProfile }), [profile, updateProfile]);
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', authProfile.id);
+
+      if (error) throw error;
+
+      await refreshProfile();
+    },
+    [authProfile?.id, refreshProfile]
+  );
+
+  const value = useMemo(
+    () => ({
+      profile: authProfile,
+      updateProfile,
+    }),
+    [authProfile, updateProfile]
+  );
 
   return (
     <UserProfileContext.Provider value={value}>
@@ -37,8 +71,12 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
 
 export function useUserProfile() {
   const context = useContext(UserProfileContext);
+
   if (!context) {
-    throw new Error('useUserProfile must be used within UserProfileProvider.');
+    throw new Error(
+      'useUserProfile harus berada di dalam UserProfileProvider.'
+    );
   }
+
   return context;
 }

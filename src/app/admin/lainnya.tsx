@@ -5,23 +5,22 @@ import { useRouter } from 'expo-router';
 import AdminPageLayout from '../../components/organisms/AdminPageLayout';
 import AdminActionRow from '../../components/molecules/AdminActionRow';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
+import { supabase } from '../../lib/supabase';
 
 export default function AdminMoreScreen() {
   const router = useRouter();
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Keluar dari akun Admin?',
-      'Kamu akan kembali ke halaman login. Pastikan perubahan yang sedang dikerjakan sudah selesai.',
-      [
-        { text: 'Batal', style: 'cancel' },
-        {
-          text: 'Keluar',
-          style: 'destructive',
-          onPress: () => router.replace('/public/login' as any),
-        },
-      ],
-    );
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error) throw error;
+
+      router.replace('/public/login' as any);
+
+    } catch (error: any) {
+      Alert.alert('Logout Gagal', error.message);
+    }
   };
 
   return (
