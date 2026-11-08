@@ -1,72 +1,149 @@
-// app/public/login.tsx
 import React, { useState } from 'react';
-import { Alert } from 'react-native';
-import { 
-  SafeAreaView, 
-  ScrollView, 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
+import {
+  SafeAreaView,
+  ScrollView,
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
   TouchableOpacity,
-  Platform,
-  StatusBar 
+  StatusBar,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
 import ValidationMessage from '../../components/molecules/ValidationMessage';
-import { validateEmail, validateLoginPassword, hasValidationErrors } from '../../utils/formValidation';
+import {
+  validateEmail,
+  validateLoginPassword,
+  hasValidationErrors,
+} from '../../utils/formValidation';
+
 import HeaderApp from '@/components/molecules/HeaderApp';
-import { ADMIN_DEMO_EMAIL } from '../../constants/adminDemo';
+import { useAuth } from '../../context/AuthContext';
 
 const Login: React.FC = () => {
   const router = useRouter();
+  const { signIn } = useAuth();
+
   const [activeTab, setActiveTab] = useState<TabType>('Login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [touched, setTouched] = useState({ email: false, password: false });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [touched, setTouched] = useState({
+    email: false,
+    password: false,
+  });
+
   const [submitted, setSubmitted] = useState(false);
 
-  // Derived on every render so feedback updates as the user types.
   const emailValidation = validateEmail(email);
   const passwordValidation = validateLoginPassword(password);
+
   const showEmailValidation = touched.email || submitted;
   const showPasswordValidation = touched.password || submitted;
-  const emailError = showEmailValidation ? emailValidation : undefined;
-  const passwordError = showPasswordValidation ? passwordValidation : undefined;
-  const emailValid = showEmailValidation && !emailValidation;
-  const passwordValid = showPasswordValidation && !passwordValidation;
 
-  const handleSubmit = () => {
+  const emailError = showEmailValidation
+    ? emailValidation
+    : undefined;
+
+  const passwordError = showPasswordValidation
+    ? passwordValidation
+    : undefined;
+
+  const emailValid =
+    showEmailValidation && !emailValidation;
+
+  const passwordValid =
+    showPasswordValidation && !passwordValidation;
+
+  const handleSubmit = async () => {
     setSubmitted(true);
-    setTouched({ email: true, password: true });
-    if (!hasValidationErrors({ email: emailValidation, password: passwordValidation })) {
-      const isAdminDemo = email.trim().toLowerCase() === ADMIN_DEMO_EMAIL;
+    setTouched({
+      email: true,
+      password: true,
+    });
+
+    if (
+      hasValidationErrors({
+        email: emailValidation,
+        password: passwordValidation,
+      })
+    ) {
+      return;
+    }
+
+    if (isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+
+      const profile = await signIn(email, password);
+
+      if (profile.role === 'admin') {
+        router.replace('/admin' as any);
+        return;
+      }
+
+      if (profile.role === 'user') {
+        router.replace('/user' as any);
+        return;
+      }
+
       Alert.alert(
-        'Mode Demo',
-        isAdminDemo
-          ? 'Akun demo terdeteksi sebagai Admin. Kamu akan diarahkan ke Panel Admin.'
-          : 'Format input valid. Karena autentikasi belum terhubung ke backend, kamu akan diarahkan ke halaman Pengguna demo.',
-        [{ text: 'Lanjut', onPress: () => router.replace(isAdminDemo ? '/admin' as any : '/user' as any) }],
+        'Akses Ditolak',
+        'Role akun tidak dikenali. Silakan hubungi administrator.',
       );
+    } catch (error: any) {
+      console.error('Login error:', error);
+
+      let message = 'Terjadi kesalahan. Silakan coba kembali.';
+
+      if (
+        error?.message?.toLowerCase().includes('invalid login credentials')
+      ) {
+        message = 'Email atau kata sandi yang kamu masukkan salah.';
+      } else if (
+        error?.message?.toLowerCase().includes('email not confirmed')
+      ) {
+        message = 'Email belum diverifikasi. Silakan periksa kotak masuk email kamu.';
+      } else if (
+        error?.message?.toLowerCase().includes('profil pengguna tidak ditemukan')
+      ) {
+        message = error.message;
+      } else if (error?.message) {
+        message = error.message;
+      }
+
+      Alert.alert('Login Gagal', message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleTabPress = (tab: TabType) => {
     setActiveTab(tab);
+
     switch (tab) {
       case 'Beranda':
         router.push('/public/' as any);
         break;
+
       case 'Katalog':
         router.push('/public/katalog' as any);
         break;
+
       case 'DurasiSewa':
         router.push('/public/durasi-sewa' as any);
         break;
+
       case 'Login':
         break;
     }
@@ -75,99 +152,221 @@ const Login: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
-      {/* Top Header App Bar dengan Safe Area Notch Fix */}
+
       <HeaderApp notificationCount={0} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-      
-        {/* Heading */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.pageTitle}>Masuk ke Akun</Text>
-        <Text style={styles.pageSubtitle}>Akses riwayat sewa pribadi dan kelola profil Anda.</Text>
 
-        {/* Input Email */}
+        <Text style={styles.pageSubtitle}>
+          Akses riwayat sewa pribadi dan kelola profil Anda.
+        </Text>
+
+        {/* EMAIL */}
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Alamat Email</Text>
-          <View style={[styles.inputBox, emailError && styles.inputBoxError, emailValid && styles.inputBoxValid]}>
-            <Ionicons name="mail-outline" size={20} color={emailError ? COLORS.accentCritical : emailValid ? COLORS.success : COLORS.textSecondary} style={{ marginRight: 10 }} />
+
+          <View
+            style={[
+              styles.inputBox,
+              emailError && styles.inputBoxError,
+              emailValid && styles.inputBoxValid,
+            ]}
+          >
+            <Ionicons
+              name="mail-outline"
+              size={20}
+              color={
+                emailError
+                  ? COLORS.accentCritical
+                  : emailValid
+                    ? COLORS.success
+                    : COLORS.textSecondary
+              }
+              style={{ marginRight: 10 }}
+            />
+
             <TextInput
               style={styles.textInput}
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
-                setTouched((current) => ({ ...current, email: true }));
+                setTouched((current) => ({
+                  ...current,
+                  email: true,
+                }));
               }}
-              onBlur={() => setTouched((current) => ({ ...current, email: true }))}
+              onBlur={() =>
+                setTouched((current) => ({
+                  ...current,
+                  email: true,
+                }))
+              }
               placeholder="Masukkan email Anda"
               placeholderTextColor={COLORS.textSecondary}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
+              editable={!isSubmitting}
             />
           </View>
+
           <ValidationMessage
             error={emailError}
             success={emailValid ? 'Format email valid.' : undefined}
           />
         </View>
 
-        {/* Input Password */}
+        {/* PASSWORD */}
         <View style={styles.inputGroup}>
           <View style={styles.labelWithLink}>
             <Text style={styles.inputLabel}>Kata Sandi</Text>
-            <TouchableOpacity>
-              <Text style={styles.forgotText}>Lupa kata sandi?</Text>
+
+            <TouchableOpacity
+              onPress={() =>
+                Alert.alert(
+                  'Lupa Kata Sandi',
+                  'Fitur reset kata sandi akan diintegrasikan pada tahap berikutnya.',
+                )
+              }
+              disabled={isSubmitting}
+            >
+              <Text style={styles.forgotText}>
+                Lupa kata sandi?
+              </Text>
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.inputBox, passwordError && styles.inputBoxError, passwordValid && styles.inputBoxValid]}>
-            <Ionicons name="lock-closed-outline" size={20} color={passwordError ? COLORS.accentCritical : passwordValid ? COLORS.success : COLORS.textSecondary} style={{ marginRight: 10 }} />
+          <View
+            style={[
+              styles.inputBox,
+              passwordError && styles.inputBoxError,
+              passwordValid && styles.inputBoxValid,
+            ]}
+          >
+            <Ionicons
+              name="lock-closed-outline"
+              size={20}
+              color={
+                passwordError
+                  ? COLORS.accentCritical
+                  : passwordValid
+                    ? COLORS.success
+                    : COLORS.textSecondary
+              }
+              style={{ marginRight: 10 }}
+            />
+
             <TextInput
               style={styles.textInput}
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
-                setTouched((current) => ({ ...current, password: true }));
+                setTouched((current) => ({
+                  ...current,
+                  password: true,
+                }));
               }}
-              onBlur={() => setTouched((current) => ({ ...current, password: true }))}
+              onBlur={() =>
+                setTouched((current) => ({
+                  ...current,
+                  password: true,
+                }))
+              }
               placeholder="Masukkan kata sandi"
               placeholderTextColor={COLORS.textSecondary}
               secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              editable={!isSubmitting}
+              onSubmitEditing={handleSubmit}
+              returnKeyType="go"
             />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={COLORS.textSecondary} />
+
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              disabled={isSubmitting}
+            >
+              <Ionicons
+                name={
+                  showPassword
+                    ? 'eye-outline'
+                    : 'eye-off-outline'
+                }
+                size={20}
+                color={COLORS.textSecondary}
+              />
             </TouchableOpacity>
           </View>
+
           <ValidationMessage
             error={passwordError}
-            success={passwordValid ? 'Kata sandi sudah diisi.' : undefined}
+            success={
+              passwordValid
+                ? 'Kata sandi sudah diisi.'
+                : undefined
+            }
           />
         </View>
 
-        {/* Action Button */}
-        <TouchableOpacity style={styles.submitBtn} activeOpacity={0.8} onPress={handleSubmit}>
-          <Text style={styles.submitBtnText}>Masuk</Text>
-          <Ionicons name="arrow-forward" size={18} color={COLORS.textPrimary} style={{ marginLeft: 6 }} />
+        {/* LOGIN BUTTON */}
+        <TouchableOpacity
+          style={[
+            styles.submitBtn,
+            isSubmitting && styles.submitBtnDisabled,
+          ]}
+          activeOpacity={0.8}
+          onPress={handleSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator color={COLORS.textPrimary} />
+          ) : (
+            <>
+              <Text style={styles.submitBtnText}>Masuk</Text>
+
+              <Ionicons
+                name="arrow-forward"
+                size={18}
+                color={COLORS.textPrimary}
+                style={{ marginLeft: 6 }}
+              />
+            </>
+          )}
         </TouchableOpacity>
 
-        {/* Register Navigation Link */}
+        {/* REGISTER LINK */}
         <View style={styles.registerRow}>
-          <Text style={styles.registerPrompt}>Belum punya akun? </Text>
-          <TouchableOpacity onPress={() => router.push('/public/register' as any)}>
+          <Text style={styles.registerPrompt}>
+            Belum punya akun?{' '}
+          </Text>
+
+          <TouchableOpacity
+            onPress={() =>
+              router.push('/public/register' as any)
+            }
+            disabled={isSubmitting}
+          >
             <Text style={styles.registerLink}>Daftar</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Tagline Footer */}
         <View style={styles.footerTagline}>
           <View style={styles.taglineDot} />
+
           <Text style={styles.taglineText}>
-            Rental Sepeda Mas Joko • Sewa sepeda yang mudah, cepat, dan jelas.
+            Rental Sepeda Mas Joko • Sewa sepeda yang mudah,
+            cepat, dan jelas.
           </Text>
         </View>
       </ScrollView>
 
-      {/* Navigasi Bawah Interaktif */}
-      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
+      <BottomNavBar
+        activeTab={activeTab}
+        onTabPress={handleTabPress}
+      />
     </SafeAreaView>
   );
 };
@@ -177,42 +376,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  safeTopBarArea: {
-    backgroundColor: COLORS.surface,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: SIZES.large,
-    paddingVertical: SIZES.medium,
-    height: 56,
-  },
-  closeBtn: {
-    padding: 4,
-  },
-  brandTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: SIZES.medium,
-  },
-  brandTitle: {
-    ...FONTS.headline3,
-    color: COLORS.secondaryDark,
-  },
   scrollContent: {
     padding: SIZES.large,
-  },
-  logoBadge: {
-    width: 56,
-    height: 56,
-    borderRadius: SIZES.radiusMedium,
-    backgroundColor: '#E0F2FE',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: SIZES.large,
   },
   pageTitle: {
     ...FONTS.headline1,
@@ -262,15 +427,6 @@ const styles = StyleSheet.create({
     ...FONTS.body,
     color: COLORS.textPrimary,
   },
-  errorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-  },
-  errorText: {
-    ...FONTS.caption,
-    color: COLORS.accentCritical,
-  },
   submitBtn: {
     flexDirection: 'row',
     height: 48,
@@ -280,24 +436,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SIZES.large,
   },
+  submitBtnDisabled: {
+    opacity: 0.6,
+  },
   submitBtnText: {
     ...FONTS.labelMedium,
     color: COLORS.textPrimary,
     fontWeight: 'bold',
-  },
-  infoBox: {
-    flexDirection: 'row',
-    backgroundColor: '#F0F9FF',
-    borderRadius: SIZES.radiusMedium,
-    padding: SIZES.medium,
-    alignItems: 'flex-start',
-    marginBottom: SIZES.xlarge,
-  },
-  infoBoxText: {
-    ...FONTS.caption,
-    color: COLORS.textSecondary,
-    flex: 1,
-    lineHeight: 18,
   },
   registerRow: {
     flexDirection: 'row',

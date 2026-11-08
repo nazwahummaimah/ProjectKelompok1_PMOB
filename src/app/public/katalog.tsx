@@ -1,94 +1,96 @@
-// app/public/Katalog.tsx
-import React, { useState } from 'react';
-import { 
-  SafeAreaView, 
-  ScrollView, 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity 
+
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  SafeAreaView,
+  ScrollView,
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import HeaderApp from '../../components/molecules/HeaderApp';
 import StatusBadge from '../../components/molecules/StatusBadge';
 import FeatureTag from '../../components/molecules/FeatureTag';
 import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
+import { getBikes, Bike } from '../../services/bikeService';
 
-export interface CatalogBikeItem {
-  id: string;
-  category: string;
-  name: string;
-  price: string;
-  status: 'Tersedia' | 'Sedang Disewa' | 'Perawatan';
-  location: string;
-  features: string[];
-  image: string;
-}
+type FilterStatus = 'Semua' | 'Tersedia' | 'Sedang Disewa';
 
-const CATALOG_DATA: CatalogBikeItem[] = [
-  {
-    id: 'ID: B-001',
-    category: 'MOUNTAIN BIKE',
-    name: 'Polygon Cascade 4',
-    price: '25.000',
-    status: 'Tersedia',
-    location: 'Pos Stasiun Tugu',
-    features: ['24 Speed Shimano', 'Pos Stasiun Tugu'],
-    image: 'https://via.placeholder.com/400x200',
-  },
-  {
-    id: 'ID: B-003',
-    category: 'FOLDING BIKE',
-    name: 'Dahon Mariner D8',
-    price: '20.000',
-    status: 'Sedang Disewa',
-    location: 'Pos Alun-alun Kidul',
-    features: ['Lipat Praktis', 'Pos Alun-alun Kidul'],
-    image: 'https://via.placeholder.com/400x200',
-  },
-  {
-    id: 'ID: B-005',
-    category: 'CITY BIKE',
-    name: 'Phoenix City Classic',
-    price: '15.000',
-    status: 'Tersedia',
-    location: 'Pos Malioboro',
-    features: ['Keranjang + Boncengan', 'Pos Malioboro'],
-    image: 'https://via.placeholder.com/400x200',
-  },
-  {
-    id: 'ID: B-014',
-    category: 'GRAVEL BIKE',
-    name: 'Polygon Bend R2',
-    price: '30.000',
-    status: 'Sedang Disewa',
-    location: 'Pos Stasiun Tugu',
-    features: ['Dropbar All-Road', 'Pos Stasiun Tugu'],
-    image: 'https://via.placeholder.com/400x200',
-  },
-  {
-    id: 'ID: B-019',
-    category: 'ELECTRIC BIKE',
-    name: 'Selis E-City',
-    price: '35.000',
-    status: 'Tersedia',
-    location: 'Pos Malioboro',
-    features: ['Baterai 36V Pedal-Assist', 'Pos Malioboro'],
-    image: 'https://via.placeholder.com/400x200',
-  },
-];
+const formatRupiah = (value: number): string => {
+  return new Intl.NumberFormat('id-ID').format(value);
+};
 
 const Katalog: React.FC = () => {
   const router = useRouter();
+
   const [activeTab, setActiveTab] = useState<TabType>('Katalog');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'Semua' | 'Tersedia' | 'Sedang Disewa'>('Semua');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('Semua');
+
+  const [bikes, setBikes] = useState<Bike[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const loadBikes = useCallback(async () => {
+    try {
+      setLoading(true);
+      setErrorMessage('');
+
+      const data = await getBikes();
+      setBikes(data);
+    } catch (error) {
+      console.error('Katalog load error:', error);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Gagal memuat katalog sepeda.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadBikes();
+  }, [loadBikes]);
+
+  const availableCount = useMemo(
+    () => bikes.filter((bike) => bike.status === 'Tersedia').length,
+    [bikes]
+  );
+
+  const rentedCount = useMemo(
+    () => bikes.filter((bike) => bike.status === 'Sedang Disewa').length,
+    [bikes]
+  );
+
+  const filteredBikes = useMemo(() => {
+    const keyword = searchQuery.trim().toLowerCase();
+
+    return bikes.filter((bike) => {
+      const matchesSearch =
+        !keyword ||
+        bike.id.toLowerCase().includes(keyword) ||
+        bike.name.toLowerCase().includes(keyword) ||
+        bike.category.toLowerCase().includes(keyword);
+
+      const matchesStatus =
+        filterStatus === 'Semua' ||
+        bike.status === filterStatus;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [bikes, searchQuery, filterStatus]);
 
   const handleTabPress = (tab: TabType) => {
     setActiveTab(tab);
+
     switch (tab) {
       case 'Beranda':
         router.push('/public/' as any);
@@ -104,28 +106,53 @@ const Katalog: React.FC = () => {
     }
   };
 
+  const getBikeFeatures = (bike: Bike): string[] => {
+    const features = bike.features ?? [];
+
+    const result = [...features];
+
+    if (bike.location && !result.includes(bike.location)) {
+      result.push(bike.location);
+    }
+
+    return result.slice(0, 4);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* HeaderApp sudah termasuk Safe Area / Status Bar height fix */}
       <HeaderApp notificationCount={0} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header Title Section */}
         <View style={styles.titleSection}>
           <View style={styles.titleRow}>
             <Text style={styles.pageTitle}>Katalog Sepeda</Text>
+
             <View style={styles.totalBadge}>
-              <Text style={styles.totalBadgeText}>Total 20 Unit</Text>
+              <Text style={styles.totalBadgeText}>
+                Total {bikes.length} Unit
+              </Text>
             </View>
           </View>
+
           <Text style={styles.pageSubtitle}>
-            Eksplorasi armada sepeda siap jalan di seluruh pos terdekat. Akses terbuka untuk semua pelancong & warga.
+            Eksplorasi armada sepeda siap jalan di seluruh pos terdekat.
+            Akses terbuka untuk semua pelancong & warga.
           </Text>
         </View>
 
         {/* Search Input Bar */}
         <View style={styles.searchContainer}>
-          <Ionicons name="search-outline" size={20} color={COLORS.textSecondary} style={styles.searchIcon} />
+          <Ionicons
+            name="search-outline"
+            size={20}
+            color={COLORS.textSecondary}
+            style={styles.searchIcon}
+          />
+
           <TextInput
             style={styles.searchInput}
             placeholder="Cari ID atau tipe sepeda..."
@@ -135,96 +162,240 @@ const Katalog: React.FC = () => {
           />
         </View>
 
-        {/* Filter Chips / Pills */}
+        {/* Filter Chips */}
         <View style={styles.filterRow}>
           <TouchableOpacity
-            style={[styles.filterChip, filterStatus === 'Semua' && styles.filterChipActive]}
+            style={[
+              styles.filterChip,
+              filterStatus === 'Semua' && styles.filterChipActive,
+            ]}
             onPress={() => setFilterStatus('Semua')}
           >
-            <Text style={[styles.filterChipText, filterStatus === 'Semua' && styles.filterChipTextActive]}>
-              Semua <Text style={styles.chipCount}>20</Text>
+            <Text
+              style={[
+                styles.filterChipText,
+                filterStatus === 'Semua' && styles.filterChipTextActive,
+              ]}
+            >
+              Semua <Text style={styles.chipCount}>{bikes.length}</Text>
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.filterChip, filterStatus === 'Tersedia' && styles.filterChipActive]}
+            style={[
+              styles.filterChip,
+              filterStatus === 'Tersedia' && styles.filterChipActive,
+            ]}
             onPress={() => setFilterStatus('Tersedia')}
           >
-            <Text style={[styles.filterChipText, filterStatus === 'Tersedia' && styles.filterChipTextActive]}>
-              Tersedia <Text style={styles.chipCountSuccess}>14</Text>
+            <Text
+              style={[
+                styles.filterChipText,
+                filterStatus === 'Tersedia' && styles.filterChipTextActive,
+              ]}
+            >
+              Tersedia{' '}
+              <Text style={styles.chipCountSuccess}>
+                {availableCount}
+              </Text>
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.filterChip, filterStatus === 'Sedang Disewa' && styles.filterChipActive]}
+            style={[
+              styles.filterChip,
+              filterStatus === 'Sedang Disewa' && styles.filterChipActive,
+            ]}
             onPress={() => setFilterStatus('Sedang Disewa')}
           >
-            <Text style={[styles.filterChipText, filterStatus === 'Sedang Disewa' && styles.filterChipTextActive]}>
-              Sedang Disewa
+            <Text
+              style={[
+                styles.filterChipText,
+                filterStatus === 'Sedang Disewa' &&
+                  styles.filterChipTextActive,
+              ]}
+            >
+              Sedang Disewa{' '}
+              <Text style={styles.chipCount}>{rentedCount}</Text>
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Notice Box */}
         <View style={styles.noticeBox}>
-          <Ionicons name="information-circle-outline" size={18} color={COLORS.textSecondary} style={{ marginRight: 8 }} />
+          <Ionicons
+            name="information-circle-outline"
+            size={18}
+            color={COLORS.textSecondary}
+            style={{ marginRight: 8 }}
+          />
+
           <Text style={styles.noticeText}>
-            Semua unit berstatus publik. Kunjungi pos terdekat atau hubungi Mas Joko di lokasi untuk verifikasi fisik sebelum peminjaman.
+            Semua unit berstatus publik. Kunjungi pos terdekat atau hubungi
+            petugas di lokasi untuk verifikasi fisik sebelum peminjaman.
           </Text>
         </View>
 
-        {/* Catalog List */}
-        <View style={styles.catalogList}>
-          {CATALOG_DATA.map((item, index) => (
-            <View key={index} style={styles.cardContainer}>
-              <View style={styles.imageContainer}>
-                <View style={styles.topOverlay}>
-                  <View style={styles.idBadge}>
-                    <Text style={styles.idText}>{item.id}</Text>
-                  </View>
-                  <StatusBadge status={item.status} />
-                </View>
-              </View>
+        {/* Loading */}
+        {loading && (
+          <View style={styles.stateContainer}>
+            <ActivityIndicator
+              size="large"
+              color={COLORS.secondaryDark}
+            />
+            <Text style={styles.stateText}>
+              Memuat katalog sepeda...
+            </Text>
+          </View>
+        )}
 
-              <View style={styles.cardDetails}>
-                <View style={styles.cardHeaderRow}>
-                  <View style={styles.titleColumn}>
-                    <Text style={styles.categoryText}>{item.category}</Text>
-                    <Text style={styles.bikeName}>{item.name}</Text>
-                  </View>
-                  <View style={styles.priceColumn}>
-                    <Text style={styles.tariffLabel}>Tarif referensi</Text>
-                    <Text style={styles.priceText}>
-                      Rp{item.price} <Text style={styles.perHour}>/ jam</Text>
-                    </Text>
-                  </View>
-                </View>
+        {/* Error */}
+        {!loading && !!errorMessage && (
+          <View style={styles.stateContainer}>
+            <Ionicons
+              name="alert-circle-outline"
+              size={36}
+              color={COLORS.error}
+            />
 
-                <View style={styles.tagsRow}>
-                  {item.features.map((feature, fIdx) => (
-                    <FeatureTag key={fIdx} label={feature} />
-                  ))}
-                </View>
+            <Text style={styles.stateText}>
+              {errorMessage}
+            </Text>
 
-                <TouchableOpacity 
-                    style={styles.detailButton} 
-                    activeOpacity={0.7}
-                    onPress={() => router.push({
-                        pathname: '/public/DetailUnit' as any,
-                        params: { id: item.id }
-                    })}
-                    >
-                    <Text style={styles.detailButtonText}>Lihat Detail Unit</Text>
-                    <Ionicons name="chevron-forward" size={16} color={COLORS.secondaryDark} />
-                </TouchableOpacity>
-              </View>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={loadBikes}
+            >
+              <Text style={styles.retryButtonText}>
+                Coba Lagi
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Empty Database */}
+        {!loading && !errorMessage && bikes.length === 0 && (
+          <View style={styles.stateContainer}>
+            <Ionicons
+              name="bicycle-outline"
+              size={44}
+              color={COLORS.textSecondary}
+            />
+
+            <Text style={styles.emptyTitle}>
+              Belum Ada Unit Sepeda
+            </Text>
+
+            <Text style={styles.stateText}>
+              Saat ini belum ada unit sepeda yang terdaftar dalam katalog.
+              Silakan kunjungi kembali nanti.
+            </Text>
+          </View>
+        )}
+
+        {/* Search / Filter Empty */}
+        {!loading &&
+          !errorMessage &&
+          bikes.length > 0 &&
+          filteredBikes.length === 0 && (
+            <View style={styles.stateContainer}>
+              <Ionicons
+                name="search-outline"
+                size={40}
+                color={COLORS.textSecondary}
+              />
+
+              <Text style={styles.emptyTitle}>
+                Sepeda Tidak Ditemukan
+              </Text>
+
+              <Text style={styles.stateText}>
+                Tidak ada unit yang sesuai dengan pencarian atau filter.
+              </Text>
             </View>
-          ))}
-        </View>
+          )}
+
+        {/* Catalog List */}
+        {!loading && !errorMessage && (
+          <View style={styles.catalogList}>
+            {filteredBikes.map((item) => (
+              <View key={item.id} style={styles.cardContainer}>
+                <View style={styles.imageContainer}>
+                  <View style={styles.topOverlay}>
+                    <View style={styles.idBadge}>
+                      <Text style={styles.idText}>
+                        ID: {item.id}
+                      </Text>
+                    </View>
+
+                    <StatusBadge status={item.status} />
+                  </View>
+                </View>
+
+                <View style={styles.cardDetails}>
+                  <View style={styles.cardHeaderRow}>
+                    <View style={styles.titleColumn}>
+                      <Text style={styles.categoryText}>
+                        {item.category}
+                      </Text>
+
+                      <Text style={styles.bikeName}>
+                        {item.name}
+                      </Text>
+                    </View>
+
+                    <View style={styles.priceColumn}>
+                      <Text style={styles.tariffLabel}>
+                        Tarif referensi
+                      </Text>
+
+                      <Text style={styles.priceText}>
+                        Rp{formatRupiah(Number(item.price_per_hour))}
+                        <Text style={styles.perHour}> / jam</Text>
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.tagsRow}>
+                    {getBikeFeatures(item).map((feature, index) => (
+                      <FeatureTag
+                        key={`${item.id}-${index}`}
+                        label={feature}
+                      />
+                    ))}
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.detailButton}
+                    activeOpacity={0.7}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/public/DetailUnit' as any,
+                        params: { id: item.id },
+                      })
+                    }
+                  >
+                    <Text style={styles.detailButtonText}>
+                      Lihat Detail Unit
+                    </Text>
+
+                    <Ionicons
+                      name="chevron-forward"
+                      size={16}
+                      color={COLORS.secondaryDark}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
 
-      {/* Navigasi Bawah Interaktif */}
-      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
+      <BottomNavBar
+        activeTab={activeTab}
+        onTabPress={handleTabPress}
+      />
     </SafeAreaView>
   );
 };
@@ -421,6 +592,34 @@ const styles = StyleSheet.create({
   detailButtonText: {
     ...FONTS.labelMedium,
     color: COLORS.secondaryDark,
+  },
+  stateContainer: {
+    padding: SIZES.large,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SIZES.small,
+  },
+  stateText: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  emptyTitle: {
+    ...FONTS.headline3,
+    color: COLORS.secondaryDark,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: SIZES.large,
+    paddingVertical: SIZES.small,
+    borderRadius: SIZES.radiusMedium,
+    marginTop: SIZES.small,
+  },
+  retryButtonText: {
+    ...FONTS.labelMedium,
+    color: COLORS.textPrimary,
   },
 });
 

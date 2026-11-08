@@ -1,35 +1,80 @@
-// app/public/DetailUnit.tsx
-import React, { useState } from 'react';
-import { 
-  SafeAreaView, 
-  ScrollView, 
-  View, 
-  Text, 
-  StyleSheet, 
+
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  SafeAreaView,
+  ScrollView,
+  View,
+  Text,
+  StyleSheet,
   TouchableOpacity,
   Platform,
   StatusBar,
-  Image 
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import StatusBadge from '../../components/molecules/StatusBadge';
-import FeatureTag from '../../components/molecules/FeatureTag';
-import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
-import { getBikeById } from '../../constants/bikes';
+import BottomNavBar, {
+  TabType,
+} from '../../components/molecules/BottomNavBar';
+import {
+  getBikeById,
+  Bike,
+} from '../../services/bikeService';
+
+const formatRupiah = (value: number): string => {
+  return new Intl.NumberFormat('id-ID').format(value);
+};
 
 const DetailUnit: React.FC = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
-  const [activeTab, setActiveTab] = useState<TabType>('Katalog');
 
-  // Mengambil data sepeda secara dinamis berdasarkan parameter ID
-  const bike = getBikeById(params.id);
-  const isAvailable = bike.status.toLowerCase() === 'tersedia';
+  const [activeTab, setActiveTab] = useState<TabType>('Katalog');
+  const [bike, setBike] = useState<Bike | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const bikeId = Array.isArray(params.id) ? params.id[0] : params.id;
+
+  const loadBike = useCallback(async () => {
+    if (!bikeId) {
+      setBike(null);
+      setErrorMessage('ID sepeda tidak ditemukan.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setErrorMessage('');
+
+      const data = await getBikeById(bikeId);
+
+      setBike(data);
+    } catch (error) {
+      console.error('Detail unit load error:', error);
+
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Gagal memuat detail sepeda.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [bikeId]);
+
+  useEffect(() => {
+    loadBike();
+  }, [loadBike]);
 
   const handleTabPress = (tab: TabType) => {
     setActiveTab(tab);
+
     switch (tab) {
       case 'Beranda':
         router.push('/public/' as any);
@@ -46,202 +91,588 @@ const DetailUnit: React.FC = () => {
     }
   };
 
+  const isAvailable = bike?.status === 'Tersedia';
+  const isRented = bike?.status === 'Sedang Disewa';
+  const isMaintenance = bike?.status === 'Perawatan';
+
+  const getOperationalTitle = () => {
+    if (isAvailable) return 'Siap Disewa di Lokasi';
+    if (isRented) return 'Unit Sedang Disewa';
+    if (isMaintenance) return 'Unit Sedang Dalam Perawatan';
+    return 'Status Tidak Diketahui';
+  };
+
+  const getOperationalDescription = () => {
+    if (isAvailable) {
+      return `Sepeda ini sedang standby dan siap disewa langsung di ${
+        bike?.location || 'pos penyewaan'
+      }. Silakan datangi pos dan konfirmasi ke kasir.`;
+    }
+
+    if (isRented) {
+      return 'Sepeda ini sedang digunakan dalam sesi penyewaan.';
+    }
+
+    if (isMaintenance) {
+      return 'Sepeda ini sedang dalam proses perawatan dan belum dapat disewa.';
+    }
+
+    return 'Informasi operasional sepeda belum tersedia.';
+  };
+
+  const getStatusColor = () => {
+    if (isAvailable) return COLORS.success;
+    if (isMaintenance) return COLORS.warning;
+    return COLORS.textSecondary;
+  };
+
+  const getStatusIcon = (): keyof typeof Ionicons.glyphMap => {
+    if (isAvailable) return 'checkmark-circle-outline';
+    if (isMaintenance) return 'construct-outline';
+    return 'time-outline';
+  };
+
+  // Loading State
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+
+        <View style={styles.stateContainer}>
+          <ActivityIndicator
+            size="large"
+            color={COLORS.secondaryDark}
+          />
+          <Text style={styles.stateText}>
+            Memuat detail sepeda...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Error State
+  if (errorMessage) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+
+        <View style={styles.stateContainer}>
+          <Ionicons
+            name="alert-circle-outline"
+            size={44}
+            color="#EF4444"
+          />
+
+          <Text style={styles.stateTitle}>
+            Gagal Memuat Detail
+          </Text>
+
+          <Text style={styles.stateText}>
+            {errorMessage}
+          </Text>
+
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={loadBike}
+          >
+            <Text style={styles.retryButtonText}>
+              Coba Lagi
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backButtonText}>
+              Kembali ke Katalog
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Not Found State
+  if (!bike) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+
+        <View style={styles.stateContainer}>
+          <Ionicons
+            name="bicycle-outline"
+            size={44}
+            color={COLORS.textSecondary}
+          />
+
+          <Text style={styles.stateTitle}>
+            Unit Tidak Ditemukan
+          </Text>
+
+          <Text style={styles.stateText}>
+            Data sepeda dengan ID {bikeId || '-'} tidak ditemukan.
+          </Text>
+
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.replace('/public/katalog' as any)}
+          >
+            <Text style={styles.backButtonText}>
+              Kembali ke Katalog
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
-      {/* Top Header dengan Status Bar Fix */}
+
+      {/* Top Header */}
       <View style={styles.safeHeaderArea}>
         <View style={styles.topHeader}>
-          <TouchableOpacity 
-            style={styles.iconBtn} 
+          <TouchableOpacity
+            style={styles.iconBtn}
             onPress={() => router.back()}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="arrow-back" size={22} color={COLORS.secondaryDark} />
+            <Ionicons
+              name="arrow-back"
+              size={22}
+              color={COLORS.secondaryDark}
+            />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Detail Sepeda</Text>
+
+          <Text style={styles.headerTitle}>
+            Detail Sepeda
+          </Text>
+
           <View style={styles.headerRight}>
             <TouchableOpacity style={styles.iconBtn}>
-              <Ionicons name="share-social-outline" size={20} color={COLORS.secondaryDark} />
+              <Ionicons
+                name="share-social-outline"
+                size={20}
+                color={COLORS.secondaryDark}
+              />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.iconBtn, { marginLeft: 8 }]}>
-              <Ionicons name="information-circle-outline" size={22} color={COLORS.secondaryDark} />
+
+            <TouchableOpacity
+              style={[styles.iconBtn, { marginLeft: 8 }]}
+            >
+              <Ionicons
+                name="information-circle-outline"
+                size={22}
+                color={COLORS.secondaryDark}
+              />
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Banner Gambar & Badges Dinamis */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Banner Gambar & Badges */}
         <View style={styles.bannerContainer}>
-          <Image source={{ uri: bike.image }} style={styles.bannerImage} />
+          {bike.image_url ? (
+            <Image
+              source={{ uri: bike.image_url }}
+              style={styles.bannerImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <Ionicons
+                name="bicycle-outline"
+                size={64}
+                color="#94A3B8"
+              />
+              <Text style={styles.placeholderText}>
+                Gambar belum tersedia
+              </Text>
+            </View>
+          )}
+
           <View style={styles.verifiedBadge}>
-            <Ionicons name="qr-code-outline" size={14} color={COLORS.secondaryDark} style={{ marginRight: 4 }} />
-            <Text style={styles.verifiedText}>Terverifikasi QR</Text>
+            <Ionicons
+              name="qr-code-outline"
+              size={14}
+              color={COLORS.secondaryDark}
+              style={{ marginRight: 4 }}
+            />
+            <Text style={styles.verifiedText}>
+              {bike.qr_code ? 'Terverifikasi QR' : 'QR belum tersedia'}
+            </Text>
           </View>
 
           <View style={styles.bannerBottomOverlay}>
             <View style={styles.unitIdTag}>
-              <Text style={styles.unitIdText}># {bike.id}</Text>
+              <Text style={styles.unitIdText}>
+                # {bike.id}
+              </Text>
             </View>
+
             <View style={styles.unitTitleTag}>
-              <Text style={styles.unitTitleText}>{bike.name}</Text>
+              <Text style={styles.unitTitleText}>
+                {bike.name}
+              </Text>
             </View>
           </View>
         </View>
 
-        {/* Info Utama Title & Price Dinamis */}
+        {/* Info Utama & Harga */}
         <View style={styles.mainInfoRow}>
           <View style={styles.titleCol}>
-            <Text style={styles.categoryTitle}>KATEGORI SEPEDA</Text>
-            <Text style={styles.mainTitle}>{bike.category}</Text>
-            <Text style={styles.subTitle}>{bike.name} Series</Text>
+            <Text style={styles.categoryTitle}>
+              KATEGORI SEPEDA
+            </Text>
+
+            <Text style={styles.mainTitle}>
+              {bike.category}
+            </Text>
+
+            <Text style={styles.subTitle}>
+              {bike.name} Series
+            </Text>
           </View>
+
           <View style={styles.priceCol}>
-            <Text style={styles.priceMeta}>Tarif Sewa Pos</Text>
+            <Text style={styles.priceMeta}>
+              Tarif Sewa Pos
+            </Text>
+
             <Text style={styles.priceAmount}>
-              <Text style={styles.currency}>Rp </Text>{bike.price}<Text style={styles.priceUnit}> / jam</Text>
+              <Text style={styles.currency}>Rp </Text>
+              {formatRupiah(Number(bike.price_per_hour))}
+              <Text style={styles.priceUnit}> / jam</Text>
             </Text>
-            <Text style={styles.paymentNote}>Bayar langsung di kasir</Text>
+
+            <Text style={styles.paymentNote}>
+              Bayar langsung di kasir
+            </Text>
           </View>
         </View>
 
-        {/* Mode Selector Display */}
+        {/* Mode Selector */}
         <View style={styles.modeContainer}>
-          <View style={[styles.modePill, isAvailable && styles.modeActive]}>
-            <View style={[styles.dot, { backgroundColor: isAvailable ? COLORS.success : COLORS.textSecondary }]} />
-            <Text style={isAvailable ? styles.modeActiveText : styles.modeInactiveText}>
-              {isAvailable ? 'Mode: Tersedia' : 'Mode: Sedang Disewa'}
+          <View
+            style={[
+              styles.modePill,
+              isAvailable && styles.modeActive,
+            ]}
+          >
+            <View
+              style={[
+                styles.dot,
+                { backgroundColor: getStatusColor() },
+              ]}
+            />
+
+            <Text
+              style={
+                isAvailable
+                  ? styles.modeActiveText
+                  : styles.modeInactiveText
+              }
+            >
+              Mode: {bike.status}
             </Text>
           </View>
         </View>
 
-        {/* Status Operational Box Dinamis */}
+        {/* Status Operational */}
         <View style={styles.operationalBox}>
           <View style={styles.opHeader}>
-            <Text style={styles.opLabel}>Status Operasional Unit</Text>
+            <Text style={styles.opLabel}>
+              Status Operasional Unit
+            </Text>
+
             <StatusBadge status={bike.status} />
           </View>
 
           <View style={styles.opContent}>
-            <Ionicons 
-              name={isAvailable ? "checkmark-circle-outline" : "time-outline"} 
-              size={24} 
-              color={isAvailable ? COLORS.success : COLORS.warning} 
-              style={{ marginRight: 10 }} 
+            <Ionicons
+              name={getStatusIcon()}
+              size={24}
+              color={getStatusColor()}
+              style={{ marginRight: 10 }}
             />
+
             <View style={{ flex: 1 }}>
-              <Text style={[styles.opTitle, !isAvailable && { color: COLORS.warning }]}>
-                {isAvailable ? 'Siap Disewa di Lokasi' : `Unit Sedang Disewa (~ ${bike.returnTime || 'Sore ini'})`}
+              <Text
+                style={[
+                  styles.opTitle,
+                  !isAvailable && { color: getStatusColor() },
+                ]}
+              >
+                {getOperationalTitle()}
               </Text>
+
               <Text style={styles.opDesc}>
-                {isAvailable 
-                  ? `Sepeda ini sedang standby dan siap disewa langsung di ${bike.location}. Silakan datangi pos dan konfirmasi ke kasir.`
-                  : `Sepeda ini sedang dalam sesi sewa. ${bike.returnLocationNote || 'Diperkirakan akan kembali ke pos sore ini.'}`
-                }
+                {getOperationalDescription()}
               </Text>
             </View>
           </View>
 
           <View style={styles.opFooter}>
-            <Ionicons name="storefront-outline" size={16} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-            <Text style={styles.opFooterText}>Hanya melayani sewa tatap muka (Walk-in direct). Tanpa sistem reservasi online.</Text>
+            <Ionicons
+              name="storefront-outline"
+              size={16}
+              color={COLORS.textSecondary}
+              style={{ marginRight: 6 }}
+            />
+
+            <Text style={styles.opFooterText}>
+              Hanya melayani sewa tatap muka (Walk-in direct).
+              Tanpa sistem reservasi online.
+            </Text>
           </View>
         </View>
 
-        {/* Section Spesifikasi & Pos Armada */}
-        <Text style={styles.sectionHeaderTitle}>📍 Spesifikasi & Pos Armada</Text>
+        {/* Spesifikasi & Pos Armada */}
+        <Text style={styles.sectionHeaderTitle}>
+          📍 Spesifikasi & Pos Armada
+        </Text>
 
         {/* Card Pos Pangkalan */}
         <View style={styles.cardBox}>
           <View style={styles.cardBoxHeader}>
             <View style={styles.iconCircle}>
-              <Ionicons name="location-outline" size={18} color={COLORS.secondaryDark} />
+              <Ionicons
+                name="location-outline"
+                size={18}
+                color={COLORS.secondaryDark}
+              />
             </View>
-            <View>
-              <Text style={styles.cardBoxMeta}>Pos Pangkalan Resmi</Text>
-              <Text style={styles.cardBoxTitle}>{bike.location}</Text>
+
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardBoxMeta}>
+                Pos Pangkalan Resmi
+              </Text>
+
+              <Text style={styles.cardBoxTitle}>
+                {bike.location || 'Lokasi belum ditentukan'}
+              </Text>
             </View>
           </View>
-          <Text style={styles.cardBoxAddress}>{bike.address || 'Jl. Pasar Kembang, Malioboro, Titik Nol KM Jogja'}</Text>
-          <Text style={styles.cardBoxHours}>⏱️ {bike.hours || 'Buka setiap hari: 06:00 - 22:00 WIB'}</Text>
+
+          <Text style={styles.cardBoxAddress}>
+            {bike.address || 'Alamat belum tersedia.'}
+          </Text>
+
+          <Text style={styles.cardBoxHours}>
+            ⏱️ {bike.opening_hours || 'Jam operasional belum tersedia.'}
+          </Text>
         </View>
 
         {/* Card Kondisi Teknis */}
         <View style={styles.cardBox}>
           <View style={styles.cardBoxHeader}>
-            <View style={[styles.iconCircle, { backgroundColor: '#DCFCE7' }]}>
-              <Ionicons name="checkmark-done-outline" size={18} color={COLORS.success} />
+            <View
+              style={[
+                styles.iconCircle,
+                { backgroundColor: '#DCFCE7' },
+              ]}
+            >
+              <Ionicons
+                name="checkmark-done-outline"
+                size={18}
+                color={COLORS.success}
+              />
             </View>
+
             <View>
-              <Text style={styles.cardBoxMeta}>Kondisi Teknis Unit</Text>
-              <Text style={styles.cardBoxTitle}>Sangat Baik</Text>
+              <Text style={styles.cardBoxMeta}>
+                Kondisi Teknis Unit
+              </Text>
+
+              <Text style={styles.cardBoxTitle}>
+                {bike.technical_condition || 'Belum diperiksa'}
+              </Text>
             </View>
           </View>
-          <Text style={styles.cardBoxAddress}>{bike.techCondition || 'Servis berkala, rem, serta tekanan ban diperiksa oleh mekanik.'}</Text>
+
+          <Text style={styles.cardBoxAddress}>
+            {bike.notes || 'Belum ada catatan tambahan untuk unit ini.'}
+          </Text>
         </View>
 
-        {/* Specs Grid 2x2 Dinamis */}
-        <Text style={styles.specsSubLabel}>Kelengkapan & Fitur Teknis</Text>
+        {/* Specs Grid */}
+        <Text style={styles.specsSubLabel}>
+          Kelengkapan & Fitur Teknis
+        </Text>
+
         <View style={styles.specsGrid}>
           <View style={styles.specTile}>
-            <Ionicons name="options-outline" size={18} color={COLORS.secondaryDark} />
+            <Ionicons
+              name="options-outline"
+              size={18}
+              color={COLORS.secondaryDark}
+            />
+
             <View style={{ marginLeft: 8, flex: 1 }}>
-              <Text style={styles.specLabel}>Ukuran Ban</Text>
-              <Text style={styles.specValue}>{bike.tireSize || 'Standard'}</Text>
+              <Text style={styles.specLabel}>
+                Ukuran Ban
+              </Text>
+
+              <Text style={styles.specValue}>
+                {bike.tire_size || 'Belum tersedia'}
+              </Text>
             </View>
           </View>
 
           <View style={styles.specTile}>
-            <Ionicons name="disc-outline" size={18} color={COLORS.secondaryDark} />
+            <Ionicons
+              name="disc-outline"
+              size={18}
+              color={COLORS.secondaryDark}
+            />
+
             <View style={{ marginLeft: 8, flex: 1 }}>
-              <Text style={styles.specLabel}>Pengereman</Text>
-              <Text style={styles.specValue}>{bike.brakes || 'Standard'}</Text>
+              <Text style={styles.specLabel}>
+                Pengereman
+              </Text>
+
+              <Text style={styles.specValue}>
+                {bike.brakes || 'Belum tersedia'}
+              </Text>
             </View>
           </View>
 
           <View style={styles.specTile}>
-            <Ionicons name="speedometer-outline" size={18} color={COLORS.secondaryDark} />
+            <Ionicons
+              name="speedometer-outline"
+              size={18}
+              color={COLORS.secondaryDark}
+            />
+
             <View style={{ marginLeft: 8, flex: 1 }}>
-              <Text style={styles.specLabel}>Transmisi</Text>
-              <Text style={styles.specValue}>{bike.transmission || 'Multi-Speed'}</Text>
+              <Text style={styles.specLabel}>
+                Transmisi
+              </Text>
+
+              <Text style={styles.specValue}>
+                {bike.transmission || 'Belum tersedia'}
+              </Text>
             </View>
           </View>
 
           <View style={styles.specTile}>
-            <Ionicons name="shield-checkmark-outline" size={18} color={COLORS.secondaryDark} />
+            <Ionicons
+              name="shield-checkmark-outline"
+              size={18}
+              color={COLORS.secondaryDark}
+            />
+
             <View style={{ marginLeft: 8, flex: 1 }}>
-              <Text style={styles.specLabel}>Fasilitas Unit</Text>
-              <Text style={styles.specValue}>{bike.facilities || 'Helm & Kunci'}</Text>
+              <Text style={styles.specLabel}>
+                Fasilitas Unit
+              </Text>
+
+              <Text style={styles.specValue}>
+                {bike.facilities || 'Belum tersedia'}
+              </Text>
             </View>
           </View>
         </View>
 
-        {/* Action Callout Section dalam Scroll View */}
+        {/* Features */}
+        {!!bike.features?.length && (
+          <View style={styles.featuresSection}>
+            <Text style={styles.specsSubLabel}>
+              Fitur Tambahan
+            </Text>
+
+            <View style={styles.featuresRow}>
+              {bike.features.map((feature, index) => (
+                <View
+                  key={`${bike.id}-feature-${index}`}
+                  style={styles.featureTag}
+                >
+                  <Text style={styles.featureTagText}>
+                    {feature}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {!!bike.extra_tags?.length && (
+          <View style={styles.featuresSection}>
+            <Text style={styles.specsSubLabel}>
+              Tag Unit
+            </Text>
+
+            <View style={styles.featuresRow}>
+              {bike.extra_tags.map((tag, index) => (
+                <View
+                  key={`${bike.id}-tag-${index}`}
+                  style={styles.featureTag}
+                >
+                  <Text style={styles.featureTagText}>
+                    {tag}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Action Callout */}
         <View style={styles.actionRowCard}>
-          <TouchableOpacity 
-            style={styles.outlineBtn} 
+          <TouchableOpacity
+            style={styles.outlineBtn}
             activeOpacity={0.8}
             onPress={() => router.push('/public/' as any)}
           >
-            <Ionicons name="navigate-outline" size={16} color={COLORS.secondaryDark} style={{ marginRight: 6 }} />
-            <Text style={styles.outlineBtnText}>Arah ke Pos</Text>
+            <Ionicons
+              name="navigate-outline"
+              size={16}
+              color={COLORS.secondaryDark}
+              style={{ marginRight: 6 }}
+            />
+
+            <Text style={styles.outlineBtnText}>
+              Arah ke Pos
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.filledBtn} 
+          <TouchableOpacity
+            style={[
+              styles.filledBtn,
+              !isAvailable && styles.disabledBtn,
+            ]}
             activeOpacity={0.8}
-            onPress={() => router.push('/public/durasi-sewa' as any)}
+            disabled={!isAvailable}
+            onPress={() =>
+              router.push('/public/durasi-sewa' as any)
+            }
           >
-            <Ionicons name="qr-code-outline" size={16} color={COLORS.textPrimary} style={{ marginRight: 6 }} />
-            <Text style={styles.filledBtnText}>Scan QR Unit</Text>
+            <Ionicons
+              name="qr-code-outline"
+              size={16}
+              color={COLORS.textPrimary}
+              style={{ marginRight: 6 }}
+            />
+
+            <Text style={styles.filledBtnText}>
+              Scan QR Unit
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* Replaced dengan Bottom Navigation Bar standar yang lebih berguna */}
-      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
+      {/* Bottom Navigation */}
+      <BottomNavBar
+        activeTab={activeTab}
+        onTabPress={handleTabPress}
+      />
     </SafeAreaView>
   );
 };
@@ -290,7 +721,17 @@ const styles = StyleSheet.create({
   bannerImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+  },
+  imagePlaceholder: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E2E8F0',
+  },
+  placeholderText: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+    marginTop: 8,
   },
   verifiedBadge: {
     position: 'absolute',
@@ -540,6 +981,25 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     fontSize: 11,
   },
+  featuresSection: {
+    marginBottom: SIZES.medium,
+  },
+  featuresRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  featureTag: {
+    backgroundColor: '#E0F2FE',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: SIZES.radiusPill,
+    marginRight: 6,
+    marginBottom: 6,
+  },
+  featureTagText: {
+    ...FONTS.caption,
+    color: COLORS.secondaryDark,
+  },
   actionRowCard: {
     flexDirection: 'row',
     marginTop: SIZES.medium,
@@ -570,9 +1030,49 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.radiusMedium,
     height: 48,
   },
+  disabledBtn: {
+    opacity: 0.45,
+  },
   filledBtnText: {
     ...FONTS.labelMedium,
     color: COLORS.textPrimary,
+  },
+  stateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: SIZES.large,
+    gap: SIZES.medium,
+  },
+  stateTitle: {
+    ...FONTS.headline3,
+    color: COLORS.secondaryDark,
+    textAlign: 'center',
+  },
+  stateText: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  retryButton: {
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: SIZES.large,
+    paddingVertical: SIZES.medium,
+    borderRadius: SIZES.radiusMedium,
+    marginTop: SIZES.small,
+  },
+  retryButtonText: {
+    ...FONTS.labelMedium,
+    color: COLORS.textPrimary,
+  },
+  backButton: {
+    paddingHorizontal: SIZES.large,
+    paddingVertical: SIZES.small,
+  },
+  backButtonText: {
+    ...FONTS.labelMedium,
+    color: COLORS.secondaryDark,
   },
 });
 

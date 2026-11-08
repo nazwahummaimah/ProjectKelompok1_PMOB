@@ -1,28 +1,80 @@
-// app/public/durasi-sewa.tsx
-import React, { useState } from 'react';
-import { 
-  SafeAreaView, 
-  View, 
-  Text, 
-  StyleSheet, 
+
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  SafeAreaView,
+  View,
+  Text,
+  StyleSheet,
   TouchableOpacity,
   Platform,
-  StatusBar 
+  StatusBar,
+  ActivityIndicator,
 } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
-import BottomNavBar, { TabType, UserTabType } from '../../components/molecules/BottomNavBar';
+import BottomNavBar, {
+  TabType,
+  UserTabType,
+} from '../../components/molecules/BottomNavBar';
+import { getPublicBikeQrInfo } from '../../services/publicBikeQrService';
 
 const DurasiSewa: React.FC = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ source?: string }>();
   const isUserFlow = params.source === 'user';
+
+  const [permission, requestPermission] = useCameraPermissions();
   const [activeTab, setActiveTab] = useState<TabType>('DurasiSewa');
-  const [stateView, setStateView] = useState<'Scan' | 'Sukses' | 'Gagal' | 'Izin'>('Scan');
+  const [torchEnabled, setTorchEnabled] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [scanError, setScanError] = useState('');
+  const scannedRef = useRef(false);
+
+  useEffect(() => {
+    if (permission && !permission.granted && permission.canAskAgain) {
+      requestPermission();
+    }
+  }, [permission, requestPermission]);
+
+  const handleBarcodeScanned = async ({
+    data,
+  }: {
+    data: string;
+    type: string;
+  }) => {
+    if (scannedRef.current || processing) return;
+
+    scannedRef.current = true;
+    setProcessing(true);
+    setScanError('');
+
+    try {
+      const bike = await getPublicBikeQrInfo(data);
+
+      router.push({
+        pathname: '/public/hasil-scan',
+        params: {
+          bikeId: bike.bike_id,
+          source: isUserFlow ? 'user' : 'public',
+        },
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'QR Code tidak dapat dibaca.';
+
+      setScanError(message);
+      setProcessing(false);
+      scannedRef.current = false;
+    }
+  };
 
   const handleTabPress = (tab: TabType) => {
     setActiveTab(tab);
+
     switch (tab) {
       case 'Beranda':
         router.push('/public/' as any);
@@ -37,7 +89,6 @@ const DurasiSewa: React.FC = () => {
         break;
     }
   };
-
 
   const handleUserTabPress = (tab: UserTabType) => {
     switch (tab) {
@@ -55,71 +106,147 @@ const DurasiSewa: React.FC = () => {
     }
   };
 
+  const resetScanner = () => {
+    scannedRef.current = false;
+    setProcessing(false);
+    setScanError('');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
-      
-      {/* Top Header Dark Bar dengan Safe Area Fix */}
+
       <View style={styles.safeHeaderArea}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.headerBtn} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.headerBtn}
+            onPress={() => router.back()}
+          >
             <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
           </TouchableOpacity>
+
           <Text style={styles.headerTitle}>Pindai QR Sepeda</Text>
-          <TouchableOpacity style={styles.headerBtn}>
-            <Ionicons name="flash-outline" size={22} color="#FFFFFF" />
+
+          <TouchableOpacity
+            style={styles.headerBtn}
+            onPress={() => setTorchEnabled((value) => !value)}
+            disabled={!permission?.granted}
+          >
+            <Ionicons
+              name={torchEnabled ? 'flash' : 'flash-outline'}
+              size={22}
+              color={torchEnabled ? '#FACC15' : '#FFFFFF'}
+            />
           </TouchableOpacity>
         </View>
-
-        {/* State View Switcher Bar */}
-        <View style={styles.stateSwitcherBar}>
-          <Text style={styles.stateLabel}>State View:</Text>
-          <View style={styles.pillsRow}>
-            {(['Scan', 'Sukses', 'Gagal', 'Izin'] as const).map((view) => (
-              <TouchableOpacity
-                key={view}
-                style={[styles.statePill, stateView === view && styles.statePillActive]}
-                onPress={() => setStateView(view)}
-              >
-                <Text style={[styles.stateText, stateView === view && styles.stateTextActive]}>
-                  {view}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
       </View>
 
-      {/* Camera Viewfinder Area */}
-      <View style={styles.cameraArea}>
-        <View style={styles.scanTargetFrame}>
-          <View style={[styles.corner, styles.topLeft]} />
-          <View style={[styles.corner, styles.topRight]} />
-          <View style={[styles.corner, styles.bottomLeft]} />
-          <View style={[styles.corner, styles.bottomRight]} />
-
-          <View style={styles.innerQrFrame}>
-            <Ionicons name="qr-code" size={48} color="rgba(56, 189, 248, 0.6)" />
-          </View>
+      {!permission ? (
+        <View style={styles.centerState}>
+          <ActivityIndicator size="large" color={COLORS.primaryLight} />
+          <Text style={styles.stateText}>Memeriksa izin kamera...</Text>
         </View>
-
-        <Text style={styles.instructionText}>
-          Arahkan kamera ke QR sepeda Mas Joko yang terpasang di stang atau rangka.
-        </Text>
-
-        <View style={styles.infoCallout}>
-          <Ionicons name="information-circle-outline" size={18} color={COLORS.primaryLight} style={{ marginRight: 8 }} />
-          <Text style={styles.infoCalloutText}>
-            QR akan langsung membuka halaman info & status unit sepeda.
+      ) : !permission.granted ? (
+        <View style={styles.centerState}>
+          <Ionicons
+            name="camera-outline"
+            size={54}
+            color={COLORS.primaryLight}
+          />
+          <Text style={styles.stateTitle}>Izin Kamera Dibutuhkan</Text>
+          <Text style={styles.stateText}>
+            Izinkan akses kamera agar aplikasi dapat memindai QR Code sepeda.
           </Text>
-        </View>
-      </View>
 
-      {/* Navigasi Bawah Interaktif */}
-      {isUserFlow ? (
-        <BottomNavBar variant="user" activeTab="Scan" onTabPress={handleUserTabPress} />
+          <TouchableOpacity
+            style={styles.permissionButton}
+            onPress={requestPermission}
+          >
+            <Text style={styles.permissionButtonText}>
+              Izinkan Kamera
+            </Text>
+          </TouchableOpacity>
+        </View>
       ) : (
-        <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
+        <View style={styles.cameraArea}>
+          <View style={styles.cameraFrame}>
+            <CameraView
+              style={StyleSheet.absoluteFill}
+              facing="back"
+              enableTorch={torchEnabled}
+              onBarcodeScanned={
+                scannedRef.current || processing
+                  ? undefined
+                  : handleBarcodeScanned
+              }
+              barcodeScannerSettings={{
+                barcodeTypes: ['qr'],
+              }}
+            />
+
+            <View pointerEvents="none" style={styles.overlay}>
+              <View style={styles.scanTargetFrame}>
+                <View style={[styles.corner, styles.topLeft]} />
+                <View style={[styles.corner, styles.topRight]} />
+                <View style={[styles.corner, styles.bottomLeft]} />
+                <View style={[styles.corner, styles.bottomRight]} />
+              </View>
+            </View>
+
+            {processing && (
+              <View style={styles.processingOverlay}>
+                <ActivityIndicator size="large" color="#FFFFFF" />
+                <Text style={styles.processingText}>
+                  Membaca informasi sepeda...
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <Text style={styles.instructionText}>
+            Arahkan kamera ke QR Code yang terpasang pada stang atau rangka
+            sepeda.
+          </Text>
+
+          {scanError ? (
+            <View style={styles.errorBox}>
+              <Ionicons
+                name="alert-circle-outline"
+                size={20}
+                color="#FCA5A5"
+              />
+              <Text style={styles.errorText}>{scanError}</Text>
+              <TouchableOpacity onPress={resetScanner}>
+                <Text style={styles.retryText}>Coba Lagi</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.infoCallout}>
+              <Ionicons
+                name="information-circle-outline"
+                size={18}
+                color={COLORS.primaryLight}
+                style={{ marginRight: 8 }}
+              />
+              <Text style={styles.infoCalloutText}>
+                Pindai QR untuk melihat detail dan status unit sepeda.
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
+
+      {isUserFlow ? (
+        <BottomNavBar
+          variant="user"
+          activeTab="Scan"
+          onTabPress={handleUserTabPress}
+        />
+      ) : (
+        <BottomNavBar
+          activeTab={activeTab}
+          onTabPress={handleTabPress}
+        />
       )}
     </SafeAreaView>
   );
@@ -148,62 +275,37 @@ const styles = StyleSheet.create({
   },
   headerBtn: {
     padding: 6,
-  },
-  stateSwitcherBar: {
-    flexDirection: 'row',
+    minWidth: 36,
     alignItems: 'center',
-    backgroundColor: '#1E293B',
-    paddingHorizontal: SIZES.large,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#334155',
-  },
-  stateLabel: {
-    ...FONTS.caption,
-    color: '#94A3B8',
-    marginRight: SIZES.small,
-  },
-  pillsRow: {
-    flexDirection: 'row',
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  statePill: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: SIZES.radiusPill,
-    backgroundColor: 'transparent',
-  },
-  statePillActive: {
-    backgroundColor: COLORS.primaryLight,
-  },
-  stateText: {
-    ...FONTS.caption,
-    color: '#94A3B8',
-  },
-  stateTextActive: {
-    color: COLORS.textPrimary,
-    fontWeight: 'bold',
   },
   cameraArea: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: SIZES.xlarge,
+    paddingHorizontal: SIZES.large,
   },
-  scanTargetFrame: {
-    width: 240,
-    height: 240,
-    position: 'relative',
+  cameraFrame: {
+    width: 280,
+    height: 340,
+    overflow: 'hidden',
+    borderRadius: 20,
+    backgroundColor: '#020617',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFill,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: SIZES.xlarge,
+  },
+  scanTargetFrame: {
+    width: 230,
+    height: 230,
+    position: 'relative',
   },
   corner: {
     position: 'absolute',
-    width: 32,
-    height: 32,
-    borderColor: COLORS.primaryLight,
+    width: 34,
+    height: 34,
+    borderColor: '#38BDF8',
   },
   topLeft: {
     top: 0,
@@ -233,19 +335,23 @@ const styles = StyleSheet.create({
     borderRightWidth: 4,
     borderBottomRightRadius: 12,
   },
-  innerQrFrame: {
-    width: 140,
-    height: 140,
-    borderRadius: SIZES.radiusMedium,
-    borderWidth: 2,
-    borderColor: 'rgba(56, 189, 248, 0.4)',
+  processingOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(15, 23, 42, 0.82)',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 12,
+  },
+  processingText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   instructionText: {
     ...FONTS.body,
     color: '#F8FAFC',
     textAlign: 'center',
+    marginTop: SIZES.xlarge,
     marginBottom: SIZES.large,
     lineHeight: 22,
   },
@@ -263,6 +369,57 @@ const styles = StyleSheet.create({
     ...FONTS.caption,
     color: '#94A3B8',
     flex: 1,
+  },
+  centerState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  stateTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 18,
+    marginBottom: 8,
+  },
+  stateText: {
+    color: '#CBD5E1',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 21,
+    marginTop: 12,
+  },
+  permissionButton: {
+    marginTop: 22,
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 24,
+    paddingVertical: 13,
+    borderRadius: 12,
+  },
+  permissionButtonText: {
+    color: COLORS.textPrimary,
+    fontWeight: '700',
+  },
+  errorBox: {
+    width: '100%',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#7F1D1D',
+    borderRadius: 12,
+    padding: 14,
+  },
+  errorText: {
+    color: '#FEE2E2',
+    flex: 1,
+    fontSize: 12,
+  },
+  retryText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    padding: 4,
   },
 });
 
