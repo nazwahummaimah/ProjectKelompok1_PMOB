@@ -5,7 +5,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import AdminPageLayout, { adminUi } from '../../components/organisms/AdminPageLayout';
 import AdminStatusBadge from '../../components/molecules/AdminStatusBadge';
 import { useAdmin } from '../../context/AdminContext';
-import { RENTAL_LOCATION } from '../../constants/adminDemo';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
 export default function AdminUnitDetailScreen() {
@@ -14,6 +13,7 @@ export default function AdminUnitDetailScreen() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const { bikes } = useAdmin();
   const bike = bikes.find((item) => item.id === id) ?? bikes[0];
+  if (!bike) return <AdminPageLayout title="Detail Unit" subtitle="Data unit belum tersedia." showBack><View style={adminUi.card}><Text style={styles.helper}>Unit tidak ditemukan atau belum ada data sepeda di database.</Text></View><TouchableOpacity style={adminUi.button} onPress={() => router.push('/admin/form-unit' as any)}><Text style={adminUi.buttonText}>Tambah Unit</Text></TouchableOpacity></AdminPageLayout>;
 
   return (
     <AdminPageLayout title="Detail Unit" subtitle="Informasi inventaris dan kondisi operasional sepeda." showBack>
@@ -27,7 +27,8 @@ export default function AdminUnitDetailScreen() {
       <View style={adminUi.card}>
         <Text style={styles.cardTitle}>Informasi Unit</Text>
         <InfoRow label="Kode QR" value={bike.qrCode} />
-        <InfoRow label="Lokasi" value={RENTAL_LOCATION} />
+        <InfoRow label="Lokasi" value={bike.branchName ?? 'Lokasi belum diatur'} />
+        <InfoRow label="Alamat Cabang" value={bike.branchAddress ?? '-'} />
         <InfoRow label="Kategori" value={bike.category} />
         <InfoRow label="Status operasional" value={bike.status} />
         <InfoRow label="Catatan" value={bike.notes} last />

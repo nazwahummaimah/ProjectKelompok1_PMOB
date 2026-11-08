@@ -4,14 +4,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import AdminPageLayout, { adminUi } from '../../components/organisms/AdminPageLayout';
 import { useAdmin } from '../../context/AdminContext';
-import { formatRupiah } from '../../constants/adminDemo';
+import { formatRupiah } from '../../constants/adminTypes';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
 export default function ReportDetailScreen() {
   const params = useLocalSearchParams<{ period?: string }>();
   const period = Array.isArray(params.period) ? params.period[0] : params.period ?? 'Bulan ini';
   const { transactions, expenses } = useAdmin();
-  const matches = (date: string) => period === 'Hari ini' ? date === '2026-11-02' : period === 'Minggu ini' ? date >= '2026-10-27' && date <= '2026-11-02' : date.startsWith('2026-11');
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const weekStartDate = new Date(now); weekStartDate.setDate(now.getDate() - 6);
+  const weekStart = `${weekStartDate.getFullYear()}-${String(weekStartDate.getMonth() + 1).padStart(2, '0')}-${String(weekStartDate.getDate()).padStart(2, '0')}`;
+  const monthStart = today.slice(0, 7);
+  const matches = (date: string) => period === 'Hari ini' ? date === today : period === 'Minggu ini' ? date >= weekStart && date <= today : date.startsWith(monthStart);
   const transactionRows = transactions.filter((item) => item.paymentStatus === 'Lunas' && matches(item.date));
   const expenseRows = expenses.filter((item) => matches(item.date));
   const income = transactionRows.reduce((sum, item) => sum + item.total, 0);
@@ -20,7 +25,7 @@ export default function ReportDetailScreen() {
   const exportDemo = () => Alert.alert('Pratinjau PDF', 'Pada prototipe frontend, tombol ini mensimulasikan aksi unduh laporan PDF. Integrasi generator PDF dilakukan pada tahap berikutnya.');
 
   return (
-    <AdminPageLayout title="Detail Laporan" subtitle={`Periode: ${period} · 2 November 2026`} showBack>
+    <AdminPageLayout title="Detail Laporan" subtitle={`Periode: ${period}`} showBack>
       <View style={styles.summary}><Text style={styles.summaryLabel}>SELISIH OPERASIONAL</Text><Text style={styles.summaryValue}>{formatRupiah(income - expenseTotal)}</Text></View>
       <Text style={adminUi.sectionTitle}>Pemasukan · {transactionRows.length} transaksi</Text>
       {transactionRows.map((item) => <View key={item.id} style={styles.row}><View style={{ flex: 1 }}><Text style={styles.rowTitle}>{item.customerName}</Text><Text style={styles.meta}>{item.id} · {item.date}</Text></View><Text style={styles.amount}>{formatRupiah(item.total)}</Text></View>)}

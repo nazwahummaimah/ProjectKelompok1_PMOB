@@ -4,12 +4,14 @@ import { useRouter } from 'expo-router';
 import AdminPageLayout, { adminUi } from '../../components/organisms/AdminPageLayout';
 import AdminStatusBadge from '../../components/molecules/AdminStatusBadge';
 import { useAdmin } from '../../context/AdminContext';
-import { CustomerType, DayType, GuaranteeType, PaymentMethod, formatRupiah, getHourlyRate } from '../../constants/adminDemo';
+import { CustomerType, DayType, GuaranteeType, PaymentMethod, formatRupiah, getHourlyRate } from '../../constants/adminTypes';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
+
+function normalizePhone(value: string) { const digits = value.replace(/\D/g, ''); if (digits.startsWith('62')) return `0${digits.slice(2)}`; if (digits.startsWith('8')) return `0${digits}`; return digits; }
 
 export default function CreateTransactionScreen() {
   const router = useRouter();
-  const { bikes, transactions, createTransaction } = useAdmin();
+  const { bikes, transactions, pricingRates, createTransaction } = useAdmin();
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
   const [customerLookupMessage, setCustomerLookupMessage] = useState('');
@@ -23,7 +25,7 @@ export default function CreateTransactionScreen() {
 
   const availableBikes = bikes.filter((bike) => bike.status === 'Tersedia');
   const hours = Math.max(1, Math.min(24, Number.parseInt(duration, 10) || 1));
-  const hourlyRate = getHourlyRate(customerType, dayType);
+  const hourlyRate = pricingRates[`${customerType}|${dayType}`] ?? getHourlyRate(customerType, dayType);
   const total = hourlyRate * hours * selectedUnits.length;
 
   const toggleUnit = (id: string) => setSelectedUnits((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
@@ -31,26 +33,32 @@ export default function CreateTransactionScreen() {
   const handleCustomerLookup = () => {
     const digits = phone.replace(/\D/g, '');
     if (digits.length < 9 || digits.length > 15) { setCustomerLookupMessage('Masukkan nomor WhatsApp yang valid untuk mencari pelanggan.'); return; }
-    const previous = transactions.find((item) => item.phone.replace(/\D/g, '') === digits);
+    const previous = transactions.find((item) => normalizePhone(item.phone) === normalizePhone(digits));
     if (previous) {
       setCustomerName(previous.customerName);
       setCustomerType(previous.customerType);
-      setCustomerLookupMessage(`Pelanggan ditemukan: ${previous.customerName}. Data pelanggan demo dimuat.`);
+      setCustomerLookupMessage(`Pelanggan ditemukan: ${previous.customerName}. Data pelanggan dimuat dari transaksi tersimpan.`);
     } else {
       setCustomerName('');
       setCustomerLookupMessage('Pelanggan belum ditemukan. Isi nama untuk mencatat pelanggan baru.');
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (customerName.trim().length < 3) { Alert.alert('Nama pelanggan', 'Masukkan nama pelanggan minimal 3 karakter.'); return; }
     const digits = phone.replace(/\D/g, '');
     if (digits.length < 9 || digits.length > 15) { Alert.alert('Nomor WhatsApp', 'Nomor WhatsApp harus terdiri dari 9–15 digit.'); return; }
     if (selectedUnits.length === 0) { Alert.alert('Pilih unit', 'Pilih minimal satu unit yang tersedia.'); return; }
-    const transaction = createTransaction({
-      customerName: customerName.trim(), phone: digits, customerType, unitIds: selectedUnits,
-      durationHours: hours, dayType, paymentMethod, paymentStatus: paymentMarkedPaid ? 'Lunas' : 'Belum Lunas', guaranteeType: guarantee,
-    });
+    let transaction;
+    try {
+      transaction = await createTransaction({
+        customerName: customerName.trim(), phone: digits, customerType, unitIds: selectedUnits,
+        durationHours: hours, dayType, paymentMethod, paymentStatus: paymentMarkedPaid ? 'Lunas' : 'Belum Lunas', guaranteeType: guarantee,
+      });
+    } catch (error: any) {
+      Alert.alert('Gagal Membuat Transaksi', error?.message ?? 'Periksa koneksi dan data cabang.');
+      return;
+    }
     Alert.alert('Transaksi dibuat', paymentMarkedPaid ? 'Pembayaran tercatat Lunas. Unit belum berstatus disewa sampai serah terima dikonfirmasi.' : 'Transaksi tercatat Belum Lunas. Serah terima belum dapat dilakukan.', [
       { text: 'Lihat Transaksi', onPress: () => router.replace(`/admin/detail-transaksi?id=${transaction.id}` as any) },
     ]);

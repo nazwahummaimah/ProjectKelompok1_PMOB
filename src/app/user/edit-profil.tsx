@@ -11,8 +11,8 @@ import { useUserProfile } from '../../context/UserProfileContext';
 export default function EditUserProfileScreen() {
   const router = useRouter();
   const { profile, updateProfile } = useUserProfile();
-  const [fullName, setFullName] = useState(profile.fullName);
-  const [phone, setPhone] = useState(profile.phone);
+  const [fullName, setFullName] = useState(profile?.full_name ?? '');
+  const [phone, setPhone] = useState(profile?.phone ?? '');
   const [touched, setTouched] = useState({ fullName: false, phone: false });
   const [submitted, setSubmitted] = useState(false);
 
@@ -22,7 +22,7 @@ export default function EditUserProfileScreen() {
   };
   const show = (field: keyof typeof touched) => touched[field] || submitted;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSubmitted(true);
     setTouched({ fullName: true, phone: true });
     if (validation.fullName || validation.phone) {
@@ -30,10 +30,14 @@ export default function EditUserProfileScreen() {
       return;
     }
 
-    updateProfile({ fullName: fullName.trim(), phone: phone.trim() });
-    Alert.alert('Profil Diperbarui', 'Perubahan tersimpan pada sesi demo ini.', [
-      { text: 'OK', onPress: () => router.back() },
-    ]);
+    try {
+      await updateProfile({ full_name: fullName.trim(), phone: phone.trim() });
+      Alert.alert('Profil Diperbarui', 'Perubahan berhasil disimpan ke database.', [
+        { text: 'OK', onPress: () => router.back() },
+      ]);
+    } catch (error: any) {
+      Alert.alert('Gagal Memperbarui Profil', error?.message ?? 'Silakan coba lagi.');
+    }
   };
 
   return (
@@ -72,10 +76,10 @@ export default function EditUserProfileScreen() {
             <Text style={styles.label}>Email</Text>
             <View style={[styles.inputWrap, styles.disabledInput]}>
               <Ionicons name="mail-outline" size={19} color={COLORS.textSecondary} />
-              <TextInput style={styles.input} value={profile.email} editable={false} />
+              <TextInput style={styles.input} value={profile?.email ?? ''} editable={false} />
               <Ionicons name="lock-closed-outline" size={16} color={COLORS.textSecondary} />
             </View>
-            <Text style={styles.helperText}>Email digunakan sebagai identitas login dan belum dapat diubah pada versi demo.</Text>
+            <Text style={styles.helperText}>Email digunakan sebagai identitas login dan belum dapat diubah dari halaman ini.</Text>
           </View>
 
           <View style={styles.inputGroup}>

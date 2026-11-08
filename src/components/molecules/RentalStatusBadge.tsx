@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
-import type { RentalHistoryStatus } from '../../constants/userDemo';
+import type { RentalHistoryStatus } from '../../constants/userTypes';
 
 interface RentalStatusBadgeProps {
   status: RentalHistoryStatus;

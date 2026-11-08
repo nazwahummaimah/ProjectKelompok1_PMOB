@@ -1,5 +1,5 @@
 // app/public/DetailUnit.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   SafeAreaView, 
   ScrollView, 
@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
   Platform,
   StatusBar,
-  Image 
+  Image,
+  ActivityIndicator 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -17,16 +18,41 @@ import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import StatusBadge from '../../components/molecules/StatusBadge';
 import FeatureTag from '../../components/molecules/FeatureTag';
 import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
-import { getBikeById } from '../../constants/bikes';
+import { getPublicBikes, PublicBike } from '../../services/bikeService';
 
 const DetailUnit: React.FC = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const [activeTab, setActiveTab] = useState<TabType>('Katalog');
+  const [bike, setBike] = useState<PublicBike | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mengambil data sepeda secara dinamis berdasarkan parameter ID
-  const bike = getBikeById(params.id);
-  const isAvailable = bike.status.toLowerCase() === 'tersedia';
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    getPublicBikes()
+      .then((items) => { if (active) setBike(items.find((item) => item.id === params.id) ?? null); })
+      .catch((error) => { console.error('Detail sepeda:', error); if (active) setBike(null); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [params.id]);
+
+  if (loading) return <SafeAreaView style={styles.container}><ActivityIndicator size="large" color={COLORS.secondaryDark} style={{ flex: 1 }} /></SafeAreaView>;
+  if (!bike) return <SafeAreaView style={styles.container}><View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}><Text style={{ color: COLORS.textPrimary, marginBottom: 14 }}>Data sepeda tidak ditemukan.</Text><TouchableOpacity onPress={() => router.back()}><Text style={{ color: COLORS.secondaryDark, fontWeight: '700' }}>Kembali ke Katalog</Text></TouchableOpacity></View></SafeAreaView>;
+
+  const bikeView = {
+    ...bike,
+    hours: 'Hubungi petugas cabang untuk informasi jam operasional.',
+    returnTime: undefined as string | undefined,
+    returnLocationNote: undefined as string | undefined,
+    tireSize: 'Informasi belum tersedia',
+    brakes: 'Informasi belum tersedia',
+    transmission: 'Informasi belum tersedia',
+    facilities: 'Konfirmasi fasilitas kepada petugas rental.',
+    techCondition: bike.description || 'Belum ada catatan kondisi teknis.',
+  };
+  const isAvailable = bikeView.status === 'Tersedia';
+  const isRented = bikeView.status === 'Sedang Disewa';
 
   const handleTabPress = (tab: TabType) => {
     setActiveTab(tab);
@@ -75,7 +101,7 @@ const DetailUnit: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Banner Gambar & Badges Dinamis */}
         <View style={styles.bannerContainer}>
-          <Image source={{ uri: bike.image }} style={styles.bannerImage} />
+          <Image source={bikeView.image ? { uri: bikeView.image } : require('../../../assets/images/image-2.jpeg')} style={styles.bannerImage} />
           <View style={styles.verifiedBadge}>
             <Ionicons name="qr-code-outline" size={14} color={COLORS.secondaryDark} style={{ marginRight: 4 }} />
             <Text style={styles.verifiedText}>Terverifikasi QR</Text>
@@ -83,10 +109,10 @@ const DetailUnit: React.FC = () => {
 
           <View style={styles.bannerBottomOverlay}>
             <View style={styles.unitIdTag}>
-              <Text style={styles.unitIdText}># {bike.id}</Text>
+              <Text style={styles.unitIdText}># {bikeView.id}</Text>
             </View>
             <View style={styles.unitTitleTag}>
-              <Text style={styles.unitTitleText}>{bike.name}</Text>
+              <Text style={styles.unitTitleText}>{bikeView.name}</Text>
             </View>
           </View>
         </View>
@@ -95,13 +121,13 @@ const DetailUnit: React.FC = () => {
         <View style={styles.mainInfoRow}>
           <View style={styles.titleCol}>
             <Text style={styles.categoryTitle}>KATEGORI SEPEDA</Text>
-            <Text style={styles.mainTitle}>{bike.category}</Text>
-            <Text style={styles.subTitle}>{bike.name} Series</Text>
+            <Text style={styles.mainTitle}>{bikeView.category}</Text>
+            <Text style={styles.subTitle}>{bikeView.name} Series</Text>
           </View>
           <View style={styles.priceCol}>
             <Text style={styles.priceMeta}>Tarif Sewa Pos</Text>
             <Text style={styles.priceAmount}>
-              <Text style={styles.currency}>Rp </Text>{bike.price}<Text style={styles.priceUnit}> / jam</Text>
+              <Text style={styles.currency}>Rp </Text>{bikeView.price}<Text style={styles.priceUnit}> / jam</Text>
             </Text>
             <Text style={styles.paymentNote}>Bayar langsung di kasir</Text>
           </View>
@@ -112,7 +138,7 @@ const DetailUnit: React.FC = () => {
           <View style={[styles.modePill, isAvailable && styles.modeActive]}>
             <View style={[styles.dot, { backgroundColor: isAvailable ? COLORS.success : COLORS.textSecondary }]} />
             <Text style={isAvailable ? styles.modeActiveText : styles.modeInactiveText}>
-              {isAvailable ? 'Mode: Tersedia' : 'Mode: Sedang Disewa'}
+              {`Mode: ${bikeView.status}`}
             </Text>
           </View>
         </View>
@@ -121,7 +147,7 @@ const DetailUnit: React.FC = () => {
         <View style={styles.operationalBox}>
           <View style={styles.opHeader}>
             <Text style={styles.opLabel}>Status Operasional Unit</Text>
-            <StatusBadge status={bike.status} />
+            <StatusBadge status={bikeView.status} />
           </View>
 
           <View style={styles.opContent}>
@@ -133,13 +159,14 @@ const DetailUnit: React.FC = () => {
             />
             <View style={{ flex: 1 }}>
               <Text style={[styles.opTitle, !isAvailable && { color: COLORS.warning }]}>
-                {isAvailable ? 'Siap Disewa di Lokasi' : `Unit Sedang Disewa (~ ${bike.returnTime || 'Sore ini'})`}
+                {isAvailable ? 'Siap Disewa di Lokasi' : isRented ? `Unit Sedang Disewa (~ ${bikeView.returnTime || 'Estimasi belum tersedia'})` : 'Unit sedang dalam perawatan'}
               </Text>
               <Text style={styles.opDesc}>
-                {isAvailable 
-                  ? `Sepeda ini sedang standby dan siap disewa langsung di ${bike.location}. Silakan datangi pos dan konfirmasi ke kasir.`
-                  : `Sepeda ini sedang dalam sesi sewa. ${bike.returnLocationNote || 'Diperkirakan akan kembali ke pos sore ini.'}`
-                }
+                {isAvailable
+                  ? `Sepeda ini sedang standby dan siap disewa langsung di ${bikeView.location}. Silakan datangi pos dan konfirmasi ke kasir.`
+                  : isRented
+                    ? `Sepeda ini sedang dalam sesi sewa. ${bikeView.returnLocationNote || 'Informasi waktu kembali dapat dikonfirmasi kepada petugas.'}`
+                    : 'Sepeda sedang menjalani pemeriksaan atau perawatan dan belum dapat disewa.'}
               </Text>
             </View>
           </View>
@@ -161,11 +188,11 @@ const DetailUnit: React.FC = () => {
             </View>
             <View>
               <Text style={styles.cardBoxMeta}>Pos Pangkalan Resmi</Text>
-              <Text style={styles.cardBoxTitle}>{bike.location}</Text>
+              <Text style={styles.cardBoxTitle}>{bikeView.location}</Text>
             </View>
           </View>
-          <Text style={styles.cardBoxAddress}>{bike.address || 'Jl. Pasar Kembang, Malioboro, Titik Nol KM Jogja'}</Text>
-          <Text style={styles.cardBoxHours}>⏱️ {bike.hours || 'Buka setiap hari: 06:00 - 22:00 WIB'}</Text>
+          <Text style={styles.cardBoxAddress}>{bikeView.address || 'Alamat cabang belum tersedia.'}</Text>
+          <Text style={styles.cardBoxHours}>⏱️ {bikeView.hours || 'Jam operasional dapat dikonfirmasi kepada petugas cabang.'}</Text>
         </View>
 
         {/* Card Kondisi Teknis */}
@@ -176,10 +203,10 @@ const DetailUnit: React.FC = () => {
             </View>
             <View>
               <Text style={styles.cardBoxMeta}>Kondisi Teknis Unit</Text>
-              <Text style={styles.cardBoxTitle}>Sangat Baik</Text>
+              <Text style={styles.cardBoxTitle}>Catatan Kondisi</Text>
             </View>
           </View>
-          <Text style={styles.cardBoxAddress}>{bike.techCondition || 'Servis berkala, rem, serta tekanan ban diperiksa oleh mekanik.'}</Text>
+          <Text style={styles.cardBoxAddress}>{bikeView.techCondition || 'Belum ada catatan kondisi teknis.'}</Text>
         </View>
 
         {/* Specs Grid 2x2 Dinamis */}
@@ -189,7 +216,7 @@ const DetailUnit: React.FC = () => {
             <Ionicons name="options-outline" size={18} color={COLORS.secondaryDark} />
             <View style={{ marginLeft: 8, flex: 1 }}>
               <Text style={styles.specLabel}>Ukuran Ban</Text>
-              <Text style={styles.specValue}>{bike.tireSize || 'Standard'}</Text>
+              <Text style={styles.specValue}>{bikeView.tireSize || 'Belum diisi'}</Text>
             </View>
           </View>
 
@@ -197,7 +224,7 @@ const DetailUnit: React.FC = () => {
             <Ionicons name="disc-outline" size={18} color={COLORS.secondaryDark} />
             <View style={{ marginLeft: 8, flex: 1 }}>
               <Text style={styles.specLabel}>Pengereman</Text>
-              <Text style={styles.specValue}>{bike.brakes || 'Standard'}</Text>
+              <Text style={styles.specValue}>{bikeView.brakes || 'Belum diisi'}</Text>
             </View>
           </View>
 
@@ -205,7 +232,7 @@ const DetailUnit: React.FC = () => {
             <Ionicons name="speedometer-outline" size={18} color={COLORS.secondaryDark} />
             <View style={{ marginLeft: 8, flex: 1 }}>
               <Text style={styles.specLabel}>Transmisi</Text>
-              <Text style={styles.specValue}>{bike.transmission || 'Multi-Speed'}</Text>
+              <Text style={styles.specValue}>{bikeView.transmission || 'Belum diisi'}</Text>
             </View>
           </View>
 
@@ -213,7 +240,7 @@ const DetailUnit: React.FC = () => {
             <Ionicons name="shield-checkmark-outline" size={18} color={COLORS.secondaryDark} />
             <View style={{ marginLeft: 8, flex: 1 }}>
               <Text style={styles.specLabel}>Fasilitas Unit</Text>
-              <Text style={styles.specValue}>{bike.facilities || 'Helm & Kunci'}</Text>
+              <Text style={styles.specValue}>{bikeView.facilities || 'Belum diisi'}</Text>
             </View>
           </View>
         </View>

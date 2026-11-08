@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import AdminPageLayout, { adminUi } from '../../components/organisms/AdminPageLayout';
 import AdminStatusBadge from '../../components/molecules/AdminStatusBadge';
 import { useAdmin } from '../../context/AdminContext';
-import { formatRupiah } from '../../constants/adminDemo';
+import { formatRupiah } from '../../constants/adminTypes';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
 export default function AdminTransactionDetailScreen() {
@@ -14,11 +14,12 @@ export default function AdminTransactionDetailScreen() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const { transactions, bikes, markTransactionPaid, confirmHandover } = useAdmin();
   const transaction = transactions.find((item) => item.id === id) ?? transactions[0];
+  if (!transaction) return <AdminPageLayout title="Detail Transaksi" subtitle="Data transaksi belum tersedia." showBack><View style={adminUi.card}><Text style={styles.helper}>Transaksi tidak ditemukan atau belum ada data dari database.</Text></View></AdminPageLayout>;
   const transactionBikes = bikes.filter((bike) => transaction.unitIds.includes(bike.id));
 
   const handover = () => Alert.alert('Konfirmasi Serah Terima', 'Pastikan pembayaran sudah Lunas dan unit benar-benar diserahkan kepada pelanggan. Waktu sewa mulai dihitung setelah konfirmasi ini.', [
     { text: 'Batal', style: 'cancel' },
-    { text: 'Konfirmasi', onPress: () => { confirmHandover(transaction.id); Alert.alert('Serah terima berhasil', 'Status unit berubah menjadi Sedang Disewa.'); } },
+    { text: 'Konfirmasi', onPress: async () => { try { await confirmHandover(transaction.id); Alert.alert('Serah terima berhasil', 'Status unit berubah menjadi Sedang Disewa.'); } catch (error: any) { Alert.alert('Gagal Serah Terima', error?.message ?? 'Silakan coba lagi.'); } } },
   ]);
 
   return (
@@ -50,7 +51,7 @@ export default function AdminTransactionDetailScreen() {
       </View>
       {transaction.status === 'Menunggu Serah Terima' ? (
         <>
-          {transaction.paymentStatus === 'Belum Lunas' ? <TouchableOpacity style={adminUi.button} onPress={() => Alert.alert('Konfirmasi Pembayaran', 'Pastikan pembayaran tunai/QRIS sudah diterima dan diverifikasi secara manual.', [{ text: 'Batal', style: 'cancel' }, { text: 'Tandai Lunas', onPress: () => markTransactionPaid(transaction.id) }])}><Text style={adminUi.buttonText}>Konfirmasi Pembayaran Lunas</Text></TouchableOpacity> : null}
+          {transaction.paymentStatus === 'Belum Lunas' ? <TouchableOpacity style={adminUi.button} onPress={() => Alert.alert('Konfirmasi Pembayaran', 'Pastikan pembayaran tunai/QRIS sudah diterima dan diverifikasi secara manual.', [{ text: 'Batal', style: 'cancel' }, { text: 'Tandai Lunas', onPress: async () => { try { await markTransactionPaid(transaction.id); } catch (error: any) { Alert.alert('Gagal Memperbarui Pembayaran', error?.message ?? 'Silakan coba lagi.'); } } }])}><Text style={adminUi.buttonText}>Konfirmasi Pembayaran Lunas</Text></TouchableOpacity> : null}
           <TouchableOpacity disabled={transaction.paymentStatus !== 'Lunas'} style={[adminUi.button, { marginTop: 10, opacity: transaction.paymentStatus === 'Lunas' ? 1 : 0.45 }]} onPress={handover}><Ionicons name="bicycle-outline" size={18} color={COLORS.textPrimary} /><Text style={[adminUi.buttonText, { marginLeft: 7 }]}>Konfirmasi Serah Terima</Text></TouchableOpacity>
           <Text style={styles.helper}>Unit baru berubah menjadi Sedang Disewa setelah serah terima dikonfirmasi.</Text>
         </>

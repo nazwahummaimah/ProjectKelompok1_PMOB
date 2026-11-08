@@ -9,6 +9,7 @@ export interface PublicBike {
   price: string;
   status: 'Tersedia' | 'Sedang Disewa' | 'Perawatan';
   location: string;
+  address?: string;
   features: string[];
   image: string;
   description: string;
@@ -39,6 +40,17 @@ export async function getPublicBikes(): Promise<PublicBike[]> {
     throw error;
   }
 
+  const { data: defaultPricing, error: pricingError } = await supabase
+    .from('pricing_rules')
+    .select('hourly_rate')
+    .eq('customer_type', 'Umum')
+    .eq('day_type', 'Hari biasa')
+    .eq('is_active', true)
+    .limit(1)
+    .maybeSingle();
+  if (pricingError) throw pricingError;
+  const publicHourlyRate = Number(defaultPricing?.hourly_rate ?? 0);
+
   // Mengubah data Supabase menjadi format yang digunakan Katalog
   return (data ?? []).map((bike) => {
     const branch = Array.isArray(bike.branches)
@@ -47,11 +59,11 @@ export async function getPublicBikes(): Promise<PublicBike[]> {
 
     let status: PublicBike['status'] = 'Tersedia';
 
-    if (bike.status === 'rented') {
+    if (bike.status === 'Sedang Disewa') {
       status = 'Sedang Disewa';
-    } else if (bike.status === 'maintenance') {
+    } else if (bike.status === 'Perawatan') {
       status = 'Perawatan';
-    } else if (bike.status === 'available') {
+    } else {
       status = 'Tersedia';
     }
 
@@ -59,9 +71,10 @@ export async function getPublicBikes(): Promise<PublicBike[]> {
       id: bike.bike_code,
       category: bike.category,
       name: bike.name,
-      price: String(bike.hourly_rate),
+      price: Number(publicHourlyRate || bike.hourly_rate || 0).toLocaleString('id-ID'),
       status,
       location: branch?.name ?? 'Lokasi tidak tersedia',
+      address: branch?.address ?? undefined,
       features: [
         branch?.name ?? 'Cabang tidak tersedia',
       ],
@@ -82,7 +95,7 @@ export async function getBikeById(id: string) {
         address
       )
     `)
-    .eq('id', id)
+    .eq('bike_code', id)
     .single();
 
   if (error) {

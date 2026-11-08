@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AdminTransaction, formatRupiah } from '../../constants/adminDemo';
+import { AdminTransaction, formatRupiah } from '../../constants/adminTypes';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 import AdminStatusBadge from './AdminStatusBadge';
 

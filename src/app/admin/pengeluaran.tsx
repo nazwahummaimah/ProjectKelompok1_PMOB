@@ -2,35 +2,38 @@ import React, { useState } from 'react';
 import { Alert, Text, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native';
 import AdminPageLayout, { adminUi } from '../../components/organisms/AdminPageLayout';
 import { useAdmin } from '../../context/AdminContext';
-import { ExpenseCategory, formatRupiah } from '../../constants/adminDemo';
+import { ExpenseCategory, formatRupiah } from '../../constants/adminTypes';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
 const CATEGORIES: ExpenseCategory[] = ['Perawatan', 'Spare Part', 'Operasional', 'Lainnya'];
+const getLocalDate = () => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; };
 
 export default function ExpenseScreen() {
   const { expenses, bikes, addExpense, updateExpense } = useAdmin();
   const [category, setCategory] = useState<ExpenseCategory>('Operasional');
   const [amount, setAmount] = useState('');
-  const [date, setDate] = useState('2026-11-02');
+  const [date, setDate] = useState(getLocalDate());
   const [description, setDescription] = useState('');
   const [relatedUnitId, setRelatedUnitId] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const value = Number.parseInt(amount.replace(/\D/g, ''), 10);
     if (!Number.isFinite(value) || value <= 0) { Alert.alert('Nominal belum valid', 'Masukkan nominal pengeluaran lebih dari nol.'); return; }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date.trim())) { Alert.alert('Tanggal belum valid', 'Gunakan format YYYY-MM-DD.'); return; }
     if (description.trim().length < 3) { Alert.alert('Deskripsi diperlukan', 'Tuliskan keterangan pengeluaran minimal 3 karakter.'); return; }
     const payload = { category, amount: value, date: date.trim(), description: description.trim(), relatedUnitId: relatedUnitId || undefined };
-    if (editingId) { updateExpense(editingId, payload); Alert.alert('Pengeluaran diperbarui', 'Catatan pengeluaran demo berhasil diperbarui.'); }
-    else { addExpense(payload); Alert.alert('Pengeluaran dicatat', 'Data pengeluaran tersimpan pada state demo aplikasi.'); }
-    setAmount(''); setDate('2026-11-02'); setDescription(''); setRelatedUnitId(''); setEditingId(null);
+    try {
+      if (editingId) { await updateExpense(editingId, payload); Alert.alert('Pengeluaran diperbarui', 'Catatan pengeluaran berhasil diperbarui di database.'); }
+      else { await addExpense(payload); Alert.alert('Pengeluaran dicatat', 'Data pengeluaran berhasil disimpan ke database.'); }
+      setAmount(''); setDate(getLocalDate()); setDescription(''); setRelatedUnitId(''); setEditingId(null);
+    } catch (error: any) { Alert.alert('Gagal Menyimpan Pengeluaran', error?.message ?? 'Silakan coba lagi.'); }
   };
 
   return (
     <AdminPageLayout title="Pengeluaran" subtitle="Catat biaya operasional di luar transaksi penyewaan." activeTab="Lainnya" showBottomNav>
-      <View style={styles.totalCard}><Text style={styles.totalLabel}>Total pengeluaran tercatat</Text><Text style={styles.totalValue}>{formatRupiah(total)}</Text><Text style={styles.helper}>Akumulasi dari seluruh data demo.</Text></View>
+      <View style={styles.totalCard}><Text style={styles.totalLabel}>Total pengeluaran tercatat</Text><Text style={styles.totalValue}>{formatRupiah(total)}</Text><Text style={styles.helper}>Akumulasi dari seluruh data pengeluaran tersimpan.</Text></View>
       <View style={adminUi.card}>
         <Text style={styles.cardTitle}>{editingId ? 'Edit Pengeluaran' : 'Tambah Pengeluaran'}</Text>
         <Text style={styles.label}>Kategori</Text>
@@ -38,13 +41,13 @@ export default function ExpenseScreen() {
         <Text style={[styles.label, { marginTop: 14 }]}>Nominal (Rp)</Text>
         <TextInput style={adminUi.input} value={amount} onChangeText={(value) => setAmount(value.replace(/[^0-9]/g, ''))} keyboardType="number-pad" placeholder="Contoh: 50000" placeholderTextColor={COLORS.textSecondary} />
         <Text style={[styles.label, { marginTop: 14 }]}>Tanggal (YYYY-MM-DD)</Text>
-        <TextInput style={adminUi.input} value={date} onChangeText={setDate} placeholder="2026-11-02" placeholderTextColor={COLORS.textSecondary} />
+        <TextInput style={adminUi.input} value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" placeholderTextColor={COLORS.textSecondary} />
         <Text style={[styles.label, { marginTop: 14 }]}>Deskripsi</Text>
         <TextInput style={adminUi.input} value={description} onChangeText={setDescription} placeholder="Keterangan pengeluaran" placeholderTextColor={COLORS.textSecondary} />
         <Text style={[styles.label, { marginTop: 14 }]}>Unit terkait (opsional)</Text>
         <View style={styles.categoryRow}>{bikes.map((bike) => <TouchableOpacity key={bike.id} onPress={() => setRelatedUnitId(relatedUnitId === bike.id ? '' : bike.id)} style={[adminUi.chip, relatedUnitId === bike.id && adminUi.chipActive]}><Text style={[styles.categoryText, relatedUnitId === bike.id && styles.categoryActive]}>{bike.id}</Text></TouchableOpacity>)}</View>
         <TouchableOpacity style={[adminUi.button, { marginTop: 18 }]} onPress={handleAdd}><Text style={adminUi.buttonText}>{editingId ? 'Perbarui Pengeluaran' : 'Simpan Pengeluaran'}</Text></TouchableOpacity>
-        {editingId ? <TouchableOpacity style={[adminUi.outlineButton, { marginTop: 8 }]} onPress={() => { setEditingId(null); setAmount(''); setDate('2026-11-02'); setDescription(''); setRelatedUnitId(''); }}><Text style={adminUi.buttonText}>Batal Edit</Text></TouchableOpacity> : null}
+        {editingId ? <TouchableOpacity style={[adminUi.outlineButton, { marginTop: 8 }]} onPress={() => { setEditingId(null); setAmount(''); setDate(getLocalDate()); setDescription(''); setRelatedUnitId(''); }}><Text style={adminUi.buttonText}>Batal Edit</Text></TouchableOpacity> : null}
       </View>
       <Text style={adminUi.sectionTitle}>Riwayat Pengeluaran</Text>
       {expenses.map((expense) => <View key={expense.id} style={styles.expenseRow}><View style={{ flex: 1 }}><Text style={styles.expenseTitle}>{expense.description}</Text><Text style={styles.helper}>{expense.date} · {expense.category}{expense.relatedUnitId ? ` · ${expense.relatedUnitId}` : ''}</Text><Text style={styles.expenseAmount}>{formatRupiah(expense.amount)}</Text></View><TouchableOpacity style={styles.editButton} onPress={() => { setEditingId(expense.id); setCategory(expense.category); setAmount(String(expense.amount)); setDate(expense.date); setDescription(expense.description); setRelatedUnitId(expense.relatedUnitId ?? ''); }}><Text style={styles.editText}>Edit</Text></TouchableOpacity></View>)}

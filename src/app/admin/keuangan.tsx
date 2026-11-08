@@ -4,12 +4,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AdminPageLayout, { adminUi } from '../../components/organisms/AdminPageLayout';
 import { useAdmin } from '../../context/AdminContext';
-import { formatRupiah } from '../../constants/adminDemo';
+import { formatRupiah } from '../../constants/adminTypes';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
 type Period = 'Hari ini' | 'Minggu ini' | 'Bulan ini';
 const PERIODS: Period[] = ['Hari ini', 'Minggu ini', 'Bulan ini'];
-const TODAY = '2026-11-02';
+const today = new Date();
+const TODAY = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+const WEEK_START_DATE = new Date(today);
+WEEK_START_DATE.setDate(today.getDate() - 6);
+const WEEK_START = `${WEEK_START_DATE.getFullYear()}-${String(WEEK_START_DATE.getMonth() + 1).padStart(2, '0')}-${String(WEEK_START_DATE.getDate()).padStart(2, '0')}`;
+const MONTH_START = TODAY.slice(0, 7);
 
 export default function FinanceScreen() {
   const router = useRouter();
@@ -17,13 +22,13 @@ export default function FinanceScreen() {
   const [period, setPeriod] = useState<Period>('Bulan ini');
   const filteredTransactions = useMemo(() => transactions.filter((item) => {
     if (period === 'Hari ini') return item.date === TODAY;
-    if (period === 'Minggu ini') return item.date >= '2026-10-27' && item.date <= TODAY;
-    return item.date.startsWith('2026-11');
+    if (period === 'Minggu ini') return item.date >= WEEK_START && item.date <= TODAY;
+    return item.date.startsWith(MONTH_START);
   }), [transactions, period]);
   const filteredExpenses = useMemo(() => expenses.filter((item) => {
     if (period === 'Hari ini') return item.date === TODAY;
-    if (period === 'Minggu ini') return item.date >= '2026-10-27' && item.date <= TODAY;
-    return item.date.startsWith('2026-11');
+    if (period === 'Minggu ini') return item.date >= WEEK_START && item.date <= TODAY;
+    return item.date.startsWith(MONTH_START);
   }), [expenses, period]);
   const income = filteredTransactions.filter((item) => item.paymentStatus === 'Lunas').reduce((sum, item) => sum + item.total, 0);
   const expenseTotal = filteredExpenses.reduce((sum, item) => sum + item.amount, 0);

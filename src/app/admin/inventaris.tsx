@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import AdminPageLayout, { adminUi } from '../../components/organisms/AdminPageLayout';
 import AdminStatusBadge from '../../components/molecules/AdminStatusBadge';
 import { useAdmin } from '../../context/AdminContext';
-import { AdminBikeStatus } from '../../constants/adminDemo';
+import { AdminBikeStatus } from '../../constants/adminTypes';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
 const FILTERS: Array<'Semua' | AdminBikeStatus> = ['Semua', 'Tersedia', 'Sedang Disewa', 'Perawatan'];

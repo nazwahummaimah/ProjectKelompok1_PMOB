@@ -157,7 +157,7 @@ const { user, profile, loading, refreshProfile } = useAuth();
           <Text style={styles.logoutText}>Keluar dari Akun</Text>
           <Ionicons name="chevron-forward" size={18} color={COLORS.textSecondary} />
         </TouchableOpacity>
-        <Text style={styles.versionText}>Jamal_Jepret • Versi Demo</Text>
+        <Text style={styles.versionText}>Jamal_Jepret • Versi 1.0</Text>
       </ScrollView>
       <BottomNavBar variant="user" activeTab="Profil" onTabPress={handleTabPress} />
     </SafeAreaView>

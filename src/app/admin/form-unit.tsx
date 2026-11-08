@@ -3,7 +3,7 @@ import { Alert, Text, TextInput, TouchableOpacity, View, StyleSheet } from 'reac
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AdminPageLayout, { adminUi } from '../../components/organisms/AdminPageLayout';
 import { useAdmin } from '../../context/AdminContext';
-import { AdminBike } from '../../constants/adminDemo';
+import { AdminBike } from '../../constants/adminTypes';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
 export default function AdminUnitFormScreen() {
@@ -20,13 +20,17 @@ export default function AdminUnitFormScreen() {
     if (existing) { setName(existing.name); setCategory(existing.category); setNotes(existing.notes); }
   }, [existing?.id]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (name.trim().length < 3) { Alert.alert('Periksa Nama Unit', 'Nama sepeda minimal 3 karakter.'); return; }
     if (existing) {
-      updateBike(existing.id, { name: name.trim(), category, notes: notes.trim() || 'Belum ada catatan.' });
+      try {
+        await updateBike(existing.id, { name: name.trim(), category, notes: notes.trim() || 'Belum ada catatan.' });
+      } catch (error: any) { Alert.alert('Gagal Menyimpan', error?.message ?? 'Terjadi kesalahan.'); return; }
       Alert.alert('Berhasil', 'Data unit diperbarui.', [{ text: 'OK', onPress: () => router.replace(`/admin/detail-unit?id=${existing.id}` as any) }]);
     } else {
-      const bike = addBike({ name: name.trim(), category, notes: notes.trim() || 'Belum ada catatan.' });
+      let bike: AdminBike;
+      try { bike = await addBike({ name: name.trim(), category, notes: notes.trim() || 'Belum ada catatan.' }); }
+      catch (error: any) { Alert.alert('Gagal Menyimpan', error?.message ?? 'Terjadi kesalahan.'); return; }
       Alert.alert('Berhasil', `${bike.id} berhasil ditambahkan dengan status Tersedia.`, [{ text: 'Lihat Unit', onPress: () => router.replace(`/admin/detail-unit?id=${bike.id}` as any) }]);
     }
   };

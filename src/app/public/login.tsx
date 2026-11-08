@@ -20,9 +20,11 @@ import ValidationMessage from '../../components/molecules/ValidationMessage';
 import { validateEmail, validateLoginPassword, hasValidationErrors } from '../../utils/formValidation';
 import HeaderApp from '@/components/molecules/HeaderApp';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 
 const Login: React.FC = () => {
   const router = useRouter();
+  const { refreshProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('Login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,6 +66,7 @@ const Login: React.FC = () => {
         });
 
       if (error) throw error;
+      await refreshProfile();
 
       const { data: profile, error: profileError } =
         await supabase

@@ -11,14 +11,18 @@ import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
 export default function AdminDashboardScreen() {
   const router = useRouter();
-  const { bikes, transactions } = useAdmin();
+  const { bikes, transactions, error, loading } = useAdmin();
   const available = bikes.filter((item) => item.status === 'Tersedia').length;
   const rented = bikes.filter((item) => item.status === 'Sedang Disewa').length;
   const maintenance = bikes.filter((item) => item.status === 'Perawatan').length;
   const activeTransactions = transactions.filter((item) => item.status === 'Sedang Berlangsung' || item.status === 'Menunggu Serah Terima');
+  const currentDate = new Date();
+  const today = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
 
   return (
     <AdminPageLayout title="Dashboard" subtitle="Ringkasan operasional Rental Sepeda Jamal_Jepret." activeTab="Dashboard" showBottomNav>
+      {error ? <View style={styles.dataError}><Text style={styles.dataErrorTitle}>Data Supabase belum berhasil dimuat</Text><Text style={styles.dataErrorText}>{error}</Text></View> : null}
+      {loading ? <Text style={styles.dataLoading}>Memuat data operasional...</Text> : null}
       <View style={styles.welcomeCard}>
         <View style={styles.welcomeIcon}><Ionicons name="speedometer-outline" size={23} color={COLORS.secondaryDark} /></View>
         <View style={{ flex: 1 }}>
@@ -40,7 +44,7 @@ export default function AdminDashboardScreen() {
 
       <View style={adminUi.between}>
         <Text style={adminUi.sectionTitle}>Operasional Hari Ini</Text>
-        <Text style={styles.dateText}>2 November 2026</Text>
+        <Text style={styles.dateText}>{new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
       </View>
       <View style={adminUi.card}>
         <View style={adminUi.between}>
@@ -50,7 +54,7 @@ export default function AdminDashboardScreen() {
           </View>
           <View style={styles.verticalDivider} />
           <View style={styles.operationItem}>
-            <Text style={styles.operationValue}>{transactions.filter((item) => item.status === 'Selesai' && item.date === '2026-11-02').length}</Text>
+            <Text style={styles.operationValue}>{transactions.filter((item) => item.status === 'Selesai' && item.date === today).length}</Text>
             <Text style={styles.operationLabel}>Selesai hari ini</Text>
           </View>
         </View>
@@ -82,6 +86,10 @@ export default function AdminDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
+  dataError: { backgroundColor: '#FEE2E2', borderRadius: 12, padding: 12, marginBottom: 12 },
+  dataErrorTitle: { ...FONTS.labelMedium, color: '#991B1B' },
+  dataErrorText: { ...FONTS.caption, color: '#991B1B', marginTop: 4 },
+  dataLoading: { ...FONTS.caption, color: COLORS.textSecondary, marginBottom: 10 },
   welcomeCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E0F2FE', padding: SIZES.large, borderRadius: SIZES.radiusLarge },
   welcomeIcon: { width: 46, height: 46, borderRadius: 14, backgroundColor: COLORS.surface, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   welcomeEyebrow: { ...FONTS.caption, color: COLORS.secondaryDark, letterSpacing: 1 },
