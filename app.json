@@ -10,7 +10,7 @@
     "ios": {
       "icon": "./assets/expo.icon"
     },
-    "android": {  
+    "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -30,7 +30,8 @@
         {
           "backgroundColor": "#E8F5E9"
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

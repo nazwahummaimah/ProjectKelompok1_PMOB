@@ -38,6 +38,7 @@ export const COLORS = {
   successBg: '#DCFCE7',
   successText: '#15803D',
   rentedBg: '#E0F2FE',
+  error: '#EF4444',
   rentedText: '#0369A1'
 } as const;
 

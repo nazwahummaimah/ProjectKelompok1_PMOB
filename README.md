@@ -92,3 +92,9 @@ Aplikasi Penyewaan Sepeda Jamal Jepret merupakan aplikasi mobile yang dirancang 
 
     Setelah aplikasi berjalan, pengguna dapat mengaksesnya melalui Expo Go dengan memindai QR Code, emulator Android, atau browser web.
 
+
+## Supabase integration
+
+Panduan konfigurasi environment, prasyarat data cabang/tarif, dan alur tabel yang digunakan tersedia di [PANDUAN_SUPABASE.md](./PANDUAN_SUPABASE.md).
+
+Salin `.env.example` menjadi `.env` dan isi URL serta publishable key Supabase sebelum menjalankan aplikasi. Jangan masukkan service-role key ke aplikasi klien.

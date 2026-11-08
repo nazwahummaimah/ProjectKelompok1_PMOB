@@ -3,7 +3,7 @@ import { Alert, Text, TextInput, TouchableOpacity, View, StyleSheet } from 'reac
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AdminPageLayout, { adminUi } from '../../components/organisms/AdminPageLayout';
 import { useAdmin } from '../../context/AdminContext';
-import { ReturnCondition } from '../../constants/adminDemo';
+import { ReturnCondition } from '../../constants/adminTypes';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
 const CONDITIONS: ReturnCondition[] = ['Baik', 'Rusak ringan', 'Rusak berat'];
@@ -24,7 +24,7 @@ export default function InspectionScreen() {
     const hasDamage = Object.values(finalConditions).some((condition) => condition !== 'Baik');
     Alert.alert('Konfirmasi Pemeriksaan', hasDamage ? 'Unit dengan kerusakan akan masuk status Perawatan. Tidak ada denda yang dihitung otomatis.' : 'Semua unit dinyatakan baik dan akan kembali tersedia.', [
       { text: 'Periksa Lagi', style: 'cancel' },
-      { text: 'Selesaikan', onPress: () => { completeReturn(transaction.id, finalConditions, notes.trim()); router.replace('/admin/transaksi' as any); } },
+      { text: 'Selesaikan', onPress: async () => { try { await completeReturn(transaction.id, finalConditions, notes.trim()); router.replace('/admin/transaksi' as any); } catch (error: any) { Alert.alert('Gagal Menyimpan Pemeriksaan', error?.message ?? 'Silakan coba lagi.'); } } },
     ]);
   };
 

@@ -1,141 +1,533 @@
+
 import React from 'react';
-import { SafeAreaView, ScrollView, View, Text, StyleSheet, TouchableOpacity, StatusBar, Alert } from 'react-native';
+import {
+  SafeAreaView,
+  ScrollView,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  StatusBar,
+  Alert,
+} from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+
 import HeaderApp from '../../components/molecules/HeaderApp';
 import BottomNavBar, { UserTabType } from '../../components/molecules/BottomNavBar';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
+<<<<<<< HEAD
 import { useUserProfile } from '../../context/UserProfileContext';
+import { useAuth } from '../../context/AuthContext';
 
 export default function UserProfileScreen() {
   const router = useRouter();
   const { profile } = useUserProfile();
+  const { signOut } = useAuth();
+=======
+import { useAuth } from '../../context/AuthContext';
+import { ActivityIndicator } from 'react-native';
+import { supabase } from '../../lib/supabase';
+
+export default function UserProfileScreen() {
+const router = useRouter();
+const { user, profile, loading, refreshProfile } = useAuth();
+>>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
 
   const handleTabPress = (tab: UserTabType) => {
     switch (tab) {
-      case 'Beranda': router.push('/user' as any); break;
-      case 'Riwayat': router.push('/user/riwayat' as any); break;
-      case 'Scan': router.push({ pathname: '/public/durasi-sewa' as any, params: { source: 'user' } }); break;
-      case 'Profil': break;
+      case 'Beranda':
+        router.push('/user' as any);
+        break;
+      case 'Riwayat':
+        router.push('/user/riwayat' as any);
+        break;
+      case 'Scan':
+        router.push({
+          pathname: '/public/durasi-sewa' as any,
+          params: { source: 'user' },
+        });
+        break;
+      case 'Profil':
+        break;
     }
   };
 
+<<<<<<< HEAD
   const handleLogout = () => {
-    Alert.alert('Keluar dari akun?', 'Kamu akan kembali ke halaman login.', [
-      { text: 'Batal', style: 'cancel' },
-      { text: 'Keluar', style: 'destructive', onPress: () => router.replace('/public/login' as any) },
-    ]);
+    Alert.alert(
+      'Keluar dari akun?',
+      'Kamu akan keluar dari akun dan kembali ke halaman login.',
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Keluar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+              router.replace('/public/login' as any);
+            } catch (error: any) {
+              Alert.alert(
+                'Logout Gagal',
+                error?.message || 'Terjadi kesalahan saat keluar.',
+              );
+            }
+          },
+        },
+      ],
+    );
+=======
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error) throw error;
+
+      router.replace('/public/login' as any);
+
+    } catch (error: any) {
+      Alert.alert('Logout Gagal', error.message);
+    }
+>>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator
+          size="large"
+          color={COLORS.secondaryDark}
+          style={{ flex: 1 }}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (!user || !profile) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+          <Ionicons
+            name="person-circle-outline"
+            size={56}
+            color={COLORS.textSecondary}
+          />
+
+          <Text style={{ ...FONTS.body, color: COLORS.textPrimary, marginTop: 12 }}>
+            Data profil tidak ditemukan.
+          </Text>
+
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={async () => {
+              try {
+                await refreshProfile();
+              } catch (error: any) {
+                Alert.alert('Gagal Memuat Profil', error.message);
+              }
+            }}
+          >
+            <Text style={styles.editText}>Coba Lagi</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <HeaderApp notificationCount={0} />
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.titleSection}>
           <Text style={styles.eyebrow}>AKUN SAYA</Text>
           <Text style={styles.pageTitle}>Profil</Text>
-          <Text style={styles.pageSubtitle}>Kelola informasi akun dan data kontakmu.</Text>
+          <Text style={styles.pageSubtitle}>
+            Kelola informasi akun dan data kontakmu.
+          </Text>
         </View>
 
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Ionicons name="person" size={34} color={COLORS.secondaryDark} />
+            <Ionicons
+              name="person"
+              size={34}
+              color={COLORS.secondaryDark}
+            />
           </View>
+<<<<<<< HEAD
+
           <Text style={styles.fullName}>{profile.fullName}</Text>
           <Text style={styles.email}>{profile.email}</Text>
+
+          <View style={styles.memberBadge}>
+            <Ionicons
+              name="ribbon-outline"
+              size={14}
+              color={COLORS.secondaryDark}
+            />
+            <Text style={styles.memberText}>
+              Pengguna sejak {profile.memberSince}
+=======
+          <Text style={styles.fullName}>{profile.full_name}</Text>
+          <Text style={styles.email}>{user.email}</Text>
           <View style={styles.memberBadge}>
             <Ionicons name="ribbon-outline" size={14} color={COLORS.secondaryDark} />
-            <Text style={styles.memberText}>Pengguna sejak {profile.memberSince}</Text>
+            <Text style={styles.memberText}>
+              Pengguna sejak{' '}
+              {new Date(user.created_at).toLocaleDateString('id-ID', {
+                month: 'long',
+                year: 'numeric',
+              })}
+>>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
+            </Text>
           </View>
         </View>
 
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Informasi Pribadi</Text>
-            <TouchableOpacity style={styles.editButton} onPress={() => router.push('/user/edit-profil' as any)}>
-              <Ionicons name="create-outline" size={15} color={COLORS.secondaryDark} />
+            <Text style={styles.sectionTitle}>
+              Informasi Pribadi
+            </Text>
+
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() =>
+                router.push('/user/edit-profil' as any)
+              }
+            >
+              <Ionicons
+                name="create-outline"
+                size={15}
+                color={COLORS.secondaryDark}
+              />
               <Text style={styles.editText}>Edit</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.infoRow}>
-            <View style={styles.infoIcon}><Ionicons name="person-outline" size={18} color={COLORS.secondaryDark} /></View>
+            <View style={styles.infoIcon}>
+              <Ionicons
+                name="person-outline"
+                size={18}
+                color={COLORS.secondaryDark}
+              />
+            </View>
             <View style={styles.infoCopy}>
               <Text style={styles.infoLabel}>Nama Lengkap</Text>
-              <Text style={styles.infoValue}>{profile.fullName}</Text>
+<<<<<<< HEAD
+              <Text style={styles.infoValue}>
+                {profile.fullName}
+              </Text>
+=======
+              <Text style={styles.infoValue}>{profile.full_name}</Text>
+>>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
             </View>
           </View>
+
           <View style={styles.infoRow}>
-            <View style={styles.infoIcon}><Ionicons name="mail-outline" size={18} color={COLORS.secondaryDark} /></View>
+            <View style={styles.infoIcon}>
+              <Ionicons
+                name="mail-outline"
+                size={18}
+                color={COLORS.secondaryDark}
+              />
+            </View>
             <View style={styles.infoCopy}>
               <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>{profile.email}</Text>
+<<<<<<< HEAD
+              <Text style={styles.infoValue}>
+                {profile.email}
+              </Text>
+=======
+              <Text style={styles.infoValue}>{user.email}</Text>
+>>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
             </View>
           </View>
+
           <View style={styles.infoRow}>
-            <View style={styles.infoIcon}><Ionicons name="logo-whatsapp" size={18} color={COLORS.secondaryDark} /></View>
+            <View style={styles.infoIcon}>
+              <Ionicons
+                name="logo-whatsapp"
+                size={18}
+                color={COLORS.secondaryDark}
+              />
+            </View>
             <View style={styles.infoCopy}>
               <Text style={styles.infoLabel}>Nomor WhatsApp</Text>
-              <Text style={styles.infoValue}>{profile.phone}</Text>
+<<<<<<< HEAD
+              <Text style={styles.infoValue}>
+                {profile.phone}
+              </Text>
+=======
+              <Text style={styles.infoValue}>{profile.phone ?? '-'}</Text>
+>>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
             </View>
           </View>
+
           <View style={[styles.infoRow, styles.lastInfoRow]}>
-            <View style={styles.infoIcon}><Ionicons name="school-outline" size={18} color={COLORS.secondaryDark} /></View>
+            <View style={styles.infoIcon}>
+              <Ionicons
+                name="school-outline"
+                size={18}
+                color={COLORS.secondaryDark}
+              />
+            </View>
             <View style={styles.infoCopy}>
+<<<<<<< HEAD
+              <Text style={styles.infoLabel}>
+                Kategori Penyewa
+              </Text>
+              <Text style={styles.infoValue}>
+                {profile.customerType}
+              </Text>
+=======
               <Text style={styles.infoLabel}>Kategori Penyewa</Text>
-              <Text style={styles.infoValue}>{profile.customerType}</Text>
+              <Text style={styles.infoValue}>{profile.customer_type}</Text>
+>>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
             </View>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.menuRow} onPress={() => router.push('/user/riwayat' as any)}>
-          <View style={styles.menuIcon}><Ionicons name="receipt-outline" size={19} color={COLORS.secondaryDark} /></View>
-          <Text style={styles.menuText}>Riwayat Penyewaan</Text>
-          <Ionicons name="chevron-forward" size={18} color={COLORS.textSecondary} />
+        <TouchableOpacity
+          style={styles.menuRow}
+          onPress={() =>
+            router.push('/user/riwayat' as any)
+          }
+        >
+          <View style={styles.menuIcon}>
+            <Ionicons
+              name="receipt-outline"
+              size={19}
+              color={COLORS.secondaryDark}
+            />
+          </View>
+          <Text style={styles.menuText}>
+            Riwayat Penyewaan
+          </Text>
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={COLORS.textSecondary}
+          />
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.menuRow, styles.logoutRow]} onPress={handleLogout}>
-          <View style={[styles.menuIcon, styles.logoutIcon]}><Ionicons name="log-out-outline" size={19} color={COLORS.accentCritical} /></View>
-          <Text style={styles.logoutText}>Keluar dari Akun</Text>
-          <Ionicons name="chevron-forward" size={18} color={COLORS.textSecondary} />
+        <TouchableOpacity
+          style={[styles.menuRow, styles.logoutRow]}
+          onPress={handleLogout}
+        >
+          <View style={[styles.menuIcon, styles.logoutIcon]}>
+            <Ionicons
+              name="log-out-outline"
+              size={19}
+              color={COLORS.accentCritical}
+            />
+          </View>
+          <Text style={styles.logoutText}>
+            Keluar dari Akun
+          </Text>
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={COLORS.textSecondary}
+          />
         </TouchableOpacity>
-        <Text style={styles.versionText}>Jamal_Jepret • Versi Demo</Text>
+<<<<<<< HEAD
+
+        <Text style={styles.versionText}>
+          Jamal_Jepret • Versi Demo
+        </Text>
+=======
+        <Text style={styles.versionText}>Jamal_Jepret • Versi 1.0</Text>
+>>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
       </ScrollView>
-      <BottomNavBar variant="user" activeTab="Profil" onTabPress={handleTabPress} />
+
+      <BottomNavBar
+        variant="user"
+        activeTab="Profil"
+        onTabPress={handleTabPress}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  scrollContent: { padding: SIZES.large, paddingBottom: SIZES.large },
-  titleSection: { marginBottom: SIZES.large },
-  eyebrow: { ...FONTS.caption, color: COLORS.secondaryDark, fontWeight: '700', letterSpacing: 1.1, marginBottom: 5 },
-  pageTitle: { ...FONTS.headline1, color: COLORS.textPrimary },
-  pageSubtitle: { ...FONTS.body, color: COLORS.textSecondary, marginTop: 4 },
-  profileCard: { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.radiusLarge, alignItems: 'center', padding: SIZES.xlarge, marginBottom: SIZES.large },
-  avatar: { width: 76, height: 76, borderRadius: 38, backgroundColor: '#E0F2FE', alignItems: 'center', justifyContent: 'center', marginBottom: SIZES.medium },
-  fullName: { ...FONTS.headline2, color: COLORS.secondaryDark },
-  email: { ...FONTS.body, color: COLORS.textSecondary, marginTop: 3 },
-  memberBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#E0F2FE', borderRadius: SIZES.radiusPill, paddingHorizontal: 11, paddingVertical: 6, marginTop: SIZES.medium },
-  memberText: { ...FONTS.caption, color: COLORS.secondaryDark, fontWeight: '600' },
-  sectionCard: { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.radiusLarge, padding: SIZES.large, marginBottom: SIZES.medium },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SIZES.medium },
-  sectionTitle: { ...FONTS.headline3, color: COLORS.secondaryDark },
-  editButton: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 5, paddingHorizontal: 8 },
-  editText: { ...FONTS.caption, color: COLORS.secondaryDark, fontWeight: '700' },
-  infoRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: SIZES.medium, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-  lastInfoRow: { borderBottomWidth: 0, paddingBottom: 0 },
-  infoIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#F0F9FF', alignItems: 'center', justifyContent: 'center', marginRight: SIZES.medium },
-  infoCopy: { flex: 1 },
-  infoLabel: { ...FONTS.caption, color: COLORS.textSecondary },
-  infoValue: { ...FONTS.labelMedium, color: COLORS.textPrimary, marginTop: 2 },
-  menuRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: SIZES.radiusMedium, padding: SIZES.medium, marginBottom: SIZES.small },
-  menuIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#E0F2FE', alignItems: 'center', justifyContent: 'center', marginRight: SIZES.medium },
-  menuText: { ...FONTS.labelMedium, color: COLORS.textPrimary, flex: 1 },
-  logoutRow: { marginTop: SIZES.small },
-  logoutIcon: { backgroundColor: '#FEE2E2' },
-  logoutText: { ...FONTS.labelMedium, color: COLORS.accentCritical, flex: 1 },
-  versionText: { ...FONTS.caption, color: COLORS.textSecondary, textAlign: 'center', marginTop: SIZES.large },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  scrollContent: {
+    padding: SIZES.large,
+    paddingBottom: SIZES.large,
+  },
+  titleSection: {
+    marginBottom: SIZES.large,
+  },
+  eyebrow: {
+    ...FONTS.caption,
+    color: COLORS.secondaryDark,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+    marginBottom: 5,
+  },
+  pageTitle: {
+    ...FONTS.headline1,
+    color: COLORS.textPrimary,
+  },
+  pageSubtitle: {
+    ...FONTS.body,
+    color: COLORS.textSecondary,
+    marginTop: 4,
+  },
+  profileCard: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: SIZES.radiusLarge,
+    alignItems: 'center',
+    padding: SIZES.xlarge,
+    marginBottom: SIZES.large,
+  },
+  avatar: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: '#E0F2FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SIZES.medium,
+  },
+  fullName: {
+    ...FONTS.headline2,
+    color: COLORS.secondaryDark,
+  },
+  email: {
+    ...FONTS.body,
+    color: COLORS.textSecondary,
+    marginTop: 3,
+  },
+  memberBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#E0F2FE',
+    borderRadius: SIZES.radiusPill,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    marginTop: SIZES.medium,
+  },
+  memberText: {
+    ...FONTS.caption,
+    color: COLORS.secondaryDark,
+    fontWeight: '600',
+  },
+  sectionCard: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: SIZES.radiusLarge,
+    padding: SIZES.large,
+    marginBottom: SIZES.medium,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SIZES.medium,
+  },
+  sectionTitle: {
+    ...FONTS.headline3,
+    color: COLORS.secondaryDark,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+  },
+  editText: {
+    ...FONTS.caption,
+    color: COLORS.secondaryDark,
+    fontWeight: '700',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: SIZES.medium,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  lastInfoRow: {
+    borderBottomWidth: 0,
+    paddingBottom: 0,
+  },
+  infoIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#F0F9FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SIZES.medium,
+  },
+  infoCopy: {
+    flex: 1,
+  },
+  infoLabel: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+  },
+  infoValue: {
+    ...FONTS.labelMedium,
+    color: COLORS.textPrimary,
+    marginTop: 2,
+  },
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: SIZES.radiusMedium,
+    padding: SIZES.medium,
+    marginBottom: SIZES.small,
+  },
+  menuIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#E0F2FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SIZES.medium,
+  },
+  menuText: {
+    ...FONTS.labelMedium,
+    color: COLORS.textPrimary,
+    flex: 1,
+  },
+  logoutRow: {
+    marginTop: SIZES.small,
+  },
+  logoutIcon: {
+    backgroundColor: '#FEE2E2',
+  },
+  logoutText: {
+    ...FONTS.labelMedium,
+    color: COLORS.accentCritical,
+    flex: 1,
+  },
+  versionText: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginTop: SIZES.large,
+  },
 });

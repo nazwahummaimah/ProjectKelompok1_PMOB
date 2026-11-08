@@ -41,7 +41,7 @@ export default function UserHomeScreen() {
         <View style={styles.welcomeSection}>
           <View style={styles.welcomeCopy}>
             <Text style={styles.eyebrow}>DASHBOARD PENGGUNA</Text>
-            <Text style={styles.pageTitle}>Halo, {profile.fullName.split(' ')[0]}!</Text>
+            <Text style={styles.pageTitle}>Halo, {(profile?.full_name ?? 'Pengguna').split(' ')[0]}!</Text>
             <Text style={styles.pageSubtitle}>Siap untuk perjalanan berikutnya?</Text>
           </View>
           <View style={styles.avatarCircle}>
