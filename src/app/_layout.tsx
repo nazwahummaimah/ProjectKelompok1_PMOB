@@ -1,10 +1,13 @@
-import React from 'react';
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+<<<<<<< HEAD
 import { AuthProvider } from '../context/AuthContext';
+=======
+>>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
 import { AdminProvider } from '../context/AdminContext';
 import { UserProfileProvider } from '../context/UserProfileContext';
+import { AuthProvider } from '../context/AuthContext';
 
 export const unstable_settings = {
   anchor: 'index',

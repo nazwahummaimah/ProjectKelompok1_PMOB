@@ -1,5 +1,6 @@
 
 import React from 'react';
+<<<<<<< HEAD
 import { Stack, Redirect } from 'expo-router';
 import {
   ActivityIndicator,
@@ -31,6 +32,18 @@ export default function UserLayout() {
   if (profile.role !== 'user') {
     return <Redirect href="/admin" />;
   }
+=======
+import { Redirect, Stack } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
+import { useAuth } from '../../context/AuthContext';
+
+export default function UserLayout() {
+  const { user, profile, loading } = useAuth();
+  if (loading) return <View style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator size="large" /></View>;
+  if (!user) return <Redirect href="/public/login" />;
+  if (profile?.role === 'admin') return <Redirect href="/admin" />;
+  if (!profile) return <Redirect href="/public/login" />;
+>>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
 
   return (
     <Stack

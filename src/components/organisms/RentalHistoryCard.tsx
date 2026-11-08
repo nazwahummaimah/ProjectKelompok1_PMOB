@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
-import type { RentalHistoryRecord } from '../../constants/userDemo';
+import type { RentalHistoryRecord } from '../../constants/userTypes';
 import RentalStatusBadge from '../molecules/RentalStatusBadge';
 
 interface RentalHistoryCardProps {

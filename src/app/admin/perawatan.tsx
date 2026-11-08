@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AdminPageLayout, { adminUi } from '../../components/organisms/AdminPageLayout';
 import AdminStatusBadge from '../../components/molecules/AdminStatusBadge';
 import { useAdmin } from '../../context/AdminContext';
-import { MaintenanceType } from '../../constants/adminDemo';
+import { MaintenanceType } from '../../constants/adminTypes';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
 const TYPES: MaintenanceType[] = ['Perbaikan', 'Servis rutin', 'Penggantian komponen'];
@@ -28,11 +28,11 @@ export default function MaintenanceScreen() {
             {item.status === 'Menunggu' ? <>
               <Text style={styles.label}>Jenis pekerjaan</Text>
               <View style={styles.typeRow}>{TYPES.map((type) => <TouchableOpacity key={type} onPress={() => setSelectedTypes((current) => ({ ...current, [item.id]: type }))} style={[adminUi.chip, (selectedTypes[item.id] ?? item.type) === type && adminUi.chipActive]}><Text style={[styles.typeText, (selectedTypes[item.id] ?? item.type) === type && styles.typeActive]}>{type}</Text></TouchableOpacity>)}</View>
-              <TouchableOpacity style={[adminUi.button, { marginTop: 13 }]} onPress={() => startMaintenance(item.id, selectedTypes[item.id] ?? item.type, workNotes[item.id] ?? item.note)}><Text style={adminUi.buttonText}>Mulai Perawatan</Text></TouchableOpacity>
+              <TouchableOpacity style={[adminUi.button, { marginTop: 13 }]} onPress={async () => { try { await startMaintenance(item.id, selectedTypes[item.id] ?? item.type, workNotes[item.id] ?? item.note); } catch (error: any) { Alert.alert('Gagal Memulai Perawatan', error?.message ?? 'Silakan coba lagi.'); } }}><Text style={adminUi.buttonText}>Mulai Perawatan</Text></TouchableOpacity>
             </> : null}
             {item.status === 'Sedang Dikerjakan' ? <TouchableOpacity style={[adminUi.outlineButton, { marginTop: 12 }]} onPress={() => Alert.alert('Pemeriksaan Akhir', 'Tentukan hasil pemeriksaan setelah pekerjaan selesai.', [
-              { text: 'Belum Layak', onPress: () => completeMaintenance(item.id, false) },
-              { text: 'Layak Digunakan', onPress: () => completeMaintenance(item.id, true) },
+              { text: 'Belum Layak', onPress: async () => { try { await completeMaintenance(item.id, false); } catch (error: any) { Alert.alert('Gagal', error?.message ?? 'Silakan coba lagi.'); } } },
+              { text: 'Layak Digunakan', onPress: async () => { try { await completeMaintenance(item.id, true); } catch (error: any) { Alert.alert('Gagal', error?.message ?? 'Silakan coba lagi.'); } } },
             ])}><Text style={adminUi.buttonText}>Selesaikan & Periksa</Text></TouchableOpacity> : null}
             {item.status === 'Selesai' ? <Text style={styles.completedText}>Pekerjaan ditutup. Status akhir unit mengikuti hasil pemeriksaan.</Text> : null}
           </View>

@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
+
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import HeaderApp from '../../components/molecules/HeaderApp';
 import StatusBadge from '../../components/molecules/StatusBadge';
@@ -28,6 +29,7 @@ const formatRupiah = (value: number): string => {
 
 const Katalog: React.FC = () => {
   const router = useRouter();
+
 
   const [activeTab, setActiveTab] = useState<TabType>('Katalog');
   const [searchQuery, setSearchQuery] = useState('');
@@ -88,18 +90,53 @@ const Katalog: React.FC = () => {
     });
   }, [bikes, searchQuery, filterStatus]);
 
+  const [bikes, setBikes] = useState<PublicBike[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Mengambil data sepeda dari Supabase
+  useEffect(() => {
+    const loadBikes = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const result = await getPublicBikes();
+
+        // Menyesuaikan hasil service dengan tipe data katalog
+        setBikes(result);
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'Terjadi kesalahan saat mengambil data sepeda.';
+
+        setError(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBikes();
+  }, []);
+
+  // Navigasi Bottom Navigation
   const handleTabPress = (tab: TabType) => {
     setActiveTab(tab);
+
 
     switch (tab) {
       case 'Beranda':
         router.push('/public/' as any);
         break;
+
       case 'Katalog':
         break;
+
       case 'DurasiSewa':
         router.push('/public/durasi-sewa' as any);
         break;
+
       case 'Login':
         router.push('/public/login' as any);
         break;
@@ -126,10 +163,15 @@ const Katalog: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header Title Section */}
         <View style={styles.titleSection}>
           <View style={styles.titleRow}>
             <Text style={styles.pageTitle}>Katalog Sepeda</Text>
+
 
             <View style={styles.totalBadge}>
               <Text style={styles.totalBadgeText}>
@@ -138,7 +180,10 @@ const Katalog: React.FC = () => {
             </View>
           </View>
 
+
           <Text style={styles.pageSubtitle}>
+            Eksplorasi armada sepeda siap jalan di seluruh pos terdekat.
+            Akses terbuka untuk semua pelancong & warga.
             Eksplorasi armada sepeda siap jalan di seluruh pos terdekat.
             Akses terbuka untuk semua pelancong & warga.
           </Text>
@@ -146,6 +191,13 @@ const Katalog: React.FC = () => {
 
         {/* Search Input Bar */}
         <View style={styles.searchContainer}>
+          <Ionicons
+            name="search-outline"
+            size={20}
+            color={COLORS.textSecondary}
+            style={styles.searchIcon}
+          />
+
           <Ionicons
             name="search-outline"
             size={20}
@@ -163,8 +215,13 @@ const Katalog: React.FC = () => {
         </View>
 
         {/* Filter Chips */}
+        {/* Filter Chips */}
         <View style={styles.filterRow}>
           <TouchableOpacity
+            style={[
+              styles.filterChip,
+              filterStatus === 'Semua' && styles.filterChipActive,
+            ]}
             style={[
               styles.filterChip,
               filterStatus === 'Semua' && styles.filterChipActive,
@@ -182,6 +239,10 @@ const Katalog: React.FC = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
+            style={[
+              styles.filterChip,
+              filterStatus === 'Tersedia' && styles.filterChipActive,
+            ]}
             style={[
               styles.filterChip,
               filterStatus === 'Tersedia' && styles.filterChipActive,
@@ -223,6 +284,13 @@ const Katalog: React.FC = () => {
 
         {/* Notice Box */}
         <View style={styles.noticeBox}>
+          <Ionicons
+            name="information-circle-outline"
+            size={18}
+            color={COLORS.textSecondary}
+            style={{ marginRight: 8 }}
+          />
+
           <Ionicons
             name="information-circle-outline"
             size={18}
@@ -370,6 +438,8 @@ const Katalog: React.FC = () => {
                     activeOpacity={0.7}
                     onPress={() =>
                       router.push({
+                    onPress={() =>
+                      router.push({
                         pathname: '/public/DetailUnit' as any,
                         params: { id: item.id },
                       })
@@ -405,37 +475,45 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+
   scrollContent: {
     padding: SIZES.large,
   },
+
   titleSection: {
     marginBottom: SIZES.large,
   },
+
   titleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
   },
+
   pageTitle: {
     ...FONTS.headline1,
     color: COLORS.secondaryDark,
   },
+
   pageSubtitle: {
     ...FONTS.body,
     color: COLORS.textSecondary,
     lineHeight: 20,
   },
+
   totalBadge: {
     backgroundColor: '#E0F2FE',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: SIZES.radiusSmall,
   },
+
   totalBadgeText: {
     ...FONTS.caption,
     color: COLORS.secondaryDark,
   },
+
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -447,18 +525,22 @@ const styles = StyleSheet.create({
     height: 48,
     marginBottom: SIZES.medium,
   },
+
   searchIcon: {
     marginRight: SIZES.small,
   },
+
   searchInput: {
     flex: 1,
     ...FONTS.body,
     color: COLORS.textPrimary,
   },
+
   filterRow: {
     flexDirection: 'row',
     marginBottom: SIZES.medium,
   },
+
   filterChip: {
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -468,28 +550,33 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     marginRight: 8,
   },
+
   filterChipActive: {
     backgroundColor: '#E0F2FE',
     borderColor: COLORS.primaryLight,
   },
+
   filterChipText: {
     ...FONTS.caption,
     color: COLORS.textSecondary,
   },
+
   filterChipTextActive: {
     color: COLORS.secondaryDark,
     fontWeight: 'bold',
   },
+
   chipCount: {
-    backgroundColor: COLORS.secondaryDark,
-    color: COLORS.surface,
+    color: COLORS.secondaryDark,
     fontSize: 10,
     fontWeight: 'bold',
   },
+
   chipCountSuccess: {
     color: COLORS.success,
     fontWeight: 'bold',
   },
+
   noticeBox: {
     flexDirection: 'row',
     backgroundColor: '#F0F9FF',
@@ -498,15 +585,18 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.large,
     alignItems: 'flex-start',
   },
+
   noticeText: {
     ...FONTS.caption,
     color: COLORS.textSecondary,
     flex: 1,
     lineHeight: 18,
   },
+
   catalogList: {
     marginBottom: SIZES.large,
   },
+
   cardContainer: {
     backgroundColor: COLORS.surface,
     borderRadius: SIZES.radiusLarge,
@@ -515,11 +605,13 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.large,
     overflow: 'hidden',
   },
+
   imageContainer: {
     height: 160,
     backgroundColor: '#CBD5E1',
     position: 'relative',
   },
+
   topOverlay: {
     position: 'absolute',
     top: SIZES.medium,
@@ -528,59 +620,72 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+
   idBadge: {
     backgroundColor: 'rgba(15, 23, 42, 0.65)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: SIZES.radiusSmall,
   },
+
   idText: {
     ...FONTS.caption,
     color: COLORS.surface,
   },
+
   cardDetails: {
     padding: SIZES.large,
   },
+
   cardHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: SIZES.medium,
   },
+
   titleColumn: {
     flex: 1,
     paddingRight: SIZES.small,
   },
+
   categoryText: {
     ...FONTS.caption,
     color: COLORS.textSecondary,
     textTransform: 'uppercase',
   },
+
   bikeName: {
     ...FONTS.headline3,
     color: COLORS.secondaryDark,
   },
+
   priceColumn: {
     alignItems: 'flex-end',
   },
+
   tariffLabel: {
     ...FONTS.caption,
     color: COLORS.textSecondary,
     fontSize: 10,
   },
+
   priceText: {
     ...FONTS.headline3,
     color: COLORS.textPrimary,
   },
+
   perHour: {
     ...FONTS.caption,
     color: COLORS.textSecondary,
     fontWeight: 'normal',
   },
+
   tagsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginBottom: SIZES.medium,
   },
+
   detailButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -589,6 +694,7 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.border,
     paddingTop: SIZES.medium,
   },
+
   detailButtonText: {
     ...FONTS.labelMedium,
     color: COLORS.secondaryDark,
