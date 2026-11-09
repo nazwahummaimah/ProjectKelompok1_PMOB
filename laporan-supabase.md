@@ -19,4 +19,4 @@
 
 ### Hasil Halaman ###
 
-![alt text](hasilhalaman.gif)
+![alt text](<hasilhalamann (1).gif>)
