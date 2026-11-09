@@ -1,27 +1,46 @@
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
+
 import {
+  ActivityIndicator,
   SafeAreaView,
   ScrollView,
-  View,
-  Text,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
+  View,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import {
+  useFocusEffect,
+  useRouter,
+} from 'expo-router';
 
+import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
-import { COLORS, SIZES, FONTS } from '../../constants/theme';
+import FeatureTag from '../../components/molecules/FeatureTag';
 import HeaderApp from '../../components/molecules/HeaderApp';
 import StatusBadge from '../../components/molecules/StatusBadge';
-import FeatureTag from '../../components/molecules/FeatureTag';
-import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
-import { getBikes, Bike } from '../../services/bikeService';
 
-type FilterStatus = 'Semua' | 'Tersedia' | 'Sedang Disewa';
+import BottomNavBar, {
+  TabType,
+} from '../../components/molecules/BottomNavBar';
+
+import {
+  Bike,
+  getBikes,
+} from '../../services/bikeService';
+
+type FilterStatus =
+  | 'Semua'
+  | 'Tersedia'
+  | 'Sedang Disewa';
 
 const formatRupiah = (value: number): string => {
   return new Intl.NumberFormat('id-ID').format(value);
@@ -30,48 +49,59 @@ const formatRupiah = (value: number): string => {
 const Katalog: React.FC = () => {
   const router = useRouter();
 
-
   const [activeTab, setActiveTab] = useState<TabType>('Katalog');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>('Semua');
+  const [filterStatus, setFilterStatus] =
+    useState<FilterStatus>('Semua');
 
   const [bikes, setBikes] = useState<Bike[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Mengambil data sepeda langsung dari Supabase.
   const loadBikes = useCallback(async () => {
     try {
       setLoading(true);
       setErrorMessage('');
 
       const data = await getBikes();
+
       setBikes(data);
     } catch (error) {
       console.error('Katalog load error:', error);
+
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'Gagal memuat katalog sepeda.'
+          : 'Gagal memuat katalog sepeda.',
       );
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    loadBikes();
-  }, [loadBikes]);
+  // Memuat ulang katalog setiap kali halaman dibuka kembali.
+  useFocusEffect(
+    useCallback(() => {
+      loadBikes();
+    }, [loadBikes]),
+  );
 
+  // Menghitung jumlah sepeda tersedia.
   const availableCount = useMemo(
-    () => bikes.filter((bike) => bike.status === 'Tersedia').length,
-    [bikes]
+    () =>
+      bikes.filter((bike) => bike.status === 'Tersedia').length,
+    [bikes],
   );
 
+  // Menghitung jumlah sepeda sedang disewa.
   const rentedCount = useMemo(
-    () => bikes.filter((bike) => bike.status === 'Sedang Disewa').length,
-    [bikes]
+    () =>
+      bikes.filter((bike) => bike.status === 'Sedang Disewa').length,
+    [bikes],
   );
 
+  // Pencarian dan filter status.
   const filteredBikes = useMemo(() => {
     const keyword = searchQuery.trim().toLowerCase();
 
@@ -90,40 +120,9 @@ const Katalog: React.FC = () => {
     });
   }, [bikes, searchQuery, filterStatus]);
 
-  const [bikes, setBikes] = useState<PublicBike[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Mengambil data sepeda dari Supabase
-  useEffect(() => {
-    const loadBikes = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const result = await getPublicBikes();
-
-        // Menyesuaikan hasil service dengan tipe data katalog
-        setBikes(result);
-      } catch (err: unknown) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : 'Terjadi kesalahan saat mengambil data sepeda.';
-
-        setError(message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadBikes();
-  }, []);
-
-  // Navigasi Bottom Navigation
+  // Navigasi Bottom Navigation.
   const handleTabPress = (tab: TabType) => {
     setActiveTab(tab);
-
 
     switch (tab) {
       case 'Beranda':
@@ -143,9 +142,9 @@ const Katalog: React.FC = () => {
     }
   };
 
+  // Mengambil fitur dan lokasi untuk ditampilkan pada kartu.
   const getBikeFeatures = (bike: Bike): string[] => {
     const features = bike.features ?? [];
-
     const result = [...features];
 
     if (bike.location && !result.includes(bike.location)) {
@@ -163,15 +162,12 @@ const Katalog: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
         {/* Header Title Section */}
         <View style={styles.titleSection}>
           <View style={styles.titleRow}>
-            <Text style={styles.pageTitle}>Katalog Sepeda</Text>
-
+            <Text style={styles.pageTitle}>
+              Katalog Sepeda
+            </Text>
 
             <View style={styles.totalBadge}>
               <Text style={styles.totalBadgeText}>
@@ -180,24 +176,14 @@ const Katalog: React.FC = () => {
             </View>
           </View>
 
-
           <Text style={styles.pageSubtitle}>
-            Eksplorasi armada sepeda siap jalan di seluruh pos terdekat.
-            Akses terbuka untuk semua pelancong & warga.
-            Eksplorasi armada sepeda siap jalan di seluruh pos terdekat.
-            Akses terbuka untuk semua pelancong & warga.
+            Eksplorasi armada sepeda siap jalan di seluruh pos
+            terdekat. Akses terbuka untuk semua pelancong & warga.
           </Text>
         </View>
 
         {/* Search Input Bar */}
         <View style={styles.searchContainer}>
-          <Ionicons
-            name="search-outline"
-            size={20}
-            color={COLORS.textSecondary}
-            style={styles.searchIcon}
-          />
-
           <Ionicons
             name="search-outline"
             size={20}
@@ -215,13 +201,8 @@ const Katalog: React.FC = () => {
         </View>
 
         {/* Filter Chips */}
-        {/* Filter Chips */}
         <View style={styles.filterRow}>
           <TouchableOpacity
-            style={[
-              styles.filterChip,
-              filterStatus === 'Semua' && styles.filterChipActive,
-            ]}
             style={[
               styles.filterChip,
               filterStatus === 'Semua' && styles.filterChipActive,
@@ -231,28 +212,30 @@ const Katalog: React.FC = () => {
             <Text
               style={[
                 styles.filterChipText,
-                filterStatus === 'Semua' && styles.filterChipTextActive,
+                filterStatus === 'Semua' &&
+                  styles.filterChipTextActive,
               ]}
             >
-              Semua <Text style={styles.chipCount}>{bikes.length}</Text>
+              Semua{' '}
+              <Text style={styles.chipCount}>
+                {bikes.length}
+              </Text>
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[
               styles.filterChip,
-              filterStatus === 'Tersedia' && styles.filterChipActive,
-            ]}
-            style={[
-              styles.filterChip,
-              filterStatus === 'Tersedia' && styles.filterChipActive,
+              filterStatus === 'Tersedia' &&
+                styles.filterChipActive,
             ]}
             onPress={() => setFilterStatus('Tersedia')}
           >
             <Text
               style={[
                 styles.filterChipText,
-                filterStatus === 'Tersedia' && styles.filterChipTextActive,
+                filterStatus === 'Tersedia' &&
+                  styles.filterChipTextActive,
               ]}
             >
               Tersedia{' '}
@@ -265,7 +248,8 @@ const Katalog: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.filterChip,
-              filterStatus === 'Sedang Disewa' && styles.filterChipActive,
+              filterStatus === 'Sedang Disewa' &&
+                styles.filterChipActive,
             ]}
             onPress={() => setFilterStatus('Sedang Disewa')}
           >
@@ -277,7 +261,9 @@ const Katalog: React.FC = () => {
               ]}
             >
               Sedang Disewa{' '}
-              <Text style={styles.chipCount}>{rentedCount}</Text>
+              <Text style={styles.chipCount}>
+                {rentedCount}
+              </Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -291,16 +277,10 @@ const Katalog: React.FC = () => {
             style={{ marginRight: 8 }}
           />
 
-          <Ionicons
-            name="information-circle-outline"
-            size={18}
-            color={COLORS.textSecondary}
-            style={{ marginRight: 8 }}
-          />
-
           <Text style={styles.noticeText}>
-            Semua unit berstatus publik. Kunjungi pos terdekat atau hubungi
-            petugas di lokasi untuk verifikasi fisik sebelum peminjaman.
+            Semua unit berstatus publik. Kunjungi pos terdekat
+            atau hubungi petugas di lokasi untuk verifikasi fisik
+            sebelum peminjaman.
           </Text>
         </View>
 
@@ -311,6 +291,7 @@ const Katalog: React.FC = () => {
               size="large"
               color={COLORS.secondaryDark}
             />
+
             <Text style={styles.stateText}>
               Memuat katalog sepeda...
             </Text>
@@ -342,24 +323,26 @@ const Katalog: React.FC = () => {
         )}
 
         {/* Empty Database */}
-        {!loading && !errorMessage && bikes.length === 0 && (
-          <View style={styles.stateContainer}>
-            <Ionicons
-              name="bicycle-outline"
-              size={44}
-              color={COLORS.textSecondary}
-            />
+        {!loading &&
+          !errorMessage &&
+          bikes.length === 0 && (
+            <View style={styles.stateContainer}>
+              <Ionicons
+                name="bicycle-outline"
+                size={44}
+                color={COLORS.textSecondary}
+              />
 
-            <Text style={styles.emptyTitle}>
-              Belum Ada Unit Sepeda
-            </Text>
+              <Text style={styles.emptyTitle}>
+                Belum Ada Unit Sepeda
+              </Text>
 
-            <Text style={styles.stateText}>
-              Saat ini belum ada unit sepeda yang terdaftar dalam katalog.
-              Silakan kunjungi kembali nanti.
-            </Text>
-          </View>
-        )}
+              <Text style={styles.stateText}>
+                Saat ini belum ada unit sepeda yang terdaftar
+                dalam katalog. Silakan kunjungi kembali nanti.
+              </Text>
+            </View>
+          )}
 
         {/* Search / Filter Empty */}
         {!loading &&
@@ -378,7 +361,8 @@ const Katalog: React.FC = () => {
               </Text>
 
               <Text style={styles.stateText}>
-                Tidak ada unit yang sesuai dengan pencarian atau filter.
+                Tidak ada unit yang sesuai dengan pencarian
+                atau filter.
               </Text>
             </View>
           )}
@@ -387,7 +371,10 @@ const Katalog: React.FC = () => {
         {!loading && !errorMessage && (
           <View style={styles.catalogList}>
             {filteredBikes.map((item) => (
-              <View key={item.id} style={styles.cardContainer}>
+              <View
+                key={item.id}
+                style={styles.cardContainer}
+              >
                 <View style={styles.imageContainer}>
                   <View style={styles.topOverlay}>
                     <View style={styles.idBadge}>
@@ -418,26 +405,32 @@ const Katalog: React.FC = () => {
                       </Text>
 
                       <Text style={styles.priceText}>
-                        Rp{formatRupiah(Number(item.price_per_hour))}
-                        <Text style={styles.perHour}> / jam</Text>
+                        Rp{formatRupiah(
+                          Number(item.price_per_hour),
+                        )}
+                        <Text style={styles.perHour}>
+                          {' '} / jam
+                        </Text>
                       </Text>
                     </View>
                   </View>
 
+                  {/* Fitur Sepeda */}
                   <View style={styles.tagsRow}>
-                    {getBikeFeatures(item).map((feature, index) => (
-                      <FeatureTag
-                        key={`${item.id}-${index}`}
-                        label={feature}
-                      />
-                    ))}
+                    {getBikeFeatures(item).map(
+                      (feature, index) => (
+                        <FeatureTag
+                          key={`${item.id}-${index}`}
+                          label={feature}
+                        />
+                      ),
+                    )}
                   </View>
 
+                  {/* Detail Unit */}
                   <TouchableOpacity
                     style={styles.detailButton}
                     activeOpacity={0.7}
-                    onPress={() =>
-                      router.push({
                     onPress={() =>
                       router.push({
                         pathname: '/public/DetailUnit' as any,
@@ -699,23 +692,27 @@ const styles = StyleSheet.create({
     ...FONTS.labelMedium,
     color: COLORS.secondaryDark,
   },
+
   stateContainer: {
     padding: SIZES.large,
     alignItems: 'center',
     justifyContent: 'center',
     gap: SIZES.small,
   },
+
   stateText: {
     ...FONTS.caption,
     color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
   },
+
   emptyTitle: {
     ...FONTS.headline3,
     color: COLORS.secondaryDark,
     textAlign: 'center',
   },
+
   retryButton: {
     backgroundColor: COLORS.primaryLight,
     paddingHorizontal: SIZES.large,
@@ -723,6 +720,7 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.radiusMedium,
     marginTop: SIZES.small,
   },
+
   retryButtonText: {
     ...FONTS.labelMedium,
     color: COLORS.textPrimary,
