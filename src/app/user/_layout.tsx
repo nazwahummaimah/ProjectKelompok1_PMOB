@@ -1,11 +1,7 @@
 
 import React from 'react';
 import { Stack, Redirect } from 'expo-router';
-import {
-  ActivityIndicator,
-  View,
-  StyleSheet,
-} from 'react-native';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constants/theme';

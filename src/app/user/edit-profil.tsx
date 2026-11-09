@@ -45,7 +45,6 @@ export default function EditUserProfileScreen() {
     fullName: false,
     phone: false,
   });
-
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
 

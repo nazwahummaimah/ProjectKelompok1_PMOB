@@ -35,7 +35,6 @@ import { useAuth } from '../../context/AuthContext';
 
 const Register: React.FC = () => {
   const router = useRouter();
-  const { signUp } = useAuth();
 
   const [activeTab, setActiveTab] = useState<TabType>('Login');
 
@@ -146,59 +145,54 @@ const Register: React.FC = () => {
     try {
       setIsSubmitting(true);
 
-      const result = await signUp({
-        fullName: fullName.trim(),
+      const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
-        phone: normalizePhone(phone),
         password,
-        customerType: 'Umum',
+        options: {
+          data: {
+            full_name: fullName.trim(),
+            phone: normalizePhone(phone),
+            customer_type: 'Umum',
+          },
+        },
       });
 
-      if (result.needsEmailConfirmation) {
+      if (error) throw error;
+
+      if (!data.user) {
+        throw new Error(
+          'Data akun tidak ditemukan. Silakan coba kembali.',
+        );
+      }
+
+      if (!data.session) {
         Alert.alert(
           'Registrasi Berhasil',
-          'Akun berhasil dibuat. Silakan periksa email kamu untuk melakukan verifikasi sebelum login.',
-          [
-            {
-              text: 'Ke Halaman Login',
-              onPress: () =>
-                router.replace('/public/login' as any),
-            },
-          ],
+          'Silakan periksa email untuk melakukan verifikasi akun.',
         );
       } else {
         Alert.alert(
           'Registrasi Berhasil',
-          'Akun berhasil dibuat. Kamu sekarang dapat masuk menggunakan email dan kata sandi yang telah didaftarkan.',
+          'Akun berhasil dibuat.',
           [
             {
-              text: 'Masuk Sekarang',
+              text: 'Lanjut',
               onPress: () =>
                 router.replace('/user' as any),
             },
           ],
         );
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Register error:', error);
 
-      let message =
-        'Terjadi kesalahan saat membuat akun. Silakan coba kembali.';
+      let message = 'Terjadi kesalahan saat membuat akun. Silakan coba kembali.';
+      if (error instanceof Error) {
+        message = error.message;
 
-      if (
-        error?.message?.toLowerCase().includes('already registered')
-      ) {
-        message = 'Email tersebut sudah terdaftar. Silakan gunakan email lain atau masuk ke akun kamu.';
-      } else if (
-        error?.message?.toLowerCase().includes('password')
-      ) {
-        message = error.message;
-      } else if (
-        error?.message?.toLowerCase().includes('email')
-      ) {
-        message = error.message;
-      } else if (error?.message) {
-        message = error.message;
+        if (error.message.toLowerCase().includes('already registered')) {
+          message = 'Email tersebut sudah terdaftar. Silakan gunakan email lain atau masuk ke akun kamu.';
+        }
       }
 
       Alert.alert('Registrasi Gagal', message);

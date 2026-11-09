@@ -83,3 +83,4 @@ Project yang Dipilih: Penyewaan Sepda
 <img src="assets/images/durasi-sewa.gif" style="width: 30%; height: auto;">
 
 <img src="assets/images/image-1.png" style="width: 30%; height: auto;">
+
