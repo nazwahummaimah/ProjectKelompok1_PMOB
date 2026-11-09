@@ -17,6 +17,15 @@
 
 <img src="skematabeldatabase.png" width="50%" >
 
-### Hasil Halaman ###
+### Hasil Halaman Integrasi tabel bikes ###
+![alt text](bikes.gif)
 
-![alt text](<hasilhalamann (1).gif>)
+### Hasil Halaman Integrasi tabel maintanance ###
+
+### Hasil Halaman Integrasi tabel expenses ###
+
+### Hasil Halaman Integrasi tabel profiles ###
+![alt text](profil.gif)
+
+### Hasil Halaman Integrasi tabel transaktion_item & transaktion ###
+![alt text](transaksi.gif)
