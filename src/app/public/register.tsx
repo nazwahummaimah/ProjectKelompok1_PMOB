@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   SafeAreaView,
@@ -17,8 +18,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
-import BottomNavBar, { TabType } from '../../components/molecules/BottomNavBar';
+
+import BottomNavBar, {
+  TabType,
+} from '../../components/molecules/BottomNavBar';
+
 import ValidationMessage from '../../components/molecules/ValidationMessage';
+import JamalJepretLogo from '../../components/molecules/JamalJepretLogo';
 
 import {
   validateFullName,
@@ -29,12 +35,15 @@ import {
   hasValidationErrors,
 } from '../../utils/formValidation';
 
-import HeaderApp from '@/components/molecules/HeaderApp';
-import JamalJepretLogo from '@/components/molecules/JamalJepretLogo';
 import { useAuth } from '../../context/AuthContext';
 
 const Register: React.FC = () => {
   const router = useRouter();
+  const { signUp } = useAuth();
+
+  // ===================================================
+  // STATE
+  // ===================================================
 
   const [activeTab, setActiveTab] = useState<TabType>('Login');
 
@@ -45,7 +54,9 @@ const Register: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [touched, setTouched] = useState({
@@ -57,6 +68,10 @@ const Register: React.FC = () => {
   });
 
   const [submitted, setSubmitted] = useState(false);
+
+  // ===================================================
+  // VALIDATION
+  // ===================================================
 
   const validation = {
     fullName: validateFullName(fullName),
@@ -105,7 +120,14 @@ const Register: React.FC = () => {
   // NORMALIZE INDONESIAN PHONE NUMBER
   // ===================================================
 
-  const normalizePhone = (value: string) => {
+  /**
+   * Mengubah nomor WhatsApp menjadi format internasional.
+   *
+   * 081234567890  -> +6281234567890
+   * 6281234567890 -> +6281234567890
+   * 81234567890   -> +6281234567890
+   */
+  const normalizePhone = (value: string): string => {
     let digits = value.replace(/\D/g, '');
 
     if (digits.startsWith('62')) {
@@ -122,6 +144,8 @@ const Register: React.FC = () => {
   // ===================================================
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     setSubmitted(true);
 
     setTouched({
@@ -140,58 +164,87 @@ const Register: React.FC = () => {
       return;
     }
 
-    if (isSubmitting) return;
-
     try {
       setIsSubmitting(true);
 
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
+      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedPhone = normalizePhone(phone);
+
+      // Registrasi melalui AuthContext agar alur autentikasi
+      // terpusat dan konsisten dengan halaman login.
+      const result = await signUp({
+        fullName: fullName.trim(),
+        email: normalizedEmail,
+        phone: normalizedPhone,
         password,
-        options: {
-          data: {
-            full_name: fullName.trim(),
-            phone: normalizePhone(phone),
-            customer_type: 'Umum',
-          },
-        },
+        customerType: 'Umum',
       });
 
-      if (error) throw error;
+      // =================================================
+      // EMAIL VERIFICATION ENABLED
+      // =================================================
 
-      if (!data.user) {
-        throw new Error(
-          'Data akun tidak ditemukan. Silakan coba kembali.',
-        );
-      }
-
-      if (!data.session) {
+      if (result.needsEmailConfirmation) {
         Alert.alert(
           'Registrasi Berhasil',
-          'Silakan periksa email untuk melakukan verifikasi akun.',
-        );
-      } else {
-        Alert.alert(
-          'Registrasi Berhasil',
-          'Akun berhasil dibuat.',
+          'Akun berhasil dibuat. Silakan periksa email kamu dan klik tautan verifikasi untuk mengaktifkan akun.',
           [
             {
-              text: 'Lanjut',
-              onPress: () =>
-                router.replace('/user' as any),
+              text: 'Mengerti',
+              onPress: () => {
+                router.replace('/public/login' as any);
+              },
             },
           ],
         );
+
+        return;
       }
+
+      // =================================================
+      // SESSION AVAILABLE
+      // =================================================
+
+      Alert.alert(
+        'Registrasi Berhasil',
+        'Akun berhasil dibuat dan kamu sudah login.',
+        [
+          {
+            text: 'Lanjut',
+            onPress: () => {
+              router.replace('/user' as any);
+            },
+          },
+        ],
+      );
     } catch (error: unknown) {
       console.error('Register error:', error);
 
-      let message = 'Terjadi kesalahan saat membuat akun. Silakan coba kembali.';
-      if (error instanceof Error) {
-        message = error.message;
+      let message =
+        'Terjadi kesalahan saat membuat akun. Silakan coba kembali.';
 
-        if (error.message.toLowerCase().includes('already registered')) {
-          message = 'Email tersebut sudah terdaftar. Silakan gunakan email lain atau masuk ke akun kamu.';
+      if (error instanceof Error) {
+        const errorMessage = error.message.toLowerCase();
+
+        if (
+          errorMessage.includes('already registered') ||
+          errorMessage.includes('user already registered')
+        ) {
+          message =
+            'Email tersebut sudah terdaftar. Silakan gunakan email lain atau masuk ke akun kamu.';
+        } else if (errorMessage.includes('invalid email')) {
+          message = 'Format email tidak valid.';
+        } else if (errorMessage.includes('password')) {
+          message =
+            'Kata sandi tidak memenuhi persyaratan Supabase.';
+        } else if (
+          errorMessage.includes('rate limit') ||
+          errorMessage.includes('too many requests')
+        ) {
+          message =
+            'Terlalu banyak percobaan registrasi. Silakan coba kembali beberapa saat lagi.';
+        } else {
+          message = error.message;
         }
       }
 
@@ -206,6 +259,8 @@ const Register: React.FC = () => {
   // ===================================================
 
   const handleTabPress = (tab: TabType) => {
+    if (isSubmitting) return;
+
     setActiveTab(tab);
 
     switch (tab) {
@@ -226,6 +281,10 @@ const Register: React.FC = () => {
         break;
     }
   };
+
+  // ===================================================
+  // RENDER
+  // ===================================================
 
   return (
     <SafeAreaView style={styles.container}>
@@ -294,6 +353,7 @@ const Register: React.FC = () => {
               placeholder="Masukkan nama lengkap"
               placeholderTextColor={COLORS.textSecondary}
               autoCapitalize="words"
+              autoCorrect={false}
               editable={!isSubmitting}
             />
           </View>
@@ -450,6 +510,7 @@ const Register: React.FC = () => {
               placeholderTextColor={COLORS.textSecondary}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
+              autoCorrect={false}
               editable={!isSubmitting}
             />
 
@@ -488,6 +549,7 @@ const Register: React.FC = () => {
                 color={COLORS.success}
                 style={{ marginRight: 4 }}
               />
+
               <Text style={styles.validText}>
                 Minimal 8 karakter
               </Text>
@@ -525,6 +587,7 @@ const Register: React.FC = () => {
               placeholderTextColor={COLORS.textSecondary}
               secureTextEntry={!showConfirmPassword}
               autoCapitalize="none"
+              autoCorrect={false}
               editable={!isSubmitting}
             />
 
@@ -563,6 +626,7 @@ const Register: React.FC = () => {
                 color={COLORS.success}
                 style={{ marginRight: 4 }}
               />
+
               <Text style={styles.validText}>
                 Kata sandi cocok
               </Text>
@@ -617,6 +681,7 @@ const Register: React.FC = () => {
         </View>
       </ScrollView>
 
+      {/* BOTTOM NAVIGATION */}
       <BottomNavBar
         activeTab={activeTab}
         onTabPress={handleTabPress}
@@ -625,11 +690,16 @@ const Register: React.FC = () => {
   );
 };
 
+// =====================================================
+// STYLES
+// =====================================================
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
+
   safeHeaderArea: {
     backgroundColor: COLORS.surface,
     paddingTop:
@@ -639,6 +709,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
+
   topHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -646,36 +717,44 @@ const styles = StyleSheet.create({
     paddingVertical: SIZES.medium,
     height: 56,
   },
+
   backBtn: {
     padding: 4,
   },
+
   brandHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: SIZES.medium,
   },
+
   scrollContent: {
     padding: SIZES.large,
   },
+
   pageTitle: {
     ...FONTS.headline1,
     color: COLORS.secondaryDark,
     marginBottom: 4,
   },
+
   pageSubtitle: {
     ...FONTS.body,
     color: COLORS.textSecondary,
     marginBottom: SIZES.xlarge,
     lineHeight: 20,
   },
+
   inputGroup: {
     marginBottom: SIZES.large,
   },
+
   inputLabel: {
     ...FONTS.labelMedium,
     color: COLORS.textPrimary,
     marginBottom: SIZES.small,
   },
+
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -686,20 +765,25 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     paddingHorizontal: SIZES.medium,
   },
+
   inputBoxError: {
     borderColor: COLORS.accentCritical,
   },
+
   inputBoxValid: {
     borderColor: COLORS.success,
   },
+
   textInput: {
     flex: 1,
     ...FONTS.body,
     color: COLORS.textPrimary,
   },
+
   phoneInputRow: {
     flexDirection: 'row',
   },
+
   countryCodeBox: {
     height: 48,
     width: 60,
@@ -712,25 +796,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   countryCodeText: {
     ...FONTS.labelMedium,
     color: COLORS.textPrimary,
   },
+
   helperRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 6,
   },
+
   helperText: {
     ...FONTS.caption,
     color: COLORS.textSecondary,
     flex: 1,
     lineHeight: 16,
   },
+
   validText: {
     ...FONTS.caption,
     color: COLORS.secondaryDark,
   },
+
   submitBtn: {
     flexDirection: 'row',
     height: 48,
@@ -741,23 +830,28 @@ const styles = StyleSheet.create({
     marginTop: SIZES.medium,
     marginBottom: SIZES.large,
   },
+
   submitBtnDisabled: {
     opacity: 0.6,
   },
+
   submitBtnText: {
     ...FONTS.labelMedium,
     color: COLORS.textPrimary,
     fontWeight: 'bold',
   },
+
   loginRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginBottom: SIZES.large,
   },
+
   loginPrompt: {
     ...FONTS.body,
     color: COLORS.textSecondary,
   },
+
   loginLink: {
     ...FONTS.body,
     fontWeight: 'bold',
