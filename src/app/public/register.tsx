@@ -31,12 +31,13 @@ import {
 
 import HeaderApp from '@/components/molecules/HeaderApp';
 import JamalJepretLogo from '@/components/molecules/JamalJepretLogo';
-import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 
 const Register: React.FC = () => {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<TabType>('Login');
+
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -100,6 +101,10 @@ const Register: React.FC = () => {
     }));
   };
 
+  // ===================================================
+  // NORMALIZE INDONESIAN PHONE NUMBER
+  // ===================================================
+
   const normalizePhone = (value: string) => {
     let digits = value.replace(/\D/g, '');
 
@@ -111,6 +116,11 @@ const Register: React.FC = () => {
 
     return `+62${digits}`;
   };
+
+  // ===================================================
+  // REGISTER
+  // ===================================================
+
   const handleSubmit = async () => {
     setSubmitted(true);
 
