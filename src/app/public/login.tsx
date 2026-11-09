@@ -25,20 +25,12 @@ import {
 } from '../../utils/formValidation';
 
 import HeaderApp from '@/components/molecules/HeaderApp';
-<<<<<<< HEAD
-=======
-import { supabase } from '../../lib/supabase';
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
 import { useAuth } from '../../context/AuthContext';
 
 const Login: React.FC = () => {
   const router = useRouter();
-<<<<<<< HEAD
   const { signIn } = useAuth();
 
-=======
-  const { refreshProfile } = useAuth();
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
   const [activeTab, setActiveTab] = useState<TabType>('Login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -58,7 +50,6 @@ const Login: React.FC = () => {
   const showEmailValidation = touched.email || submitted;
   const showPasswordValidation = touched.password || submitted;
 
-<<<<<<< HEAD
   const emailError = showEmailValidation
     ? emailValidation
     : undefined;
@@ -73,8 +64,6 @@ const Login: React.FC = () => {
   const passwordValid =
     showPasswordValidation && !passwordValidation;
 
-=======
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
   const handleSubmit = async () => {
     setSubmitted(true);
     setTouched({
@@ -91,7 +80,6 @@ const Login: React.FC = () => {
       return;
     }
 
-<<<<<<< HEAD
     if (isSubmitting) return;
 
     try {
@@ -112,37 +100,6 @@ const Login: React.FC = () => {
       Alert.alert(
         'Akses Ditolak',
         'Role akun tidak dikenali. Silakan hubungi administrator.',
-=======
-    try {
-      const { data, error } =
-        await supabase.auth.signInWithPassword({
-          email: email.trim().toLowerCase(),
-          password,
-        });
-
-      if (error) throw error;
-      await refreshProfile();
-
-      const { data: profile, error: profileError } =
-        await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
-
-      if (profileError) throw profileError;
-
-      if (profile.role === 'admin') {
-        router.replace('/admin' as any);
-      } else {
-        router.replace('/user' as any);
-      }
-
-    } catch (error: any) {
-      Alert.alert(
-        'Login Gagal',
-        error.message || 'Email atau password tidak sesuai.'
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
       );
     } catch (error: any) {
       console.error('Login error:', error);
