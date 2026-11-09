@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -17,23 +18,11 @@ import { useRouter } from 'expo-router';
 import HeaderApp from '../../components/molecules/HeaderApp';
 import BottomNavBar, { UserTabType } from '../../components/molecules/BottomNavBar';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
-<<<<<<< HEAD
-import { useUserProfile } from '../../context/UserProfileContext';
 import { useAuth } from '../../context/AuthContext';
 
 export default function UserProfileScreen() {
   const router = useRouter();
-  const { profile } = useUserProfile();
-  const { signOut } = useAuth();
-=======
-import { useAuth } from '../../context/AuthContext';
-import { ActivityIndicator } from 'react-native';
-import { supabase } from '../../lib/supabase';
-
-export default function UserProfileScreen() {
-const router = useRouter();
-const { user, profile, loading, refreshProfile } = useAuth();
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
+  const { user, profile, loading, signOut, refreshProfile } = useAuth();
 
   const handleTabPress = (tab: UserTabType) => {
     switch (tab) {
@@ -54,7 +43,6 @@ const { user, profile, loading, refreshProfile } = useAuth();
     }
   };
 
-<<<<<<< HEAD
   const handleLogout = () => {
     Alert.alert(
       'Keluar dari akun?',
@@ -78,19 +66,6 @@ const { user, profile, loading, refreshProfile } = useAuth();
         },
       ],
     );
-=======
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-
-      if (error) throw error;
-
-      router.replace('/public/login' as any);
-
-    } catch (error: any) {
-      Alert.alert('Logout Gagal', error.message);
-    }
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
   };
 
   if (loading) {
@@ -161,10 +136,8 @@ const { user, profile, loading, refreshProfile } = useAuth();
               color={COLORS.secondaryDark}
             />
           </View>
-<<<<<<< HEAD
-
-          <Text style={styles.fullName}>{profile.fullName}</Text>
-          <Text style={styles.email}>{profile.email}</Text>
+          <Text style={styles.fullName}>{profile.full_name}</Text>
+          <Text style={styles.email}>{user?.email ?? profile.email}</Text>
 
           <View style={styles.memberBadge}>
             <Ionicons
@@ -173,19 +146,11 @@ const { user, profile, loading, refreshProfile } = useAuth();
               color={COLORS.secondaryDark}
             />
             <Text style={styles.memberText}>
-              Pengguna sejak {profile.memberSince}
-=======
-          <Text style={styles.fullName}>{profile.full_name}</Text>
-          <Text style={styles.email}>{user.email}</Text>
-          <View style={styles.memberBadge}>
-            <Ionicons name="ribbon-outline" size={14} color={COLORS.secondaryDark} />
-            <Text style={styles.memberText}>
               Pengguna sejak{' '}
-              {new Date(user.created_at).toLocaleDateString('id-ID', {
+              {new Date(profile.created_at).toLocaleDateString('id-ID', {
                 month: 'long',
                 year: 'numeric',
               })}
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
             </Text>
           </View>
         </View>
@@ -221,13 +186,7 @@ const { user, profile, loading, refreshProfile } = useAuth();
             </View>
             <View style={styles.infoCopy}>
               <Text style={styles.infoLabel}>Nama Lengkap</Text>
-<<<<<<< HEAD
-              <Text style={styles.infoValue}>
-                {profile.fullName}
-              </Text>
-=======
               <Text style={styles.infoValue}>{profile.full_name}</Text>
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
             </View>
           </View>
 
@@ -241,13 +200,7 @@ const { user, profile, loading, refreshProfile } = useAuth();
             </View>
             <View style={styles.infoCopy}>
               <Text style={styles.infoLabel}>Email</Text>
-<<<<<<< HEAD
-              <Text style={styles.infoValue}>
-                {profile.email}
-              </Text>
-=======
-              <Text style={styles.infoValue}>{user.email}</Text>
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
+              <Text style={styles.infoValue}>{user?.email ?? profile.email}</Text>
             </View>
           </View>
 
@@ -261,13 +214,7 @@ const { user, profile, loading, refreshProfile } = useAuth();
             </View>
             <View style={styles.infoCopy}>
               <Text style={styles.infoLabel}>Nomor WhatsApp</Text>
-<<<<<<< HEAD
-              <Text style={styles.infoValue}>
-                {profile.phone}
-              </Text>
-=======
               <Text style={styles.infoValue}>{profile.phone ?? '-'}</Text>
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
             </View>
           </View>
 
@@ -280,17 +227,8 @@ const { user, profile, loading, refreshProfile } = useAuth();
               />
             </View>
             <View style={styles.infoCopy}>
-<<<<<<< HEAD
-              <Text style={styles.infoLabel}>
-                Kategori Penyewa
-              </Text>
-              <Text style={styles.infoValue}>
-                {profile.customerType}
-              </Text>
-=======
               <Text style={styles.infoLabel}>Kategori Penyewa</Text>
               <Text style={styles.infoValue}>{profile.customer_type}</Text>
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
             </View>
           </View>
         </View>
@@ -338,14 +276,7 @@ const { user, profile, loading, refreshProfile } = useAuth();
             color={COLORS.textSecondary}
           />
         </TouchableOpacity>
-<<<<<<< HEAD
-
-        <Text style={styles.versionText}>
-          Jamal_Jepret • Versi Demo
-        </Text>
-=======
         <Text style={styles.versionText}>Jamal_Jepret • Versi 1.0</Text>
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
       </ScrollView>
 
       <BottomNavBar

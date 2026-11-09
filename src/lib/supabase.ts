@@ -1,54 +1,66 @@
 
 import 'react-native-url-polyfill/auto';
-<<<<<<< HEAD
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
-=======
-import 'expo-sqlite/localStorage/install';
-
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
 import { createClient } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+
 const supabasePublishableKey =
-<<<<<<< HEAD
-  process.env.EXPO_PUBLIC_SUPABASE_KEY;
+  process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 if (!supabaseUrl) {
   throw new Error(
-    'EXPO_PUBLIC_SUPABASE_URL belum dikonfigurasi. Periksa file .env.',
+    'EXPO_PUBLIC_SUPABASE_URL belum dikonfigurasi. Periksa file .env.'
   );
 }
 
 if (!supabasePublishableKey) {
   throw new Error(
-    'EXPO_PUBLIC_SUPABASE_ANON_KEY belum dikonfigurasi. Periksa file .env.',
+    'EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY belum dikonfigurasi. Periksa file .env.'
   );
-=======
-  process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-if (!supabaseUrl || !supabasePublishableKey) {
-  throw new Error('Konfigurasi Supabase belum lengkap. Periksa file .env');
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
 }
+
+// Storage khusus Web yang aman untuk SSR
+const webStorage = {
+  getItem: async (key: string): Promise<string | null> => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    return window.localStorage.getItem(key);
+  },
+
+  setItem: async (key: string, value: string): Promise<void> => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem(key, value);
+  },
+
+  removeItem: async (key: string): Promise<void> => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.removeItem(key);
+  },
+};
+
+// Pilih storage sesuai platform
+const supabaseStorage =
+  Platform.OS === 'web' ? webStorage : AsyncStorage;
 
 export const supabase = createClient(
   supabaseUrl,
   supabasePublishableKey,
   {
     auth: {
-<<<<<<< HEAD
-      storage: AsyncStorage,
-=======
-      storage: localStorage,
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
+      storage: supabaseStorage,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,
     },
-<<<<<<< HEAD
-  },
-=======
   }
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
 );
