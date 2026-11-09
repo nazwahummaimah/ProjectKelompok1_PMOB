@@ -1,6 +1,5 @@
 
 import React from 'react';
-<<<<<<< HEAD
 import { Stack, Redirect } from 'expo-router';
 import {
   ActivityIndicator,
@@ -10,60 +9,51 @@ import {
 
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constants/theme';
-=======
-import { Redirect, Stack } from 'expo-router';
-import { ActivityIndicator, View } from 'react-native';
-import { useAuth } from '../../context/AuthContext';
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
 
 export default function AdminLayout() {
   const { user, profile, loading } = useAuth();
 
-<<<<<<< HEAD
-  if (loading || (user && !profile)) {
+  // Menunggu proses autentikasi
+  if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator
           size="large"
           color={COLORS.secondaryDark}
         />
-=======
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center' }}>
-        <ActivityIndicator size="large" />
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
       </View>
     );
   }
 
-<<<<<<< HEAD
-  if (!user || !profile) {
-    return <Redirect href="/public/login" />;
-  }
-
-  if (profile.role !== 'admin') {
-=======
+  // Jika pengguna belum login
   if (!user) {
     return <Redirect href="/public/login" />;
   }
 
-  if (profile?.role !== 'admin') {
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
+  // Menunggu data profil tersedia
+  if (!profile) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator
+          size="large"
+          color={COLORS.secondaryDark}
+        />
+      </View>
+    );
+  }
+
+  // Jika pengguna bukan admin
+  if (profile.role !== 'admin') {
     return <Redirect href="/user" />;
   }
 
   return (
-<<<<<<< HEAD
     <Stack
       screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',
       }}
     >
-=======
-    <Stack screenOptions={{ headerShown: false }}>
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
       <Stack.Screen name="index" />
       <Stack.Screen name="inventaris" />
       <Stack.Screen name="detail-unit" />

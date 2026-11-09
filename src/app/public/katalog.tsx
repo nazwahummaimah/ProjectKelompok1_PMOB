@@ -90,36 +90,6 @@ const Katalog: React.FC = () => {
     });
   }, [bikes, searchQuery, filterStatus]);
 
-  const [bikes, setBikes] = useState<PublicBike[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Mengambil data sepeda dari Supabase
-  useEffect(() => {
-    const loadBikes = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const result = await getPublicBikes();
-
-        // Menyesuaikan hasil service dengan tipe data katalog
-        setBikes(result);
-      } catch (err: unknown) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : 'Terjadi kesalahan saat mengambil data sepeda.';
-
-        setError(message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadBikes();
-  }, []);
-
   // Navigasi Bottom Navigation
   const handleTabPress = (tab: TabType) => {
     setActiveTab(tab);
@@ -163,10 +133,6 @@ const Katalog: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
         {/* Header Title Section */}
         <View style={styles.titleSection}>
           <View style={styles.titleRow}>
@@ -184,20 +150,11 @@ const Katalog: React.FC = () => {
           <Text style={styles.pageSubtitle}>
             Eksplorasi armada sepeda siap jalan di seluruh pos terdekat.
             Akses terbuka untuk semua pelancong & warga.
-            Eksplorasi armada sepeda siap jalan di seluruh pos terdekat.
-            Akses terbuka untuk semua pelancong & warga.
           </Text>
         </View>
 
         {/* Search Input Bar */}
         <View style={styles.searchContainer}>
-          <Ionicons
-            name="search-outline"
-            size={20}
-            color={COLORS.textSecondary}
-            style={styles.searchIcon}
-          />
-
           <Ionicons
             name="search-outline"
             size={20}
@@ -215,13 +172,8 @@ const Katalog: React.FC = () => {
         </View>
 
         {/* Filter Chips */}
-        {/* Filter Chips */}
         <View style={styles.filterRow}>
           <TouchableOpacity
-            style={[
-              styles.filterChip,
-              filterStatus === 'Semua' && styles.filterChipActive,
-            ]}
             style={[
               styles.filterChip,
               filterStatus === 'Semua' && styles.filterChipActive,
@@ -239,10 +191,6 @@ const Katalog: React.FC = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.filterChip,
-              filterStatus === 'Tersedia' && styles.filterChipActive,
-            ]}
             style={[
               styles.filterChip,
               filterStatus === 'Tersedia' && styles.filterChipActive,
@@ -284,13 +232,6 @@ const Katalog: React.FC = () => {
 
         {/* Notice Box */}
         <View style={styles.noticeBox}>
-          <Ionicons
-            name="information-circle-outline"
-            size={18}
-            color={COLORS.textSecondary}
-            style={{ marginRight: 8 }}
-          />
-
           <Ionicons
             name="information-circle-outline"
             size={18}
@@ -436,8 +377,6 @@ const Katalog: React.FC = () => {
                   <TouchableOpacity
                     style={styles.detailButton}
                     activeOpacity={0.7}
-                    onPress={() =>
-                      router.push({
                     onPress={() =>
                       router.push({
                         pathname: '/public/DetailUnit' as any,

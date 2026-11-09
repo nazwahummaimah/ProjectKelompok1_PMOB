@@ -31,28 +31,15 @@ import {
 
 import HeaderApp from '@/components/molecules/HeaderApp';
 import JamalJepretLogo from '@/components/molecules/JamalJepretLogo';
-<<<<<<< HEAD
-import { useAuth } from '../../context/AuthContext';
-=======
 import { supabase } from '../../lib/supabase';
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
 
 const Register: React.FC = () => {
   const router = useRouter();
-  const { signUp } = useAuth();
 
   const [activeTab, setActiveTab] = useState<TabType>('Login');
-<<<<<<< HEAD
-
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-=======
-  
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState(''); 
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -113,11 +100,6 @@ const Register: React.FC = () => {
     }));
   };
 
-<<<<<<< HEAD
-  // ===================================================
-  // NORMALIZE INDONESIAN PHONE NUMBER
-  // ===================================================
-
   const normalizePhone = (value: string) => {
     let digits = value.replace(/\D/g, '');
 
@@ -129,13 +111,6 @@ const Register: React.FC = () => {
 
     return `+62${digits}`;
   };
-
-  // ===================================================
-  // REGISTER
-  // ===================================================
-
-=======
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
   const handleSubmit = async () => {
     setSubmitted(true);
 
@@ -150,7 +125,6 @@ const Register: React.FC = () => {
     if (hasValidationErrors(validation)) {
       Alert.alert(
         'Periksa Kembali Data',
-<<<<<<< HEAD
         'Masih ada kolom yang perlu diperbaiki.',
       );
       return;
@@ -161,78 +135,13 @@ const Register: React.FC = () => {
     try {
       setIsSubmitting(true);
 
-      const result = await signUp({
-        fullName: fullName.trim(),
-        email: email.trim().toLowerCase(),
-        phone: normalizePhone(phone),
-        password,
-        customerType: 'Umum',
-      });
-
-      if (result.needsEmailConfirmation) {
-        Alert.alert(
-          'Registrasi Berhasil',
-          'Akun berhasil dibuat. Silakan periksa email kamu untuk melakukan verifikasi sebelum login.',
-          [
-            {
-              text: 'Ke Halaman Login',
-              onPress: () =>
-                router.replace('/public/login' as any),
-            },
-          ],
-        );
-      } else {
-        Alert.alert(
-          'Registrasi Berhasil',
-          'Akun berhasil dibuat. Kamu sekarang dapat masuk menggunakan email dan kata sandi yang telah didaftarkan.',
-          [
-            {
-              text: 'Masuk Sekarang',
-              onPress: () =>
-                router.replace('/user' as any),
-            },
-          ],
-        );
-      }
-    } catch (error: any) {
-      console.error('Register error:', error);
-
-      let message =
-        'Terjadi kesalahan saat membuat akun. Silakan coba kembali.';
-
-      if (
-        error?.message?.toLowerCase().includes('already registered')
-      ) {
-        message = 'Email tersebut sudah terdaftar. Silakan gunakan email lain atau masuk ke akun kamu.';
-      } else if (
-        error?.message?.toLowerCase().includes('password')
-      ) {
-        message = error.message;
-      } else if (
-        error?.message?.toLowerCase().includes('email')
-      ) {
-        message = error.message;
-      } else if (error?.message) {
-        message = error.message;
-      }
-
-      Alert.alert('Registrasi Gagal', message);
-    } finally {
-      setIsSubmitting(false);
-=======
-        'Masih ada kolom yang perlu diperbaiki.'
-      );
-      return;
-    }
-
-    try {
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
         options: {
           data: {
             full_name: fullName.trim(),
-            phone: phone.trim(),
+            phone: normalizePhone(phone),
             customer_type: 'Umum',
           },
         },
@@ -240,31 +149,45 @@ const Register: React.FC = () => {
 
       if (error) throw error;
 
+      if (!data.user) {
+        throw new Error(
+          'Data akun tidak ditemukan. Silakan coba kembali.',
+        );
+      }
+
       if (!data.session) {
         Alert.alert(
           'Registrasi Berhasil',
-          'Silakan periksa email untuk melakukan verifikasi akun.'
+          'Silakan periksa email untuk melakukan verifikasi akun.',
         );
-        return;
+      } else {
+        Alert.alert(
+          'Registrasi Berhasil',
+          'Akun berhasil dibuat.',
+          [
+            {
+              text: 'Lanjut',
+              onPress: () =>
+                router.replace('/user' as any),
+            },
+          ],
+        );
+      }
+    } catch (error: unknown) {
+      console.error('Register error:', error);
+
+      let message = 'Terjadi kesalahan saat membuat akun. Silakan coba kembali.';
+      if (error instanceof Error) {
+        message = error.message;
+
+        if (error.message.toLowerCase().includes('already registered')) {
+          message = 'Email tersebut sudah terdaftar. Silakan gunakan email lain atau masuk ke akun kamu.';
+        }
       }
 
-      Alert.alert(
-        'Registrasi Berhasil',
-        'Akun berhasil dibuat.',
-        [
-          {
-            text: 'Lanjut',
-            onPress: () => router.replace('/user' as any),
-          },
-        ]
-      );
-
-    } catch (error: any) {
-      Alert.alert(
-        'Registrasi Gagal',
-        error.message || 'Terjadi kesalahan saat mendaftar.'
-      );
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
+      Alert.alert('Registrasi Gagal', message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

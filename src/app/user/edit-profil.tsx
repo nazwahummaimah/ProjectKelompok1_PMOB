@@ -31,7 +31,6 @@ import { useUserProfile } from '../../context/UserProfileContext';
 
 export default function EditUserProfileScreen() {
   const router = useRouter();
-<<<<<<< HEAD
 
   const {
     profile,
@@ -46,13 +45,6 @@ export default function EditUserProfileScreen() {
     fullName: false,
     phone: false,
   });
-
-=======
-  const { profile, updateProfile } = useUserProfile();
-  const [fullName, setFullName] = useState(profile?.full_name ?? '');
-  const [phone, setPhone] = useState(profile?.phone ?? '');
-  const [touched, setTouched] = useState({ fullName: false, phone: false });
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -61,16 +53,8 @@ export default function EditUserProfileScreen() {
     phone: validateWhatsApp(phone),
   };
 
-<<<<<<< HEAD
   const show = (field: keyof typeof touched) =>
     touched[field] || submitted;
-
-  // ===================================================
-  // SAVE PROFILE
-  // ===================================================
-
-=======
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
   const handleSave = async () => {
     setSubmitted(true);
 
@@ -87,7 +71,6 @@ export default function EditUserProfileScreen() {
       return;
     }
 
-<<<<<<< HEAD
     if (saving) return;
 
     try {
@@ -118,15 +101,6 @@ export default function EditUserProfileScreen() {
       );
     } finally {
       setSaving(false);
-=======
-    try {
-      await updateProfile({ full_name: fullName.trim(), phone: phone.trim() });
-      Alert.alert('Profil Diperbarui', 'Perubahan berhasil disimpan ke database.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
-    } catch (error: any) {
-      Alert.alert('Gagal Memperbarui Profil', error?.message ?? 'Silakan coba lagi.');
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
     }
   };
 
@@ -256,7 +230,6 @@ export default function EditUserProfileScreen() {
           {/* EMAIL */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email</Text>
-<<<<<<< HEAD
 
             <View
               style={[
@@ -287,14 +260,6 @@ export default function EditUserProfileScreen() {
               Email digunakan sebagai identitas login dan
               belum dapat diubah melalui halaman ini.
             </Text>
-=======
-            <View style={[styles.inputWrap, styles.disabledInput]}>
-              <Ionicons name="mail-outline" size={19} color={COLORS.textSecondary} />
-              <TextInput style={styles.input} value={profile?.email ?? ''} editable={false} />
-              <Ionicons name="lock-closed-outline" size={16} color={COLORS.textSecondary} />
-            </View>
-            <Text style={styles.helperText}>Email digunakan sebagai identitas login dan belum dapat diubah dari halaman ini.</Text>
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
           </View>
 
           {/* PHONE */}

@@ -14,17 +14,12 @@ import { useRouter } from 'expo-router';
 import AdminPageLayout from '../../components/organisms/AdminPageLayout';
 import AdminActionRow from '../../components/molecules/AdminActionRow';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
-<<<<<<< HEAD
 import { useAuth } from '../../context/AuthContext';
-=======
-import { supabase } from '../../lib/supabase';
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
 
 export default function AdminMoreScreen() {
   const router = useRouter();
   const { signOut } = useAuth();
 
-<<<<<<< HEAD
   const handleLogout = () => {
     Alert.alert(
       'Keluar dari akun Admin?',
@@ -51,19 +46,6 @@ export default function AdminMoreScreen() {
         },
       ],
     );
-=======
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-
-      if (error) throw error;
-
-      router.replace('/public/login' as any);
-
-    } catch (error: any) {
-      Alert.alert('Logout Gagal', error.message);
-    }
->>>>>>> 8e11d31070a99647ff703eaa542824a5f5cc1ce8
   };
 
   return (
