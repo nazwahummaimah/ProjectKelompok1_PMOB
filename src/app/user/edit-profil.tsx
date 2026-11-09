@@ -55,6 +55,11 @@ export default function EditUserProfileScreen() {
 
   const show = (field: keyof typeof touched) =>
     touched[field] || submitted;
+
+  // ===================================================
+  // SAVE PROFILE
+  // ===================================================
+
   const handleSave = async () => {
     setSubmitted(true);
 

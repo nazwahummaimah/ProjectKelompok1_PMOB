@@ -13,8 +13,7 @@ import { COLORS } from '../../constants/theme';
 export default function AdminLayout() {
   const { user, profile, loading } = useAuth();
 
-  // Menunggu proses autentikasi
-  if (loading) {
+  if (loading || (user && !profile)) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator
@@ -25,24 +24,10 @@ export default function AdminLayout() {
     );
   }
 
-  // Jika pengguna belum login
-  if (!user) {
+  if (!user || !profile) {
     return <Redirect href="/public/login" />;
   }
 
-  // Menunggu data profil tersedia
-  if (!profile) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator
-          size="large"
-          color={COLORS.secondaryDark}
-        />
-      </View>
-    );
-  }
-
-  // Jika pengguna bukan admin
   if (profile.role !== 'admin') {
     return <Redirect href="/user" />;
   }

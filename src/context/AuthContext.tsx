@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useCallback,
@@ -42,6 +43,7 @@ type AuthContextValue = {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+
   signIn: (
     email: string,
     password: string,

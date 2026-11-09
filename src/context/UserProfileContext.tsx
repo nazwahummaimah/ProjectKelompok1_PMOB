@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useCallback,
@@ -12,26 +13,21 @@ import type { ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import type { Profile as SupabaseProfile } from './AuthContext';
 
-import {
-  updateProfile as updateProfileService,
-} from '../services/profileService';
+import { updateProfile as updateProfileService } from '../services/profileService';
 
-import type {
-  UpdateProfileInput,
-} from '../services/profileService';
+import type { UpdateProfileInput } from '../services/profileService';
 
-import type {
-  DemoUserProfile,
-} from '../constants/userDemo';
+import type { DemoUserProfile } from '../constants/userDemo';
 
 // =====================================================
 // TYPES
 // =====================================================
 
-type EditableProfile = Pick<
-  DemoUserProfile,
-  'fullName' | 'phone'
->;
+type EditableProfile = {
+  fullName: string;
+  phone: string;
+};
+
 interface UserProfileContextValue {
   profile: DemoUserProfile;
   loading: boolean;
@@ -164,7 +160,6 @@ export function UserProfileProvider({
       setProfile(mappedProfile);
 
       // Sinkronisasi AuthContext berjalan di background.
-      // Tidak perlu menunggu request kedua.
       void refreshProfile().catch((error) => {
         console.error(
           'Background profile synchronization error:',

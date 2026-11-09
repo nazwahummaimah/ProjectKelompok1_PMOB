@@ -1,8 +1,10 @@
-
 import 'react-native-url-polyfill/auto';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { createClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
+
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 
@@ -17,7 +19,7 @@ if (!supabaseUrl) {
 
 if (!supabasePublishableKey) {
   throw new Error(
-    'EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY belum dikonfigurasi. Periksa file .env.'
+    'EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY belum dikonfigurasi. Periksa file .env.',
   );
 }
 
@@ -57,10 +59,10 @@ export const supabase = createClient(
   supabasePublishableKey,
   {
     auth: {
-      storage: supabaseStorage,
+      storage: AsyncStorage,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,
     },
-  }
+  },
 );
