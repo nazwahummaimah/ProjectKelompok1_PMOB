@@ -15,7 +15,6 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -24,8 +23,8 @@ import { useRouter } from 'expo-router';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 
 import HeaderApp from '../../components/molecules/HeaderApp';
-import StatusBadge from '../../components/molecules/StatusBadge';
-import FeatureTag from '../../components/molecules/FeatureTag';
+import PublicBikePreviewCard from '../../components/organisms/PublicBikePreviewCard';
+import type { BikeData } from '../../constants/bikes';
 import BottomNavBar, {
   TabType,
 } from '../../components/molecules/BottomNavBar';
@@ -35,11 +34,30 @@ import {
   Bike,
 } from '../../services/bikeService';
 
-type FilterStatus = 'Semua' | 'Tersedia' | 'Sedang Disewa';
+type FilterStatus = 'Semua' | 'Tersedia' | 'Sedang Disewa' | 'Perawatan';
 
 const formatRupiah = (value: number): string => {
   return new Intl.NumberFormat('id-ID').format(value);
 };
+
+const mapBikeToCard = (bike: Bike): BikeData => ({
+  id: bike.id,
+  category: bike.category,
+  name: bike.name,
+  price: formatRupiah(Number(bike.price_per_hour)),
+  status: bike.status,
+  location: bike.location || 'Lokasi Jamal Jepret',
+  address: bike.address || undefined,
+  hours: bike.opening_hours || undefined,
+  features: bike.features ?? [],
+  image: bike.image_url || '',
+  tireSize: bike.tire_size || undefined,
+  brakes: bike.brakes || undefined,
+  transmission: bike.transmission || undefined,
+  facilities: bike.facilities || undefined,
+  techCondition: bike.technical_condition || undefined,
+  extraTags: bike.extra_tags || undefined,
+});
 
 const Katalog: React.FC = () => {
   const router = useRouter();
@@ -87,6 +105,11 @@ const Katalog: React.FC = () => {
     [bikes]
   );
 
+  const maintenanceCount = useMemo(
+    () => bikes.filter((bike) => bike.status === 'Perawatan').length,
+    [bikes]
+  );
+
   const filteredBikes = useMemo(() => {
     const keyword = searchQuery.trim().toLowerCase();
 
@@ -126,27 +149,9 @@ const Katalog: React.FC = () => {
     }
   };
 
-  const getBikeFeatures = (bike: Bike): string[] => {
-    const features = bike.features ?? [];
-    const result = [...features];
-
-    if (bike.location && !result.includes(bike.location)) {
-      result.push(bike.location);
-    }
-
-    return result.slice(0, 4);
-  };
-
-  const openBikeDetail = (bikeId: string) => {
-    router.push({
-      pathname: '/public/DetailUnit' as any,
-      params: { id: bikeId },
-    });
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-      <HeaderApp notificationCount={0} />
+      <HeaderApp />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -161,14 +166,13 @@ const Katalog: React.FC = () => {
 
             <View style={styles.totalBadge}>
               <Text style={styles.totalBadgeText}>
-                Total {bikes.length} Unit
+                {loading ? 'Memuat...' : errorMessage ? 'Data belum tersedia' : `${bikes.length} Unit`}
               </Text>
             </View>
           </View>
 
           <Text style={styles.pageSubtitle}>
-            Eksplorasi armada sepeda siap jalan di seluruh pos
-            penyewaan Jamal Jepret.
+            Lihat kategori, tarif, dan status unit di lokasi Jamal Jepret.
           </Text>
         </View>
 
@@ -187,12 +191,16 @@ const Katalog: React.FC = () => {
             placeholderTextColor={COLORS.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
+            accessibilityLabel="Cari sepeda berdasarkan ID, nama, atau kategori"
           />
 
           {searchQuery.length > 0 && (
             <TouchableOpacity
               onPress={() => setSearchQuery('')}
               hitSlop={10}
+                style={styles.clearSearchButton}
+                accessibilityRole="button"
+                accessibilityLabel="Hapus pencarian"
             >
               <Ionicons
                 name="close-circle"
@@ -210,6 +218,7 @@ const Katalog: React.FC = () => {
               'Semua',
               'Tersedia',
               'Sedang Disewa',
+              'Perawatan',
             ] as FilterStatus[]
           ).map((item) => {
             const active = filterStatus === item;
@@ -219,7 +228,9 @@ const Katalog: React.FC = () => {
                 ? bikes.length
                 : item === 'Tersedia'
                   ? availableCount
-                  : rentedCount;
+                  : item === 'Sedang Disewa'
+                    ? rentedCount
+                    : maintenanceCount;
 
             return (
               <TouchableOpacity
@@ -230,6 +241,9 @@ const Katalog: React.FC = () => {
                 ]}
                 onPress={() => setFilterStatus(item)}
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={`Filter ${item}, ${count} unit`}
               >
                 <Text
                   style={[
@@ -257,9 +271,7 @@ const Katalog: React.FC = () => {
           />
 
           <Text style={styles.noticeText}>
-            Semua unit berstatus publik. Kunjungi pos terdekat
-            atau hubungi petugas di lokasi untuk verifikasi fisik
-            sebelum peminjaman.
+            Penyewaan dilakukan langsung di lokasi Jamal Jepret. Konfirmasikan kondisi unit kepada petugas sebelum memulai penyewaan.
           </Text>
         </View>
 
@@ -346,132 +358,19 @@ const Katalog: React.FC = () => {
             </View>
           )}
 
-        {/* CATALOG LIST */}
+        {/* CATALOG LIST: gunakan komponen kartu yang sama dengan Home */}
         {!loading && !errorMessage && (
           <View style={styles.catalogList}>
             {filteredBikes.map((item) => (
-              <View
+              <PublicBikePreviewCard
                 key={item.id}
-                style={styles.cardContainer}
-              >
-                {/* BIKE IMAGE */}
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => openBikeDetail(item.id)}
-                >
-                  <View style={styles.imageContainer}>
-                    {item.image_url ? (
-                      <Image
-                        source={{ uri: item.image_url }}
-                        style={styles.bikeImage}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View style={styles.imageFallback}>
-                        <Ionicons
-                          name="bicycle"
-                          size={54}
-                          color="#94A3B8"
-                        />
-
-                        <Text style={styles.imageFallbackText}>
-                          Foto belum tersedia
-                        </Text>
-                      </View>
-                    )}
-
-                    {/* IMAGE OVERLAY */}
-                    <View style={styles.imageOverlay} />
-
-                    {/* TOP BADGES */}
-                    <View style={styles.topOverlay}>
-                      <View style={styles.idBadge}>
-                        <Text style={styles.idText}>
-                          ID: {item.id}
-                        </Text>
-                      </View>
-
-                      <StatusBadge status={item.status} />
-                    </View>
-
-                    {/* IMAGE CAPTION */}
-                    <View style={styles.imageCaption}>
-                      <Text
-                        style={styles.imageCaptionName}
-                        numberOfLines={1}
-                      >
-                        {item.name}
-                      </Text>
-
-                      <Text style={styles.imageCaptionCategory}>
-                        {item.category}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-
-                {/* CARD DETAILS */}
-                <View style={styles.cardDetails}>
-                  <View style={styles.cardHeaderRow}>
-                    <View style={styles.titleColumn}>
-                      <Text style={styles.categoryText}>
-                        {item.category}
-                      </Text>
-
-                      <Text style={styles.bikeName}>
-                        {item.id}
-                      </Text>
-                    </View>
-
-                    <View style={styles.priceColumn}>
-                      <Text style={styles.tariffLabel}>
-                        Tarif referensi
-                      </Text>
-
-                      <Text style={styles.priceText}>
-                        Rp{formatRupiah(
-                          Number(item.price_per_hour)
-                        )}
-                        <Text style={styles.perHour}>
-                          {' '}/ jam
-                        </Text>
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* FEATURES */}
-                  <View style={styles.tagsRow}>
-                    {getBikeFeatures(item).map(
-                      (feature, index) => (
-                        <FeatureTag
-                          key={`${item.id}-${index}`}
-                          label={feature}
-                        />
-                      )
-                    )}
-                  </View>
-
-                  {/* DETAIL BUTTON */}
-                  <TouchableOpacity
-                    style={styles.detailButton}
-                    activeOpacity={0.7}
-                    onPress={() => openBikeDetail(item.id)}
-                  >
-                    <Text style={styles.detailButtonText}>
-                      Lihat Detail Unit
-                    </Text>
-
-                    <Ionicons
-                      name="chevron-forward"
-                      size={16}
-                      color={COLORS.secondaryDark}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
+                bike={mapBikeToCard(item)}
+                variant="catalog"
+              />
             ))}
           </View>
         )}
+
       </ScrollView>
 
       <BottomNavBar
@@ -556,13 +455,17 @@ const styles = StyleSheet.create({
   },
 
   filterChip: {
-    paddingVertical: 6,
+    minHeight: 44,
     paddingHorizontal: 12,
     borderRadius: SIZES.radiusPill,
     backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+
+  clearSearchButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
 
   filterChipActive: {
     backgroundColor: '#E0F2FE',
@@ -605,158 +508,6 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.large,
   },
 
-  cardContainer: {
-    backgroundColor: COLORS.surface,
-    borderRadius: SIZES.radiusLarge,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    marginBottom: SIZES.large,
-    overflow: 'hidden',
-  },
-
-  imageContainer: {
-    height: 205,
-    backgroundColor: '#CBD5E1',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-
-  bikeImage: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-  },
-
-  imageFallback: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E2E8F0',
-  },
-
-  imageFallbackText: {
-    ...FONTS.caption,
-    color: '#64748B',
-    marginTop: 8,
-  },
-
-  imageOverlay: {
-    ...StyleSheet.absoluteFill ,
-    backgroundColor: 'rgba(15, 23, 42, 0.10)',
-  },
-
-  topOverlay: {
-    position: 'absolute',
-    top: SIZES.medium,
-    left: SIZES.medium,
-    right: SIZES.medium,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  idBadge: {
-    backgroundColor: 'rgba(15, 23, 42, 0.72)',
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-    borderRadius: SIZES.radiusSmall,
-  },
-
-  idText: {
-    ...FONTS.caption,
-    color: COLORS.surface,
-    fontWeight: '700',
-  },
-
-  imageCaption: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: SIZES.large,
-    paddingVertical: 13,
-    backgroundColor: 'rgba(15, 23, 42, 0.52)',
-  },
-
-  imageCaptionName: {
-    ...FONTS.labelLarge,
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-
-  imageCaptionCategory: {
-    ...FONTS.caption,
-    color: '#E2E8F0',
-    marginTop: 2,
-  },
-
-  cardDetails: {
-    padding: SIZES.large,
-  },
-
-  cardHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: SIZES.medium,
-  },
-
-  titleColumn: {
-    flex: 1,
-    paddingRight: SIZES.small,
-  },
-
-  categoryText: {
-    ...FONTS.caption,
-    color: COLORS.textSecondary,
-    textTransform: 'uppercase',
-  },
-
-  bikeName: {
-    ...FONTS.headline3,
-    color: COLORS.secondaryDark,
-  },
-
-  priceColumn: {
-    alignItems: 'flex-end',
-  },
-
-  tariffLabel: {
-    ...FONTS.caption,
-    color: COLORS.textSecondary,
-    fontSize: 10,
-  },
-
-  priceText: {
-    ...FONTS.headline3,
-    color: COLORS.textPrimary,
-  },
-
-  perHour: {
-    ...FONTS.caption,
-    color: COLORS.textSecondary,
-    fontWeight: 'normal',
-  },
-
-  tagsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: SIZES.medium,
-  },
-
-  detailButton: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    paddingTop: SIZES.medium,
-  },
-
-  detailButtonText: {
-    ...FONTS.labelMedium,
-    color: COLORS.secondaryDark,
-  },
-
   stateContainer: {
     padding: SIZES.large,
     alignItems: 'center',
@@ -780,7 +531,9 @@ const styles = StyleSheet.create({
   retryButton: {
     backgroundColor: COLORS.primaryLight,
     paddingHorizontal: SIZES.large,
-    paddingVertical: SIZES.small,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: SIZES.radiusMedium,
     marginTop: SIZES.small,
   },

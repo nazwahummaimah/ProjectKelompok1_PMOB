@@ -153,7 +153,7 @@ const Login: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
-      <HeaderApp notificationCount={0} />
+      <HeaderApp />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -357,8 +357,7 @@ const Login: React.FC = () => {
           <View style={styles.taglineDot} />
 
           <Text style={styles.taglineText}>
-            Rental Sepeda Mas Joko • Sewa sepeda yang mudah,
-            cepat, dan jelas.
+            Penyewaan sepeda langsung di lokasi Jamal Jepret.
           </Text>
         </View>
       </ScrollView>

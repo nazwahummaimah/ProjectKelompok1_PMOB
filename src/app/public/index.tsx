@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 import {
   SafeAreaView,
@@ -8,15 +7,16 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import HeaderApp from '../../components/molecules/HeaderApp';
-import BikeCard from '../../components/organisms/BikeCard';
 import type { BikeData } from '../../constants/bikes';
 import HowToRentSection from '../../components/organisms/HowToRentSection';
+import PublicBikePreviewCard from '../../components/organisms/PublicBikePreviewCard';
 import BottomNavBar, {
   TabType,
 } from '../../components/molecules/BottomNavBar';
@@ -40,11 +40,9 @@ const Beranda: React.FC = () => {
       setErrorMessage('');
 
       const data = await getBikes();
-
       setBikes(data);
     } catch (error) {
       console.error('Public dashboard bike error:', error);
-
       setErrorMessage(
         error instanceof Error
           ? error.message
@@ -55,7 +53,6 @@ const Beranda: React.FC = () => {
     }
   }, []);
 
-  // Memuat ulang data ketika Beranda kembali dibuka.
   useFocusEffect(
     useCallback(() => {
       loadBikes();
@@ -68,58 +65,36 @@ const Beranda: React.FC = () => {
     switch (tab) {
       case 'Beranda':
         break;
-
       case 'Katalog':
         router.push('/public/katalog' as any);
         break;
-
       case 'DurasiSewa':
         router.push('/public/durasi-sewa' as any);
         break;
-
       case 'Login':
         router.push('/public/login' as any);
         break;
     }
   };
 
-  // Jumlah unit berdasarkan data aktual Supabase.
   const availableCount = bikes.filter(
     (bike) => bike.status === 'Tersedia',
   ).length;
 
-  // Armada unggulan: maksimal tiga unit terbaru.
-  const featuredBikes = bikes.slice(0, 3);
+  // Batasi pratinjau Home agar katalog lengkap tetap berada di halaman Katalog.
+  const homeBikes = bikes.slice(0, 3);
 
-  // Adapter Bike Supabase menjadi format yang dipakai BikeCard.
   const mapBikeToCard = (bike: Bike): BikeData => ({
     id: bike.id,
     category: bike.category,
     name: bike.name,
     price: Number(bike.price_per_hour).toLocaleString('id-ID'),
     status: bike.status,
-    location: bike.location || 'Outlet Jamal Jepret',
+    location: bike.location || 'Lokasi Jamal Jepret',
     address: bike.address || undefined,
     hours: bike.opening_hours || undefined,
-    features:
-      bike.features && bike.features.length > 0
-        ? bike.features
-        : ['Informasi unit tersedia'],
-    image:
-      bike.image_url ||
-      'https://placehold.co/400x200/png',
-    returnTime:
-      bike.status === 'Sedang Disewa'
-        ? 'Cek detail unit'
-        : bike.status === 'Perawatan'
-          ? 'Dalam perawatan'
-          : undefined,
-    returnLocationNote:
-      bike.status === 'Sedang Disewa'
-        ? 'Lihat informasi estimasi pengembalian pada detail unit'
-        : bike.status === 'Perawatan'
-          ? 'Unit sedang dalam perawatan'
-          : undefined,
+    features: bike.features ?? [],
+    image: bike.image_url || '',
     tireSize: bike.tire_size || undefined,
     brakes: bike.brakes || undefined,
     transmission: bike.transmission || undefined,
@@ -130,187 +105,130 @@ const Beranda: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <HeaderApp notificationCount={0} />
+      <HeaderApp />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero Section */}
-        <View style={styles.heroSection}>
-          <View style={styles.heroBadge}>
-            <Text style={styles.heroBadgeText}>
-              📍 Jl. Yudhasari 2, Sunyaragi, Kota Cirebon.
+        <ImageBackground
+          source={require('../../assets/jamal-jepret-store.jpg')}
+          style={styles.heroCard}
+          imageStyle={styles.heroImage}
+          resizeMode="cover"
+          accessibilityLabel="Foto asli area penyewaan sepeda Jamal Jepret"
+        >
+          <View style={styles.heroOverlay} />
+          <View style={styles.heroCopy}>
+            <Text style={styles.heroTitle}>
+              Jelajahi Cirebon dengan Cara yang Berbeda!
             </Text>
-          </View>
+            <Text style={styles.heroSubtitle}>
+              Pilih unit, periksa ketersediaannya, lalu datang untuk memulai penyewaan.
+            </Text>
 
-          <Text style={styles.heroTitle}>
-            Sewa Sepeda Lebih Mudah
-          </Text>
-
-          <Text style={styles.heroSubtitle}>
-            Jelajahi armada sepeda yang siap pakai langsung di
-            lokasi pos rental Jamal_Jepret. Cek ketersediaan
-            secara real-time.
-          </Text>
-
-          <View style={styles.heroActions}>
             <TouchableOpacity
-              style={[styles.primaryButton, styles.heroButton]}
-              activeOpacity={0.8}
+              style={styles.heroButton}
+              activeOpacity={0.82}
               onPress={() => handleTabPress('Katalog')}
+              accessibilityRole="button"
+              accessibilityLabel="Lihat katalog sepeda"
             >
-              <Text style={styles.primaryButtonText}>
-                Lihat Sepeda
-              </Text>
+              <Text style={styles.heroButtonText}>Lihat katalog</Text>
+              <Ionicons name="arrow-forward" size={18} color={COLORS.secondaryDark} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.secondaryButton, styles.heroButton]}
-              activeOpacity={0.8}
+              style={styles.scanAction}
+              activeOpacity={0.75}
               onPress={() => handleTabPress('DurasiSewa')}
+              accessibilityRole="button"
+              accessibilityLabel="Pindai QR sepeda"
             >
-              <Ionicons
-                name="qr-code-outline"
-                size={16}
-                color={COLORS.textPrimary}
-                style={{ marginRight: 6 }}
-              />
-
-              <Text style={styles.secondaryButtonText}>
-                Scan QR
-              </Text>
+              <Ionicons name="qr-code-outline" size={18} color="#FFFFFF" />
+              <Text style={styles.scanActionText}>Sudah di lokasi? Pindai QR</Text>
             </TouchableOpacity>
           </View>
+        </ImageBackground>
 
-          <View style={styles.heroStats}>
-            <View style={styles.statBox}>
-              <View style={styles.statHeader}>
-                <Ionicons
-                  name="bicycle-outline"
-                  size={14}
-                  color={COLORS.secondaryDark}
-                  style={{ marginRight: 4 }}
-                />
-
-                <Text style={styles.statLabel}>
-                  Unit
-                </Text>
-              </View>
-
-              <Text style={styles.statValue}>
-                {loading ? 'Memuat...' : `${availableCount} Unit Tersedia`}
-              </Text>
-            </View>
-
-            <View style={styles.statBox}>
-              <View style={styles.statHeader}>
-                <Ionicons
-                  name="storefront-outline"
-                  size={14}
-                  color={COLORS.secondaryDark}
-                  style={{ marginRight: 4 }}
-                />
-
-                <Text style={styles.statLabel}>
-                  Metode Sewa
-                </Text>
-              </View>
-
-              <Text style={styles.statValue}>
-                Datang ke Lokasi
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Armada Unggulan */}
         <View style={styles.sectionHeader}>
-          <View>
-            <Text style={styles.sectionTitle}>
-              Armada Unggulan
-            </Text>
-
+          <View style={styles.sectionHeadingCopy}>
+            <Text style={styles.sectionTitle}>Unit Sepeda</Text>
             <Text style={styles.sectionSubtitle}>
-              Unit sepeda dari inventaris Jamal Jepret
+              {loading
+                ? 'Memuat unit...'
+                : errorMessage
+                  ? 'Informasi unit belum tersedia'
+                  : `${availableCount} unit tersedia`}
             </Text>
           </View>
 
-          <View style={styles.unitCountBadge}>
-            <Text style={styles.unitCountText}>
-              {loading
-                ? 'Memuat...'
-                : `${featuredBikes.filter((bike) => bike.status === 'Tersedia').length} Tersedia`}
-            </Text>
-          </View>
+          <TouchableOpacity
+            style={styles.seeAllButton}
+            onPress={() => handleTabPress('Katalog')}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityLabel="Lihat semua sepeda"
+          >
+            <Text style={styles.seeAllText}>Lihat semua</Text>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.secondaryDark} />
+          </TouchableOpacity>
         </View>
 
-        {/* Loading */}
         {loading && (
-          <View style={styles.stateContainer}>
-            <ActivityIndicator
-              size="large"
-              color={COLORS.secondaryDark}
-            />
-
-            <Text style={styles.stateText}>
-              Memuat armada sepeda...
-            </Text>
+          <View style={styles.stateCard}>
+            <ActivityIndicator size="small" color={COLORS.secondaryDark} />
+            <Text style={styles.stateText}>Memuat unit sepeda...</Text>
           </View>
         )}
 
-        {/* Error */}
         {!loading && !!errorMessage && (
-          <View style={styles.stateContainer}>
-            <Ionicons
-              name="alert-circle-outline"
-              size={36}
-              color="#EF4444"
-            />
-
-            <Text style={styles.errorText}>
-              {errorMessage}
-            </Text>
-
+          <View style={styles.stateCard}>
+            <Ionicons name="cloud-offline-outline" size={30} color={COLORS.textSecondary} />
+            <Text style={styles.errorText}>{errorMessage}</Text>
             <TouchableOpacity
               style={styles.retryButton}
               onPress={loadBikes}
+              accessibilityRole="button"
+              accessibilityLabel="Muat ulang data sepeda"
             >
-              <Text style={styles.retryButtonText}>
-                Coba Lagi
-              </Text>
+              <Text style={styles.retryButtonText}>Coba lagi</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Empty */}
         {!loading && !errorMessage && bikes.length === 0 && (
-          <View style={styles.stateContainer}>
-            <Ionicons
-              name="bicycle-outline"
-              size={40}
-              color={COLORS.textSecondary}
-            />
-
-            <Text style={styles.stateText}>
-              Belum ada unit sepeda yang tersedia.
-            </Text>
+          <View style={styles.stateCard}>
+            <Ionicons name="bicycle-outline" size={34} color={COLORS.textSecondary} />
+            <Text style={styles.stateText}>Belum ada unit sepeda yang ditampilkan.</Text>
           </View>
         )}
 
-        {/* List Sepeda */}
-        {!loading && !errorMessage && (
-          <View style={styles.bikeList}>
-            {featuredBikes.map((bike) => (
-              <BikeCard
+        {!loading && !errorMessage && homeBikes.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.bikeCarousel}
+          >
+            {homeBikes.map((bike) => (
+              <PublicBikePreviewCard
                 key={bike.id}
                 bike={mapBikeToCard(bike)}
               />
             ))}
-          </View>
+          </ScrollView>
         )}
 
-        {/* Cara Sewa */}
+        
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionHeadingCopy}>
+            <Text style={styles.sectionTitle}>Cara Menyewa</Text>
+            <Text style={styles.sectionSubtitle}>
+              Ikuti 4 langkah mudah untuk menyewa sepeda
+            </Text>
+          </View>
+        </View>
+
         <HowToRentSection />
       </ScrollView>
 
@@ -327,206 +245,149 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-
   scrollContent: {
-    padding: SIZES.large,
+    paddingTop: SIZES.large,
+    paddingHorizontal: SIZES.large,
     paddingBottom: SIZES.large,
   },
-
-  heroSection: {
-    backgroundColor: '#F0F9FF',
-    borderRadius: SIZES.radiusLarge,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+  heroCard: {
+    justifyContent: 'center',
+    overflow: 'hidden',
+    backgroundColor: COLORS.secondaryDark,
+    borderRadius: 22,
     padding: SIZES.large,
-    marginBottom: SIZES.xlarge,
+    marginBottom: SIZES.xxlarge,
+    minHeight: 310,
   },
-
-  heroBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#E0F2FE',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: SIZES.radiusSmall,
-    marginBottom: SIZES.medium,
+  heroImage: {
+    borderRadius: 22,
   },
-
-  heroBadgeText: {
-    ...FONTS.caption,
-    color: COLORS.secondaryDark,
+  heroOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(3, 48, 70, 0.70)',
   },
-
-  heroTitle: {
-    ...FONTS.headline1,
-    color: COLORS.secondaryDark,
+  heroCopy: {
+    width: '100%',
+    alignItems: 'flex-start',
+  },
+  heroEyebrow: {
+    ...FONTS.labelMedium,
+    color: '#BAE6FD',
+    letterSpacing: 1.1,
     marginBottom: SIZES.small,
   },
-
+  heroTitle: {
+    ...FONTS.headline1,
+    color: '#FFFFFF',
+    fontSize: 26,
+    lineHeight: 33,
+    marginBottom: SIZES.small,
+    marginTop: SIZES.medium,
+    maxWidth: 330,
+  },
   heroSubtitle: {
     ...FONTS.body,
-    color: COLORS.textSecondary,
-    marginBottom: SIZES.large,
-    lineHeight: 20,
+    color: '#F0F9FF',
+    lineHeight: 23,
+    marginBottom: 64,
+    maxWidth: 360,
   },
-
   heroButton: {
-    minWidth: 0,
-    minHeight: 46,
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 10,
-  },
-
-  heroActions: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    justifyContent: 'center',
-    width: '100%',
-    gap: 12,
-    marginBottom: SIZES.large,
-  },
-
-  primaryButton: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 46,
-    backgroundColor: COLORS.primaryLight,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
+    gap: 9,
+    backgroundColor: '#FFFFFF',
     borderRadius: SIZES.radiusMedium,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: SIZES.large,
+    paddingVertical: SIZES.medium,
   },
-
-  primaryButtonText: {
+  heroButtonText: {
     ...FONTS.labelMedium,
-    color: COLORS.textPrimary,
-    textAlign: 'center',
+    color: COLORS.secondaryDark,
   },
-
-  secondaryButton: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 46,
-    flexDirection: 'row',
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderRadius: SIZES.radiusMedium,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  secondaryButtonText: {
-    ...FONTS.labelMedium,
-    color: COLORS.textPrimary,
-    textAlign: 'center',
-  },
-
-  heroStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'stretch',
-    width: '100%',
-    gap: 12,
-  },
-
-  statBox: {
-    flex: 1,
-    minWidth: 0,
-    backgroundColor: COLORS.surface,
-    padding: SIZES.medium,
-    borderRadius: SIZES.radiusMedium,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-
-  statHeader: {
+  scanAction: {
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    marginBottom: 5,
+    gap: 9,
+    marginTop: 18,
+    paddingVertical: 7,
   },
-
-  statLabel: {
-    ...FONTS.caption,
-    color: COLORS.textSecondary,
-    textAlign: 'left',
+  scanActionText: {
+    ...FONTS.body,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
-
-  statValue: {
-    ...FONTS.labelMedium,
-    color: COLORS.textPrimary,
-    textAlign: 'left',
-  },
-
   sectionHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
     marginBottom: SIZES.medium,
   },
-
+  sectionHeadingCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
   sectionTitle: {
     ...FONTS.headline2,
-    color: COLORS.secondaryDark,
+    color: COLORS.textPrimary,
   },
-
   sectionSubtitle: {
-    ...FONTS.body,
-    color: COLORS.textSecondary,
-  },
-
-  unitCountBadge: {
-    backgroundColor: '#E0F2FE',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: SIZES.radiusSmall,
-  },
-
-  unitCountText: {
     ...FONTS.caption,
-    color: COLORS.secondaryDark,
+    color: COLORS.textSecondary,
+    marginTop: 2,
   },
-
-  bikeList: {
-    marginBottom: SIZES.medium,
-  },
-
-  stateContainer: {
+  seeAllButton: {
+    minHeight: 40,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 28,
-    gap: 10,
+    paddingLeft: SIZES.small,
   },
-
+  seeAllText: {
+    ...FONTS.caption,
+    color: COLORS.secondaryDark,
+    fontWeight: '700',
+  },
+  bikeCarousel: {
+    paddingBottom: SIZES.large,
+    paddingRight: SIZES.large,
+  },
+  stateCard: {
+    minHeight: 150,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SIZES.small,
+    padding: SIZES.large,
+    marginBottom: SIZES.large,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: SIZES.radiusLarge,
+  },
   stateText: {
     ...FONTS.body,
     color: COLORS.textSecondary,
     textAlign: 'center',
   },
-
   errorText: {
     ...FONTS.body,
-    color: '#DC2626',
+    color: COLORS.textPrimary,
     textAlign: 'center',
   },
-
   retryButton: {
-    backgroundColor: COLORS.primaryLight,
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: SIZES.large,
-    paddingVertical: SIZES.medium,
     borderRadius: SIZES.radiusMedium,
+    backgroundColor: '#E0F2FE',
   },
-
   retryButtonText: {
     ...FONTS.labelMedium,
-    color: COLORS.textPrimary,
+    color: COLORS.secondaryDark,
   },
 });
 

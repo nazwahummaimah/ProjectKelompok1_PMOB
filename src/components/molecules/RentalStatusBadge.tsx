@@ -14,7 +14,12 @@ const RentalStatusBadge: React.FC<RentalStatusBadgeProps> = ({ status }) => {
   const dotColor = isOngoing ? COLORS.primaryLight : isPending ? COLORS.warning : COLORS.success;
   const textColor = isOngoing ? COLORS.rentedText : isPending ? '#92400E' : COLORS.successText;
   return (
-    <View style={[styles.container, stateStyle]}>
+    <View
+      style={[styles.container, stateStyle]}
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={`Status penyewaan: ${status}`}
+    >
       <View style={[styles.dot, { backgroundColor: dotColor }]} />
       <Text style={[styles.label, { color: textColor }]}>{status}</Text>
     </View>

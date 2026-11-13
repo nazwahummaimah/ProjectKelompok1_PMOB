@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, TextInput, View, Pressable, TextInputProps } from 'react-native';
+import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
 type FormFieldProps = TextInputProps & {
   label: string;
@@ -16,11 +17,11 @@ export function FormField({
     <View style={styles.group}>
       <Text style={styles.label}>{label}</Text>
       <View style={[styles.inputWrap, error && styles.inputError]}>
-        <Ionicons name={icon} size={18} color="#61766A" />
+        <Ionicons name={icon} size={18} color={COLORS.textSecondary} />
         <TextInput
           {...inputProps}
           style={[styles.input, style]}
-          placeholderTextColor="#87988E"
+          placeholderTextColor={COLORS.textSecondary}
         />
         {trailingIcon ? (
           <Pressable
@@ -28,7 +29,7 @@ export function FormField({
             accessibilityLabel="Tampilkan atau sembunyikan password"
             hitSlop={8}
             onPress={onTrailingPress}>
-            <Ionicons name={trailingIcon} size={19} color="#61766A" />
+            <Ionicons name={trailingIcon} size={19} color={COLORS.textSecondary} />
           </Pressable>
         ) : null}
       </View>
@@ -38,14 +39,20 @@ export function FormField({
 }
 
 const styles = StyleSheet.create({
-  group: { gap: 7, marginBottom: 16 },
-  label: { color: '#212121', fontSize: 13, fontWeight: '700' },
+  group: { gap: 7, marginBottom: SIZES.large },
+  label: { ...FONTS.labelMedium, color: COLORS.textPrimary },
   inputWrap: {
-    minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 12,
-    backgroundColor: '#FFFFFF', paddingHorizontal: 13,
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SIZES.small,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: SIZES.radiusMedium,
+    backgroundColor: COLORS.surface,
+    paddingHorizontal: SIZES.medium,
   },
-  inputError: { borderColor: '#C62828' },
-  input: { flex: 1, minWidth: 0, color: '#212121', fontSize: 14, paddingVertical: 11 },
-  error: { color: '#C62828', fontSize: 12 },
+  inputError: { borderColor: COLORS.accentCritical },
+  input: { flex: 1, minWidth: 0, color: COLORS.textPrimary, ...FONTS.body, paddingVertical: 11 },
+  error: { color: COLORS.accentCritical, ...FONTS.caption },
 });

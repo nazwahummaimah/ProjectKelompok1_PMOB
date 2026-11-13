@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
+import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
 type FilterChipProps = {
   label: string;
@@ -11,8 +12,10 @@ export function FilterChip({ label, selected, onPress }: FilterChipProps) {
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected }}
+      accessibilityLabel={`Filter ${label}`}
       onPress={onPress}
-      style={[styles.chip, selected && styles.selectedChip]}>
+      style={[styles.chip, selected && styles.selectedChip]}
+    >
       <Text style={[styles.label, selected && styles.selectedLabel]}>{label}</Text>
     </Pressable>
   );
@@ -20,10 +23,24 @@ export function FilterChip({ label, selected, onPress }: FilterChipProps) {
 
 const styles = StyleSheet.create({
   chip: {
-    paddingHorizontal: 15, paddingVertical: 9, borderRadius: 20,
-    borderWidth: 1, borderColor: '#E5ECE7', backgroundColor: '#FFFFFF',
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    borderRadius: SIZES.radiusMedium,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
   },
-  selectedChip: { backgroundColor: '#16833B', borderColor: '#16833B' },
-  label: { color: '#61766A', fontSize: 13, fontWeight: '600' },
-  selectedLabel: { color: '#FFFFFF' },
+  selectedChip: {
+    backgroundColor: '#E0F2FE',
+    borderColor: '#7DD3FC',
+  },
+  label: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+  },
+  selectedLabel: {
+    color: COLORS.secondaryDark,
+    fontWeight: '700',
+  },
 });

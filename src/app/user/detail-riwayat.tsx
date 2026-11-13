@@ -127,7 +127,7 @@ export default function RentalHistoryDetailScreen() {
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" />
 
-        <HeaderApp notificationCount={0} />
+        <HeaderApp />
 
         <View style={styles.stateContainer}>
           <ActivityIndicator
@@ -154,7 +154,7 @@ export default function RentalHistoryDetailScreen() {
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" />
 
-        <HeaderApp notificationCount={0} />
+        <HeaderApp />
 
         <View style={styles.emptyState}>
           <Ionicons
@@ -209,7 +209,7 @@ export default function RentalHistoryDetailScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
-      <HeaderApp notificationCount={0} />
+      <HeaderApp />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}

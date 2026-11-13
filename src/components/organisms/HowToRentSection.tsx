@@ -1,71 +1,69 @@
-// components/organisms/HowToRentSection.tsx
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 
 const STEPS = [
   {
-    num: '1',
+    number: '01',
     title: 'Pilih sepeda',
-    desc: 'Cek ketersediaan langsung di aplikasi atau pos terdekat.',
+    description: 'Lihat jenis unit dan status ketersediaannya melalui katalog.',
+    image: require('../../assets/images/step1.png'),
   },
   {
-    num: '2',
+    number: '02',
     title: 'Datang ke lokasi',
-    desc: 'Kunjungi pos rental Mas Joko (Stasiun Tugu, Malioboro, Titik Nol).',
+    description: 'Penyewaan dilakukan langsung di lokasi usaha Jamal Jepret.',
+    image: require('../../assets/images/step2.png'),
   },
   {
-    num: '3',
-    title: 'Selesaikan transaksi',
-    desc: 'Scan QR atau tunjukkan identitas fisik (KTP/SIM) ke petugas kasir.',
+    number: '03',
+    title: 'Selesaikan pencatatan',
+    description: 'Petugas mencatat data penyewa, unit, durasi, dan ketentuan jaminan yang berlaku.',
+    image: require('../../assets/images/step3.png'),
   },
   {
-    num: '4',
-    title: 'Gunakan sepeda',
-    desc: 'Mulai bersepeda keliling kota Jogja dengan nyaman dan aman.',
+    number: '04',
+    title: 'Mulai bersepeda',
+    description: 'Gunakan sepeda setelah proses penyewaan selesai.',
+    image: require('../../assets/images/step4.png'),
   },
 ];
 
-const HowToRentSection: React.FC = () => {
+export default function HowToRentSection() {
   return (
     <View style={styles.container}>
-      {/* Header Section */}
-      <View style={styles.headerRow}>
-        <View style={styles.iconCircle}>
-          <Ionicons name="bicycle" size={18} color={COLORS.secondaryDark} />
-        </View>
-        <View style={styles.headerTextContainer}>
-          <Text style={styles.sectionTitle}>Cara Sewa</Text>
-          <Text style={styles.sectionSubtitle}>Proses cepat tanpa antre rumit</Text>
-        </View>
-      </View>
-
-      {/* Numbered Steps */}
-      <View style={styles.stepsList}>
-        {STEPS.map((step, index) => (
-          <View key={index} style={styles.stepItem}>
-            <View style={styles.numberBadge}>
-              <Text style={styles.numberText}>{step.num}</Text>
+      <View style={styles.stepsGrid}>
+        {STEPS.map((step) => (
+          <View key={step.number} style={styles.stepCard}>
+            <View style={styles.illustration}>
+                <Image
+                  source={step.image}
+                  style={styles.illustrationImage}
+                  resizeMode="contain"
+                />
+              <View style={styles.numberBadge}>
+                <Text style={styles.numberText}>{step.number}</Text>
+              </View>
             </View>
+
             <View style={styles.stepContent}>
               <Text style={styles.stepTitle}>{step.title}</Text>
-              <Text style={styles.stepDesc}>{step.desc}</Text>
+              <Text style={styles.stepDescription}>{step.description}</Text>
             </View>
           </View>
         ))}
       </View>
 
-      {/* Info Callout Box */}
       <View style={styles.infoBox}>
-        <Ionicons name="information-circle-outline" size={20} color={COLORS.secondaryDark} style={styles.infoIcon} />
+        <Ionicons name="information-circle-outline" size={19} color={COLORS.secondaryDark} />
         <Text style={styles.infoText}>
-          Penyewaan langsung di lokasi (walk-in). Tanpa reservasi online yang rumit. Cukup datang dan gowes!
+          Aplikasi ini menampilkan informasi unit. Penyewaan tetap diselesaikan bersama petugas di lokasi.
         </Text>
       </View>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -82,77 +80,68 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.large,
   },
   iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: SIZES.radiusPill,
+    width: 40,
+    height: 40,
+    borderRadius: SIZES.radiusMedium,
     backgroundColor: '#E0F2FE',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: SIZES.medium,
   },
-  headerTextContainer: {
-    flex: 1,
-  },
-  sectionTitle: {
-    ...FONTS.headline3,
-    color: COLORS.secondaryDark,
-  },
-  sectionSubtitle: {
-    ...FONTS.caption,
-    color: COLORS.textSecondary,
-  },
-  stepsList: {
-    marginBottom: SIZES.medium,
-  },
-  stepItem: {
+  headerText: { flex: 1, minWidth: 0 },
+  sectionTitle: { ...FONTS.headline3, color: COLORS.textPrimary },
+  sectionSubtitle: { ...FONTS.caption, color: COLORS.textSecondary, marginTop: 2 },
+  stepsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  stepCard: {
+    width: '48%',
+    backgroundColor: COLORS.surface,
+    borderRadius: SIZES.radiusMedium,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: SIZES.small,
     marginBottom: SIZES.medium,
+  },
+  illustrationImage: {
+    width: '100%',
+    height: '100%',
+  },
+  illustration: {
+    height: 104,
+    borderRadius: SIZES.radiusSmall,
+    backgroundColor: '#EAF6FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SIZES.medium,
+    overflow: 'hidden',
   },
   numberBadge: {
-    width: 24,
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    minWidth: 28,
     height: 24,
-    borderRadius: 12,
-    backgroundColor: '#E0F2FE',
-    justifyContent: 'center',
+    paddingHorizontal: 6,
+    borderRadius: SIZES.radiusPill,
+    backgroundColor: COLORS.secondaryDark,
     alignItems: 'center',
-    marginRight: SIZES.medium,
-    marginTop: 2,
+    justifyContent: 'center',
   },
-  numberText: {
-    ...FONTS.caption,
-    fontWeight: 'bold',
-    color: COLORS.secondaryDark,
-  },
-  stepContent: {
-    flex: 1,
-  },
-  stepTitle: {
-    ...FONTS.labelMedium,
-    color: COLORS.textPrimary,
-    marginBottom: 2,
-  },
-  stepDesc: {
-    ...FONTS.caption,
-    color: COLORS.textSecondary,
-    lineHeight: 18,
-  },
+  numberText: { ...FONTS.caption, color: '#FFFFFF', fontWeight: '700' },
+  stepContent: { flex: 1 },
+  stepTitle: { ...FONTS.labelMedium, color: COLORS.textPrimary, marginBottom: 5 },
+  stepDescription: { ...FONTS.caption, color: COLORS.textSecondary, lineHeight: 18 },
   infoBox: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: SIZES.small,
     backgroundColor: '#F0F9FF',
     borderRadius: SIZES.radiusMedium,
     padding: SIZES.medium,
-    alignItems: 'flex-start',
+    marginTop: SIZES.small,
   },
-  infoIcon: {
-    marginRight: SIZES.small,
-    marginTop: 2,
-  },
-  infoText: {
-    ...FONTS.caption,
-    color: COLORS.textSecondary,
-    flex: 1,
-    lineHeight: 18,
-  },
+  infoText: { ...FONTS.caption, color: COLORS.secondaryDark, flex: 1, lineHeight: 19 },
 });
-
-export default HowToRentSection;

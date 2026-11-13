@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   SafeAreaView,
   View,
@@ -9,10 +9,11 @@ import {
   Platform,
   StatusBar,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import BottomNavBar, {
   TabType,
@@ -22,6 +23,7 @@ import { getPublicBikeQrInfo } from '../../services/publicBikeQrService';
 
 const DurasiSewa: React.FC = () => {
   const router = useRouter();
+  const [isFocused, setIsFocused] = useState(false);
   const params = useLocalSearchParams<{ source?: string }>();
   const isUserFlow = params.source === 'user';
 
@@ -37,6 +39,24 @@ const DurasiSewa: React.FC = () => {
       requestPermission();
     }
   }, [permission, requestPermission]);
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      scannedRef.current = false;
+      setProcessing(false);
+      setTorchEnabled(false);
+      setScanError('');
+
+      return () => {
+        setIsFocused(false);
+        scannedRef.current = false;
+        setProcessing(false);
+        setTorchEnabled(false);
+        setScanError('');
+      };
+    }, [])
+  );
 
   const handleBarcodeScanned = async ({
     data,
@@ -121,6 +141,8 @@ const DurasiSewa: React.FC = () => {
           <TouchableOpacity
             style={styles.headerBtn}
             onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Kembali"
           >
             <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
           </TouchableOpacity>
@@ -130,7 +152,10 @@ const DurasiSewa: React.FC = () => {
           <TouchableOpacity
             style={styles.headerBtn}
             onPress={() => setTorchEnabled((value) => !value)}
-            disabled={!permission?.granted}
+            disabled={!permission?.granted || !isFocused}
+            accessibilityRole="button"
+            accessibilityLabel={torchEnabled ? 'Matikan lampu kamera' : 'Nyalakan lampu kamera'}
+            accessibilityState={{ disabled: !permission?.granted || !isFocused, checked: torchEnabled }}
           >
             <Ionicons
               name={torchEnabled ? 'flash' : 'flash-outline'}
@@ -160,12 +185,24 @@ const DurasiSewa: React.FC = () => {
 
           <TouchableOpacity
             style={styles.permissionButton}
-            onPress={requestPermission}
+            onPress={() => {
+              if (permission.canAskAgain) {
+                void requestPermission();
+              } else {
+                void Linking.openSettings();
+              }
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={permission.canAskAgain ? 'Izinkan akses kamera' : 'Buka pengaturan aplikasi'}
           >
             <Text style={styles.permissionButtonText}>
-              Izinkan Kamera
+              {permission.canAskAgain ? 'Izinkan Kamera' : 'Buka Pengaturan'}
             </Text>
           </TouchableOpacity>
+        </View>
+      ) : !isFocused ? (
+        <View style={styles.centerState}>
+          <Text style={styles.stateText}>Kamera dijeda.</Text>
         </View>
       ) : (
         <View style={styles.cameraArea}>
@@ -216,7 +253,12 @@ const DurasiSewa: React.FC = () => {
                 color="#FCA5A5"
               />
               <Text style={styles.errorText}>{scanError}</Text>
-              <TouchableOpacity onPress={resetScanner}>
+              <TouchableOpacity
+                onPress={resetScanner}
+                style={styles.retryButton}
+                accessibilityRole="button"
+                accessibilityLabel="Pindai QR sekali lagi"
+              >
                 <Text style={styles.retryText}>Coba Lagi</Text>
               </TouchableOpacity>
             </View>
@@ -274,9 +316,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   headerBtn: {
-    padding: 6,
-    minWidth: 36,
+    width: 44,
+    height: 44,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
   },
   cameraArea: {
     flex: 1,
@@ -285,8 +329,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: SIZES.large,
   },
   cameraFrame: {
-    width: 280,
-    height: 340,
+    width: '100%',
+    maxWidth: 280,
+    aspectRatio: 280 / 340,
     overflow: 'hidden',
     borderRadius: 20,
     backgroundColor: '#020617',
@@ -391,6 +436,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   permissionButton: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 22,
     backgroundColor: COLORS.primaryLight,
     paddingHorizontal: 24,
@@ -415,6 +463,11 @@ const styles = StyleSheet.create({
     color: '#FEE2E2',
     flex: 1,
     fontSize: 12,
+  },
+  retryButton: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
   },
   retryText: {
     color: '#FFFFFF',

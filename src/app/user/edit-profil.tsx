@@ -135,7 +135,7 @@ export default function EditUserProfileScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
-      <HeaderApp notificationCount={0} />
+      <HeaderApp />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}

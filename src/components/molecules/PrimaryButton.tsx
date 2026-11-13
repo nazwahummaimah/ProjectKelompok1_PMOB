@@ -1,14 +1,13 @@
-
 import React from 'react';
 import {
   Pressable,
   StyleSheet,
   Text,
-  View,
   StyleProp,
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
 type PrimaryButtonProps = {
   title: string;
@@ -31,10 +30,12 @@ export function PrimaryButton({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      style={[
+      accessibilityLabel={title}
+      style={({ pressed }) => [
         styles.button,
         outlined && styles.outlined,
         small && styles.small,
+        pressed && styles.pressed,
         style,
       ]}
     >
@@ -45,8 +46,8 @@ export function PrimaryButton({
       {icon ? (
         <Ionicons
           name={icon}
-          size={15}
-          color={outlined ? '#16833B' : '#FFFFFF'}
+          size={16}
+          color={outlined ? COLORS.secondaryDark : COLORS.textPrimary}
         />
       ) : null}
     </Pressable>
@@ -55,33 +56,33 @@ export function PrimaryButton({
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 39,
-    paddingHorizontal: 14,
-    borderRadius: 13,
-    backgroundColor: '#16833B',
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: SIZES.radiusMedium,
+    backgroundColor: COLORS.primaryLight,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 7,
+    gap: 8,
   },
   outlined: {
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: '#16833B',
+    borderColor: COLORS.secondaryDark,
   },
   small: {
-    minHeight: 34,
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    alignSelf: 'stretch',
+    minHeight: 44,
+    paddingHorizontal: 12,
+  },
+  pressed: {
+    opacity: 0.82,
   },
   text: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '800',
+    ...FONTS.labelMedium,
+    color: COLORS.textPrimary,
   },
   outlinedText: {
-    color: '#16833B',
+    color: COLORS.secondaryDark,
   },
 });
 

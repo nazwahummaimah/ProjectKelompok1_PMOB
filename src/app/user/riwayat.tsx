@@ -95,7 +95,7 @@ export default function RentalHistoryScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
-      <HeaderApp notificationCount={0} />
+      <HeaderApp />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -120,7 +120,7 @@ export default function RentalHistoryScreen() {
 
         {/* SUMMARY */}
 
-        <View style={styles.summaryStrip}>
+        {!loading && !error ? <View style={styles.summaryStrip}>
           <View style={styles.summaryCell}>
             <Text style={styles.summaryValue}>
               {summary.total}
@@ -154,7 +154,7 @@ export default function RentalHistoryScreen() {
               Selesai
             </Text>
           </View>
-        </View>
+        </View> : null}
 
         {/* FILTER */}
 
@@ -178,6 +178,9 @@ export default function RentalHistoryScreen() {
                 ]}
                 onPress={() => setFilter(option)}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                accessibilityLabel={`Filter ${label}`}
               >
                 <Text
                   style={[
@@ -200,7 +203,7 @@ export default function RentalHistoryScreen() {
           </Text>
 
           <Text style={styles.listCount}>
-            {filteredRentals.length} transaksi
+            {loading ? 'Memuat...' : error ? 'Data belum tersedia' : `${filteredRentals.length} transaksi`}
           </Text>
         </View>
 
@@ -241,6 +244,9 @@ export default function RentalHistoryScreen() {
                 void refresh();
               }}
               disabled={refreshing}
+              accessibilityRole="button"
+              accessibilityLabel="Muat ulang riwayat penyewaan"
+              accessibilityState={{ disabled: refreshing }}
             >
               <Text style={styles.retryText}>
                 Coba Lagi
@@ -539,6 +545,9 @@ const styles = StyleSheet.create({
   },
 
   filterChip: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 9,
     paddingHorizontal: 12,
     borderRadius: SIZES.radiusPill,

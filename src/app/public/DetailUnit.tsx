@@ -37,6 +37,7 @@ const DetailUnit: React.FC = () => {
   const [bike, setBike] = useState<Bike | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [imageFailed, setImageFailed] = useState(false);
 
   const bikeId = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -51,6 +52,7 @@ const DetailUnit: React.FC = () => {
     try {
       setLoading(true);
       setErrorMessage('');
+      setImageFailed(false);
 
       const data = await getBikeById(bikeId);
 
@@ -92,6 +94,7 @@ const DetailUnit: React.FC = () => {
   };
 
   const isAvailable = bike?.status === 'Tersedia';
+  const canScanUnitQr = isAvailable && Boolean(bike?.qr_code);
   const isRented = bike?.status === 'Sedang Disewa';
   const isMaintenance = bike?.status === 'Perawatan';
 
@@ -104,9 +107,7 @@ const DetailUnit: React.FC = () => {
 
   const getOperationalDescription = () => {
     if (isAvailable) {
-      return `Sepeda ini sedang standby dan siap disewa langsung di ${
-        bike?.location || 'pos penyewaan'
-      }. Silakan datangi pos dan konfirmasi ke kasir.`;
+      return 'Sepeda ini tercatat tersedia. Datangi lokasi Jamal Jepret dan konfirmasikan unit kepada petugas.';
     }
 
     if (isRented) {
@@ -122,7 +123,8 @@ const DetailUnit: React.FC = () => {
 
   const getStatusColor = () => {
     if (isAvailable) return COLORS.success;
-    if (isMaintenance) return COLORS.warning;
+    if (isMaintenance) return '#92400E';
+    if (isRented) return COLORS.rentedText;
     return COLORS.textSecondary;
   };
 
@@ -161,7 +163,7 @@ const DetailUnit: React.FC = () => {
           <Ionicons
             name="alert-circle-outline"
             size={44}
-            color="#EF4444"
+            color="#B91C1C"
           />
 
           <Text style={styles.stateTitle}>
@@ -239,6 +241,8 @@ const DetailUnit: React.FC = () => {
             style={styles.iconBtn}
             onPress={() => router.back()}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel="Kembali"
           >
             <Ionicons
               name="arrow-back"
@@ -251,25 +255,7 @@ const DetailUnit: React.FC = () => {
             Detail Sepeda
           </Text>
 
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.iconBtn}>
-              <Ionicons
-                name="share-social-outline"
-                size={20}
-                color={COLORS.secondaryDark}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.iconBtn, { marginLeft: 8 }]}
-            >
-              <Ionicons
-                name="information-circle-outline"
-                size={22}
-                color={COLORS.secondaryDark}
-              />
-            </TouchableOpacity>
-          </View>
+          <View style={styles.headerRight} />
         </View>
       </View>
 
@@ -279,11 +265,13 @@ const DetailUnit: React.FC = () => {
       >
         {/* Banner Gambar & Badges */}
         <View style={styles.bannerContainer}>
-          {bike.image_url ? (
+          {bike.image_url && !imageFailed ? (
             <Image
               source={{ uri: bike.image_url }}
               style={styles.bannerImage}
               resizeMode="cover"
+              onError={() => setImageFailed(true)}
+              accessibilityLabel={`Foto ${bike.name}`}
             />
           ) : (
             <View style={styles.imagePlaceholder}>
@@ -306,7 +294,7 @@ const DetailUnit: React.FC = () => {
               style={{ marginRight: 4 }}
             />
             <Text style={styles.verifiedText}>
-              {bike.qr_code ? 'Terverifikasi QR' : 'QR belum tersedia'}
+              {bike.qr_code ? 'QR tersedia' : 'QR belum tersedia'}
             </Text>
           </View>
 
@@ -329,21 +317,18 @@ const DetailUnit: React.FC = () => {
         <View style={styles.mainInfoRow}>
           <View style={styles.titleCol}>
             <Text style={styles.categoryTitle}>
-              KATEGORI SEPEDA
+              Kategori
             </Text>
 
             <Text style={styles.mainTitle}>
               {bike.category}
             </Text>
 
-            <Text style={styles.subTitle}>
-              {bike.name} Series
-            </Text>
           </View>
 
           <View style={styles.priceCol}>
             <Text style={styles.priceMeta}>
-              Tarif Sewa Pos
+              Tarif Sewa per Jam
             </Text>
 
             <Text style={styles.priceAmount}>
@@ -352,36 +337,6 @@ const DetailUnit: React.FC = () => {
               <Text style={styles.priceUnit}> / jam</Text>
             </Text>
 
-            <Text style={styles.paymentNote}>
-              Bayar langsung di kasir
-            </Text>
-          </View>
-        </View>
-
-        {/* Mode Selector */}
-        <View style={styles.modeContainer}>
-          <View
-            style={[
-              styles.modePill,
-              isAvailable && styles.modeActive,
-            ]}
-          >
-            <View
-              style={[
-                styles.dot,
-                { backgroundColor: getStatusColor() },
-              ]}
-            />
-
-            <Text
-              style={
-                isAvailable
-                  ? styles.modeActiveText
-                  : styles.modeInactiveText
-              }
-            >
-              Mode: {bike.status}
-            </Text>
           </View>
         </View>
 
@@ -428,18 +383,17 @@ const DetailUnit: React.FC = () => {
             />
 
             <Text style={styles.opFooterText}>
-              Hanya melayani sewa tatap muka (Walk-in direct).
-              Tanpa sistem reservasi online.
+              Penyewaan dilakukan langsung di lokasi Jamal Jepret.
             </Text>
           </View>
         </View>
 
-        {/* Spesifikasi & Pos Armada */}
+        {/* Informasi lokasi usaha */}
         <Text style={styles.sectionHeaderTitle}>
-          📍 Spesifikasi & Pos Armada
+          Lokasi Penyewaan
         </Text>
 
-        {/* Card Pos Pangkalan */}
+        {/* Informasi lokasi usaha */}
         <View style={styles.cardBox}>
           <View style={styles.cardBoxHeader}>
             <View style={styles.iconCircle}>
@@ -452,21 +406,17 @@ const DetailUnit: React.FC = () => {
 
             <View style={{ flex: 1 }}>
               <Text style={styles.cardBoxMeta}>
-                Pos Pangkalan Resmi
+                Satu lokasi operasional
               </Text>
 
               <Text style={styles.cardBoxTitle}>
-                {bike.location || 'Lokasi belum ditentukan'}
+                Jamal Jepret
               </Text>
             </View>
           </View>
 
           <Text style={styles.cardBoxAddress}>
-            {bike.address || 'Alamat belum tersedia.'}
-          </Text>
-
-          <Text style={styles.cardBoxHours}>
-            ⏱️ {bike.opening_hours || 'Jam operasional belum tersedia.'}
+            Penyewaan diselesaikan bersama petugas di lokasi usaha.
           </Text>
         </View>
 
@@ -627,29 +577,15 @@ const DetailUnit: React.FC = () => {
         {/* Action Callout */}
         <View style={styles.actionRowCard}>
           <TouchableOpacity
-            style={styles.outlineBtn}
-            activeOpacity={0.8}
-            onPress={() => router.push('/public/' as any)}
-          >
-            <Ionicons
-              name="navigate-outline"
-              size={16}
-              color={COLORS.secondaryDark}
-              style={{ marginRight: 6 }}
-            />
-
-            <Text style={styles.outlineBtnText}>
-              Arah ke Pos
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
             style={[
               styles.filledBtn,
-              !isAvailable && styles.disabledBtn,
+              !canScanUnitQr && styles.disabledBtn,
             ]}
             activeOpacity={0.8}
-            disabled={!isAvailable}
+            disabled={!canScanUnitQr}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !canScanUnitQr }}
+            accessibilityLabel={canScanUnitQr ? 'Pindai QR unit' : !bike.qr_code ? 'Kode QR unit belum tersedia' : 'Unit tidak tersedia untuk disewa'}
             onPress={() =>
               router.push('/public/durasi-sewa' as any)
             }
@@ -662,7 +598,7 @@ const DetailUnit: React.FC = () => {
             />
 
             <Text style={styles.filledBtnText}>
-              Scan QR Unit
+              {canScanUnitQr ? 'Pindai QR Unit' : !bike.qr_code ? 'QR Belum Tersedia' : 'Unit Tidak Tersedia'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -701,11 +637,10 @@ const styles = StyleSheet.create({
     color: COLORS.secondaryDark,
   },
   headerRight: {
-    flexDirection: 'row',
+    width: 44,
+    height: 44,
   },
-  iconBtn: {
-    padding: 6,
-  },
+  iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   scrollContent: {
     padding: SIZES.large,
     paddingBottom: SIZES.large,
@@ -793,11 +728,6 @@ const styles = StyleSheet.create({
     ...FONTS.headline2,
     color: COLORS.secondaryDark,
   },
-  subTitle: {
-    ...FONTS.caption,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
   priceCol: {
     alignItems: 'flex-end',
   },
@@ -821,39 +751,6 @@ const styles = StyleSheet.create({
   paymentNote: {
     ...FONTS.caption,
     fontSize: 10,
-    color: COLORS.textSecondary,
-  },
-  modeContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
-    borderRadius: SIZES.radiusPill,
-    padding: 4,
-    marginBottom: SIZES.large,
-  },
-  modePill: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-    borderRadius: SIZES.radiusPill,
-  },
-  modeActive: {
-    backgroundColor: COLORS.surface,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 6,
-  },
-  modeActiveText: {
-    ...FONTS.caption,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
-  },
-  modeInactiveText: {
-    ...FONTS.caption,
     color: COLORS.textSecondary,
   },
   operationalBox: {

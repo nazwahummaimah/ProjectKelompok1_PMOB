@@ -70,29 +70,31 @@ const BottomNavBar: React.FC<BottomNavBarProps> = (props) => {
         return (
           <TouchableOpacity
             key={tab.name}
-            style={styles.tabItem}
-            activeOpacity={0.6}
+            style={styles.tabButton}
+            activeOpacity={0.8}
             onPress={() => handlePress(tab.name)}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
             accessibilityRole="button"
             accessibilityState={{ selected: isActive }}
             accessibilityLabel={tabLabel}
           >
-            {isActive && <View style={styles.activeIndicator} />}
-            <Ionicons
-              name={(isActive ? tab.activeIcon : tab.icon) as keyof typeof Ionicons.glyphMap}
-              size={22}
-              color={isActive ? COLORS.secondaryDark : COLORS.textSecondary}
-            />
-            <Text
-              style={[
-                styles.tabLabel,
-                { color: isActive ? COLORS.secondaryDark : COLORS.textSecondary },
-                isActive && styles.activeTabLabel,
-              ]}
-            >
-              {tabLabel}
-            </Text>
+            <View style={[styles.tabContent, isActive && styles.activeTabContent]}>
+              <Ionicons
+                name={(isActive ? tab.activeIcon : tab.icon) as keyof typeof Ionicons.glyphMap}
+                size={21}
+                color={isActive ? COLORS.secondaryDark : COLORS.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.tabLabel,
+                  { color: isActive ? COLORS.secondaryDark : COLORS.textSecondary },
+                  isActive && styles.activeTabLabel,
+                ]}
+                numberOfLines={1}
+              >
+                {tabLabel}
+              </Text>
+            </View>
           </TouchableOpacity>
         );
       })}
@@ -103,37 +105,44 @@ const BottomNavBar: React.FC<BottomNavBarProps> = (props) => {
 const styles = StyleSheet.create({
   navContainer: {
     flexDirection: 'row',
-    height: 64,
+    minHeight: 72,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
     backgroundColor: COLORS.surface,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
     justifyContent: 'space-around',
     alignItems: 'center',
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 5,
   },
-  tabItem: {
+  tabButton: {
     flex: 1,
+    minWidth: 0,
+    height: 56,
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100%',
+    paddingHorizontal: 2,
   },
-  activeIndicator: {
-    position: 'absolute',
-    top: 0,
-    width: 28,
-    height: 3,
-    backgroundColor: COLORS.secondaryDark,
-    borderBottomLeftRadius: 3,
-    borderBottomRightRadius: 3,
+  tabContent: {
+    width: '92%',
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999,
+    overflow: 'hidden',
+    paddingHorizontal: 3,
+    paddingVertical: 5,
+  },
+  activeTabContent: {
+    backgroundColor: '#E0F2FE',
   },
   tabLabel: {
     ...FONTS.caption,
     fontSize: 11,
-    marginTop: 4,
+    marginTop: 3,
+    textAlign: 'center',
   },
   activeTabLabel: { fontWeight: '700' },
 });

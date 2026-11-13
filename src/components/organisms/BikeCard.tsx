@@ -1,6 +1,6 @@
-// components/organisms/BikeCard.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 import StatusBadge from '../molecules/StatusBadge';
@@ -13,9 +13,10 @@ interface BikeCardProps {
 
 const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
   const router = useRouter();
-  const isAvailable = bike.status.toLowerCase() === 'tersedia';
+  const [imageFailed, setImageFailed] = useState(false);
+  const isAvailable = bike.status === 'Tersedia';
+  const hasImage = Boolean(bike.image) && !imageFailed;
 
-  // Handler klik kartu -> Pindah ke detail membawa parameter ID
   const handlePressCard = () => {
     router.push({
       pathname: '/public/DetailUnit' as any,
@@ -24,13 +25,30 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
   };
 
   return (
-    <TouchableOpacity 
-      style={styles.cardContainer} 
+    <TouchableOpacity
+      style={styles.cardContainer}
       activeOpacity={0.85}
       onPress={handlePressCard}
+      accessibilityRole="button"
+      accessibilityLabel={`Lihat detail sepeda ${bike.name}, status ${bike.status}`}
+      accessibilityHint="Membuka informasi lengkap unit sepeda"
     >
       <View style={styles.imageContainer}>
-        <Image source={{ uri: bike.image }} style={styles.image} />
+        {hasImage ? (
+          <Image
+            source={{ uri: bike.image }}
+            style={styles.image}
+            resizeMode="cover"
+            onError={() => setImageFailed(true)}
+            accessibilityLabel={`Foto ${bike.name}`}
+          />
+        ) : (
+          <View style={styles.imageFallback}>
+            <Ionicons name="bicycle-outline" size={48} color={COLORS.textSecondary} />
+            <Text style={styles.imageFallbackText}>Foto unit belum tersedia</Text>
+          </View>
+        )}
+
         <View style={styles.topBadges}>
           <View style={styles.unitIdBadge}>
             <Text style={styles.unitIdText}>{bike.id}</Text>
@@ -43,7 +61,7 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
             <Text style={styles.categoryText}>{bike.category}</Text>
-            <Text style={styles.nameText}>{bike.name}</Text>
+            <Text style={styles.nameText} numberOfLines={2}>{bike.name}</Text>
           </View>
           <View style={styles.priceContainer}>
             <Text style={styles.priceLabel}>Tarif</Text>
@@ -53,29 +71,20 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
           </View>
         </View>
 
-        <View style={styles.locationRow}>
-          <Text style={styles.locationText}>
-            {isAvailable ? `📍 ${bike.location}` : `⏱️ Estimasi kembali ~ ${bike.returnTime}`}
-          </Text>
-        </View>
+        {bike.features.length > 0 ? (
+          <View style={styles.featuresRow}>
+            {bike.features.map((feature, index) => (
+              <FeatureTag key={`${bike.id}-${index}`} label={feature} />
+            ))}
+          </View>
+        ) : null}
 
-        <View style={styles.featuresRow}>
-          {bike.features.map((feature, index) => (
-            <FeatureTag key={index} label={feature} />
-          ))}
-        </View>
-
-        <View style={styles.footerRow}>
-          <Text style={styles.footerText}>
-            {isAvailable ? '⏱️ Sewa langsung di lokasi pos' : `⏱️ ${bike.returnLocationNote || 'Kembali sore ini'}`}
-          </Text>
-          <Text style={[
-            styles.availabilityText, 
-            { color: isAvailable ? COLORS.secondaryDark : COLORS.textSecondary }
-          ]}>
-            {isAvailable ? 'Tersedia di Pos' : 'Tidak Tersedia'}
-          </Text>
-        </View>
+        {isAvailable ? (
+          <View style={styles.footerRow}>
+            <Ionicons name="storefront-outline" size={15} color={COLORS.secondaryDark} />
+            <Text style={styles.footerText}>Penyewaan diproses di lokasi Jamal Jepret</Text>
+          </View>
+        ) : null}
       </View>
     </TouchableOpacity>
   );
@@ -95,11 +104,15 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#E2E8F0',
   },
-  image: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+  image: { width: '100%', height: '100%' },
+  imageFallback: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E2E8F0',
+    gap: SIZES.small,
   },
+  imageFallbackText: { ...FONTS.caption, color: COLORS.textSecondary },
   topBadges: {
     position: 'absolute',
     top: SIZES.medium,
@@ -107,85 +120,40 @@ const styles = StyleSheet.create({
     right: SIZES.medium,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
   unitIdBadge: {
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    backgroundColor: 'rgba(15, 23, 42, 0.78)',
+    paddingVertical: 5,
+    paddingHorizontal: 9,
     borderRadius: SIZES.radiusSmall,
   },
-  unitIdText: {
-    ...FONTS.caption,
-    color: COLORS.surface,
-    fontSize: 11,
-  },
-  detailsContainer: {
-    padding: SIZES.large,
-  },
+  unitIdText: { ...FONTS.caption, color: COLORS.surface, fontSize: 11 },
+  detailsContainer: { padding: SIZES.large },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: SIZES.small,
   },
-  headerLeft: {
-    flex: 1,
-    paddingRight: SIZES.small,
-  },
-  categoryText: {
-    ...FONTS.caption,
-    color: COLORS.textSecondary,
-    fontSize: 11,
-    textTransform: 'uppercase',
-  },
-  nameText: {
-    ...FONTS.headline2,
-    color: COLORS.secondaryDark,
-  },
-  priceContainer: {
-    alignItems: 'flex-end',
-  },
-  priceLabel: {
-    ...FONTS.caption,
-    color: COLORS.textSecondary,
-    fontSize: 11,
-  },
-  priceText: {
-    ...FONTS.labelLarge,
-    color: COLORS.textPrimary,
-  },
-  priceUnit: {
-    ...FONTS.caption,
-    color: COLORS.textSecondary,
-    fontWeight: 'normal',
-  },
-  locationRow: {
-    marginBottom: SIZES.medium,
-  },
-  locationText: {
-    ...FONTS.body,
-    color: COLORS.textSecondary,
-  },
-  featuresRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: SIZES.medium,
-  },
+  headerLeft: { flex: 1, minWidth: 0, paddingRight: SIZES.small },
+  categoryText: { ...FONTS.caption, color: COLORS.textSecondary, fontSize: 11 },
+  nameText: { ...FONTS.headline2, color: COLORS.textPrimary, marginTop: 2 },
+  priceContainer: { alignItems: 'flex-end', maxWidth: '44%' },
+  priceLabel: { ...FONTS.caption, color: COLORS.textSecondary, fontSize: 11 },
+  priceText: { ...FONTS.labelLarge, color: COLORS.textPrimary, textAlign: 'right' },
+  priceUnit: { ...FONTS.caption, color: COLORS.textSecondary, fontWeight: 'normal' },
+  featuresRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: SIZES.small },
   footerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: SIZES.small,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
     paddingTop: SIZES.medium,
+    marginTop: SIZES.medium,
   },
-  footerText: {
-    ...FONTS.caption,
-    color: COLORS.textSecondary,
-  },
-  availabilityText: {
-    ...FONTS.caption,
-    fontWeight: 'bold',
-  }
+  footerText: { ...FONTS.caption, color: COLORS.secondaryDark, flex: 1 },
 });
 
 export default BikeCard;

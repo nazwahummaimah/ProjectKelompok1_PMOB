@@ -297,6 +297,8 @@ const Register: React.FC = () => {
             style={styles.backBtn}
             onPress={() => router.back()}
             disabled={isSubmitting}
+            accessibilityRole="button"
+            accessibilityLabel="Kembali"
           >
             <Ionicons
               name="arrow-back"
@@ -306,7 +308,7 @@ const Register: React.FC = () => {
           </TouchableOpacity>
 
           <View style={styles.brandHeader}>
-            <View style={{ marginRight: 6 }}>
+            <View style={{ marginRight: 6 }} accessible accessibilityRole="image" accessibilityLabel="Logo Jamal Jepret">
               <JamalJepretLogo width={130} />
             </View>
           </View>
@@ -324,7 +326,7 @@ const Register: React.FC = () => {
 
         <Text style={styles.pageSubtitle}>
           Buat akun untuk mempermudah pencatatan sewa dan
-          riwayat transaksi di pos Mas Joko.
+          melihat riwayat penyewaan di Jamal Jepret.
         </Text>
 
         {/* NAMA LENGKAP */}
@@ -472,8 +474,8 @@ const Register: React.FC = () => {
               />
 
               <Text style={styles.helperText}>
-                Digunakan petugas pos rental untuk
-                mencocokkan riwayat sewa fisik Anda.
+                Digunakan petugas Jamal Jepret untuk
+                mencocokkan riwayat penyewaan Anda.
               </Text>
             </View>
           )}

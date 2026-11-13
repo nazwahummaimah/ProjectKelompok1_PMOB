@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, ScrollView, View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
+import { ActivityIndicator, SafeAreaView, ScrollView, View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import HeaderApp from '../../components/molecules/HeaderApp';
@@ -9,13 +9,16 @@ import RentalHistoryCard from '../../components/organisms/RentalHistoryCard';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 import { useUserRentalHistory } from '../../hooks/use-user-rental-history';
 import { useUserProfile } from '../../context/UserProfileContext';
+import type { TransactionWithItems } from '../../services/transactionService';
 
 export default function UserHomeScreen() {
   const router = useRouter();
   const { profile } = useUserProfile();
-  const { history, summary } = useUserRentalHistory();
-  const activeRental = history.find((item) => item.status === 'Sedang Berlangsung');
-  const recentRentals = history.filter((item) => item.status === 'Selesai').slice(0, 2);
+  const { history, summary, loading, error, refresh, refreshing } = useUserRentalHistory();
+  const activeRental = history.find((item: TransactionWithItems) => item.status === 'Sedang Berlangsung');
+  const recentRentals = history.filter((item: TransactionWithItems) => item.status === 'Selesai').slice(0, 2);
+  const activeItems = activeRental?.transaction_items ?? [];
+  const activeFirstBike = activeItems[0]?.bikes;
 
   const handleTabPress = (tab: UserTabType) => {
     switch (tab) {
@@ -36,12 +39,12 @@ export default function UserHomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <HeaderApp notificationCount={0} />
+      <HeaderApp />
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.welcomeSection}>
           <View style={styles.welcomeCopy}>
             <Text style={styles.eyebrow}>DASHBOARD PENGGUNA</Text>
-            <Text style={styles.pageTitle}>Halo, {(profile?.full_name ?? 'Pengguna').split(' ')[0]}!</Text>
+            <Text style={styles.pageTitle}>Halo, {(profile.fullName?.trim() || 'Pengguna').split(' ')[0]}!</Text>
             <Text style={styles.pageSubtitle}>Siap untuk perjalanan berikutnya?</Text>
           </View>
           <View style={styles.avatarCircle}>
@@ -49,7 +52,7 @@ export default function UserHomeScreen() {
           </View>
         </View>
 
-        <View style={styles.summaryRow}>
+        {!loading && !error ? <View style={styles.summaryRow}>
           <View style={styles.summaryCard}>
             <View style={[styles.summaryIcon, { backgroundColor: '#E0F2FE' }]}>
               <Ionicons name="bicycle-outline" size={19} color={COLORS.secondaryDark} />
@@ -71,7 +74,7 @@ export default function UserHomeScreen() {
             <Text style={styles.summaryValue}>{summary.completed}</Text>
             <Text style={styles.summaryLabel}>Selesai</Text>
           </View>
-        </View>
+        </View> : null}
 
         <View style={styles.sectionHeader}>
           <View>
@@ -80,14 +83,35 @@ export default function UserHomeScreen() {
           </View>
         </View>
 
-        {activeRental ? (
+        {loading ? (
+          <View style={styles.stateCard}>
+            <ActivityIndicator size="small" color={COLORS.secondaryDark} />
+            <Text style={styles.stateMessage}>Memuat data penyewaan...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.stateCard}>
+            <Ionicons name="alert-circle-outline" size={26} color="#B91C1C" />
+            <Text style={styles.stateTitle}>Gagal memuat data penyewaan</Text>
+            <Text style={styles.stateMessage}>{error}</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={() => { void refresh(); }}
+              disabled={refreshing}
+              accessibilityRole="button"
+              accessibilityLabel="Muat ulang data penyewaan"
+              accessibilityState={{ disabled: refreshing }}
+            >
+              <Text style={styles.retryText}>{refreshing ? 'Memuat...' : 'Coba lagi'}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : activeRental ? (
           <TouchableOpacity
             style={styles.activeCard}
             activeOpacity={0.85}
             onPress={() => router.push({ pathname: '/user/detail-riwayat' as any, params: { id: activeRental.id } })}
           >
             <View style={styles.activeCardTop}>
-              <Text style={styles.transactionId}>{activeRental.id}</Text>
+              <Text style={styles.transactionId}>{activeRental.transaction_code}</Text>
               <RentalStatusBadge status={activeRental.status} />
             </View>
             <View style={styles.activeBikeRow}>
@@ -95,19 +119,19 @@ export default function UserHomeScreen() {
                 <Ionicons name="bicycle" size={30} color={COLORS.secondaryDark} />
               </View>
               <View style={styles.activeBikeInfo}>
-                <Text style={styles.activeBikeName}>{activeRental.bikeName}</Text>
-                <Text style={styles.activeBikeUnit}>Unit {activeRental.unitId} • {activeRental.category}</Text>
+                <Text style={styles.activeBikeName}>{activeFirstBike?.name ?? 'Sepeda'}</Text>
+                <Text style={styles.activeBikeUnit}>{activeItems.length} unit • {activeFirstBike?.category ?? 'Sepeda'}</Text>
               </View>
             </View>
             <View style={styles.activeDivider} />
             <View style={styles.activeInfoRow}>
               <View style={styles.activeInfoItem}>
                 <Text style={styles.infoLabel}>Mulai sewa</Text>
-                <Text style={styles.infoValue}>{activeRental.startTime}</Text>
+                <Text style={styles.infoValue}>{formatTime(activeRental.rental_date)}</Text>
               </View>
               <View style={styles.activeInfoItem}>
-                <Text style={styles.infoLabel}>Durasi berjalan</Text>
-                <Text style={styles.infoValue}>{activeRental.duration}</Text>
+                <Text style={styles.infoLabel}>Durasi sewa</Text>
+                <Text style={styles.infoValue}>{activeRental.duration_hours} jam</Text>
               </View>
             </View>
             <View style={styles.detailLinkRow}>
@@ -134,17 +158,35 @@ export default function UserHomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {recentRentals.map((rental) => (
+        {!loading && !error && recentRentals.length === 0 ? (
+          <View style={styles.recentEmpty}>
+            <Text style={styles.emptyText}>Belum ada penyewaan yang selesai.</Text>
+          </View>
+        ) : null}
+
+        {!loading && !error ? recentRentals.map((rental: TransactionWithItems) => (
           <RentalHistoryCard
             key={rental.id}
             rental={rental}
             onPress={() => router.push({ pathname: '/user/detail-riwayat' as any, params: { id: rental.id } })}
           />
-        ))}
+        )) : null}
       </ScrollView>
       <BottomNavBar variant="user" activeTab="Beranda" onTabPress={handleTabPress} />
     </SafeAreaView>
   );
+}
+
+
+function formatTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+
+  return date.toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Jakarta',
+  });
 }
 
 const styles = StyleSheet.create({
@@ -185,4 +227,10 @@ const styles = StyleSheet.create({
   recentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   viewAllButton: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   viewAllText: { ...FONTS.caption, fontWeight: '700', color: COLORS.secondaryDark },
+  stateCard: { backgroundColor: COLORS.surface, borderRadius: SIZES.radiusLarge, borderWidth: 1, borderColor: COLORS.border, padding: SIZES.xlarge, alignItems: 'center', justifyContent: 'center', marginBottom: SIZES.xlarge, gap: SIZES.small },
+  stateTitle: { ...FONTS.labelLarge, color: COLORS.textPrimary, textAlign: 'center' },
+  stateMessage: { ...FONTS.caption, color: COLORS.textSecondary, textAlign: 'center' },
+  retryButton: { minHeight: 40, paddingHorizontal: SIZES.large, borderRadius: SIZES.radiusPill, backgroundColor: COLORS.secondaryDark, alignItems: 'center', justifyContent: 'center', marginTop: SIZES.small },
+  retryText: { ...FONTS.labelMedium, color: '#FFFFFF' },
+  recentEmpty: { borderRadius: SIZES.radiusMedium, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, padding: SIZES.large, marginBottom: SIZES.medium },
 });

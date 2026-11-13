@@ -636,17 +636,17 @@ export default function AdminUnitFormScreen() {
         </Text>
 
         <FormField
-          label="Lokasi / Nama Pos"
+          label="Nama Lokasi Usaha"
           value={form.location}
           onChangeText={(value) => updateField('location', value)}
-          placeholder="Contoh: Pos Jamal Jepret Cirebon"
+          placeholder="Masukkan nama lokasi usaha"
         />
 
         <FormField
           label="Alamat"
           value={form.address}
           onChangeText={(value) => updateField('address', value)}
-          placeholder="Alamat lengkap pos penyewaan"
+          placeholder="Alamat lengkap lokasi usaha"
           multiline
         />
 
@@ -654,7 +654,7 @@ export default function AdminUnitFormScreen() {
           label="Jam Operasional"
           value={form.openingHours}
           onChangeText={(value) => updateField('openingHours', value)}
-          placeholder="Contoh: Setiap hari, 06:00 - 22:00"
+          placeholder="Masukkan jam operasional yang berlaku"
         />
       </View>
 

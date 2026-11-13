@@ -1,12 +1,11 @@
-// components/molecules/HeaderApp.tsx
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Platform, 
-  StatusBar 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES } from '../../constants/theme';
@@ -17,28 +16,42 @@ interface HeaderAppProps {
   onPressNotification?: () => void;
 }
 
-const HeaderApp: React.FC<HeaderAppProps> = ({ 
-  notificationCount = 0, 
-  onPressNotification 
+const HeaderApp: React.FC<HeaderAppProps> = ({
+  notificationCount = 0,
+  onPressNotification,
 }) => {
   return (
     <View style={styles.safeContainer}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.headerContainer}>
         <View style={styles.brandRow}>
-          <JamalJepretLogo width={145} />
+          <View accessible accessibilityRole="image" accessibilityLabel="Logo Jamal Jepret">
+            <JamalJepretLogo width={200} />
+          </View>
         </View>
 
-        <TouchableOpacity 
-          style={styles.notificationBtn} 
-          onPress={onPressNotification}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="notifications-outline" size={22} color={COLORS.secondaryDark} />
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{notificationCount}</Text>
-          </View>
-        </TouchableOpacity>
+        {onPressNotification ? (
+          <TouchableOpacity
+            style={styles.notificationBtn}
+            onPress={onPressNotification}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityLabel={
+              notificationCount > 0
+                ? `Buka notifikasi, ${notificationCount} belum dibaca`
+                : 'Buka notifikasi'
+            }
+          >
+            <Ionicons name="notifications-outline" size={22} color={COLORS.secondaryDark} />
+            {notificationCount > 0 ? (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {notificationCount > 99 ? '99+' : notificationCount}
+                </Text>
+              </View>
+            ) : null}
+          </TouchableOpacity>
+        ) : null}
       </View>
     </View>
   );
@@ -47,7 +60,6 @@ const HeaderApp: React.FC<HeaderAppProps> = ({
 const styles = StyleSheet.create({
   safeContainer: {
     backgroundColor: COLORS.surface,
-    // Menambahkan padding khusus Android agar tidak tertutup notch/kamera
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
@@ -58,34 +70,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: SIZES.large,
     paddingVertical: 8,
-    height: 64,
+    minHeight: 64,
   },
   brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
   },
   notificationBtn: {
     position: 'relative',
-    padding: 6,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: SIZES.small,
   },
   badge: {
     position: 'absolute',
     top: 2,
     right: 2,
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 3,
+    backgroundColor: COLORS.primaryLight,
     borderRadius: SIZES.radiusPill,
-    width: 16,
-    height: 16,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   badgeText: {
     fontSize: 10,
-    fontWeight: 'bold',
-    color: COLORS.textSecondary,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
   },
 });
 
