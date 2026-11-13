@@ -1,5 +1,7 @@
 
 import { supabase } from '../lib/supabase';
+import * as FileSystem from 'expo-file-system/legacy';
+import { decode } from 'base64-arraybuffer';
 
 export type BikeStatus =
   | 'Tersedia'
@@ -52,10 +54,11 @@ export type UpdateBikeInput = Partial<CreateBikeInput> & {
 };
 
 const BIKE_SELECT = '*';
+const BIKE_IMAGE_BUCKET = 'bike-images';
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 /**
  * Mengambil seluruh data sepeda.
- * Bisa dipanggil oleh halaman katalog publik maupun inventaris Admin.
  */
 export async function getBikes(): Promise<Bike[]> {
   const { data, error } = await supabase
@@ -88,6 +91,138 @@ export async function getBikeById(id: string): Promise<Bike | null> {
 }
 
 /**
+ * Upload gambar sepeda ke Supabase Storage.
+ *
+ * File lokal dibaca sebagai Base64, lalu dikonversi
+ * menjadi ArrayBuffer sebelum dikirim ke Supabase.
+ */
+export async function uploadBikeImage(
+  uri: string,
+  mimeType?: string | null
+): Promise<string> {
+  if (!uri) {
+    throw new Error('File gambar tidak ditemukan.');
+  }
+
+  const contentType = mimeType || 'image/jpeg';
+
+  const allowedTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+  ];
+
+  if (!allowedTypes.includes(contentType)) {
+    throw new Error('Format gambar harus JPG, PNG, atau WEBP.');
+  }
+
+  try {
+    const fileInfo = await FileSystem.getInfoAsync(uri);
+
+    if (!fileInfo.exists) {
+      throw new Error('File gambar tidak ditemukan di perangkat.');
+    }
+
+    if (
+      typeof fileInfo.size === 'number' &&
+      fileInfo.size > MAX_IMAGE_SIZE
+    ) {
+      throw new Error('Ukuran gambar maksimal 5 MB.');
+    }
+
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    if (!base64) {
+      throw new Error('Gagal membaca file gambar.');
+    }
+
+    const fileData = decode(base64);
+
+    const extension =
+      contentType === 'image/png'
+        ? 'png'
+        : contentType === 'image/webp'
+          ? 'webp'
+          : 'jpg';
+
+    const randomSuffix = Math.random()
+      .toString(36)
+      .substring(2, 10);
+
+    const fileName = `${Date.now()}-${randomSuffix}.${extension}`;
+    const filePath = `bikes/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from(BIKE_IMAGE_BUCKET)
+      .upload(filePath, fileData, {
+        contentType,
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      throw new Error(`Gagal mengunggah gambar: ${error.message}`);
+    }
+
+    const { data } = supabase.storage
+      .from(BIKE_IMAGE_BUCKET)
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : 'Terjadi kesalahan saat mengunggah gambar.'
+    );
+  }
+}
+
+/**
+ * Menghapus gambar sepeda dari Supabase Storage
+ * berdasarkan URL publik.
+ *
+ * URL eksternal tidak akan dihapus.
+ */
+export async function deleteBikeImageByUrl(
+  imageUrl: string | null
+): Promise<void> {
+  if (!imageUrl) return;
+
+  const marker = `/storage/v1/object/public/${BIKE_IMAGE_BUCKET}/`;
+  const markerIndex = imageUrl.indexOf(marker);
+
+  if (markerIndex === -1) {
+    return;
+  }
+
+  try {
+    const encodedPath = imageUrl.substring(
+      markerIndex + marker.length
+    );
+
+    const filePath = decodeURIComponent(encodedPath);
+
+    if (!filePath) return;
+
+    const { error } = await supabase.storage
+      .from(BIKE_IMAGE_BUCKET)
+      .remove([filePath]);
+
+    if (error) {
+      console.warn(
+        'Gagal menghapus gambar lama:',
+        error.message
+      );
+    }
+  } catch (error) {
+    console.warn('Delete bike image warning:', error);
+  }
+}
+
+/**
  * Membuat ID sepeda berikutnya dengan format B-001, B-002, dst.
  */
 async function generateBikeId(): Promise<string> {
@@ -102,6 +237,7 @@ async function generateBikeId(): Promise<string> {
   const highestNumber = (data ?? []).reduce((highest, item) => {
     const match = String(item.id).match(/^B-(\d+)$/i);
     const number = match ? Number(match[1]) : 0;
+
     return Math.max(highest, number);
   }, 0);
 
@@ -192,15 +328,29 @@ export async function updateBike(
 
   if (input.location !== undefined) payload.location = input.location;
   if (input.address !== undefined) payload.address = input.address;
-  if (input.opening_hours !== undefined) payload.opening_hours = input.opening_hours;
+  if (input.opening_hours !== undefined) {
+    payload.opening_hours = input.opening_hours;
+  }
   if (input.features !== undefined) payload.features = input.features;
-  if (input.image_url !== undefined) payload.image_url = input.image_url;
-  if (input.tire_size !== undefined) payload.tire_size = input.tire_size;
+  if (input.image_url !== undefined) {
+    payload.image_url = input.image_url;
+  }
+  if (input.tire_size !== undefined) {
+    payload.tire_size = input.tire_size;
+  }
   if (input.brakes !== undefined) payload.brakes = input.brakes;
-  if (input.transmission !== undefined) payload.transmission = input.transmission;
-  if (input.facilities !== undefined) payload.facilities = input.facilities;
-  if (input.technical_condition !== undefined) payload.technical_condition = input.technical_condition;
-  if (input.extra_tags !== undefined) payload.extra_tags = input.extra_tags;
+  if (input.transmission !== undefined) {
+    payload.transmission = input.transmission;
+  }
+  if (input.facilities !== undefined) {
+    payload.facilities = input.facilities;
+  }
+  if (input.technical_condition !== undefined) {
+    payload.technical_condition = input.technical_condition;
+  }
+  if (input.extra_tags !== undefined) {
+    payload.extra_tags = input.extra_tags;
+  }
   if (input.notes !== undefined) payload.notes = input.notes;
 
   const { data, error } = await supabase
@@ -225,4 +375,83 @@ export async function updateBikeStatus(
   status: BikeStatus
 ): Promise<Bike> {
   return updateBike(id, { status });
+}
+
+/**
+ * Menghapus unit sepeda.
+ *
+ * Ketentuan:
+ * 1. Unit yang sedang disewa tidak boleh dihapus.
+ * 2. Unit yang memiliki riwayat transaksi tidak boleh dihapus.
+ * 3. Penghapusan tetap dilindungi oleh RLS Supabase.
+ */
+export async function deleteBike(id: string): Promise<void> {
+  if (!id || !id.trim()) {
+    throw new Error('ID unit sepeda tidak valid.');
+  }
+
+  const { data: bike, error: bikeError } = await supabase
+    .from('bikes')
+    .select('id, status')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (bikeError) {
+    throw new Error(
+      `Gagal memeriksa unit sepeda: ${bikeError.message}`
+    );
+  }
+
+  if (!bike) {
+    throw new Error('Unit sepeda tidak ditemukan.');
+  }
+
+  if (bike.status === 'Sedang Disewa') {
+    throw new Error(
+      'Unit sedang disewa dan tidak dapat dihapus. Selesaikan transaksi pengembalian terlebih dahulu.'
+    );
+  }
+
+  const { count, error: historyError } = await supabase
+    .from('transaction_items')
+    .select('id', { count: 'exact', head: true })
+    .eq('bike_id', id);
+
+  if (historyError) {
+    throw new Error(
+      `Gagal memeriksa riwayat transaksi unit: ${historyError.message}`
+    );
+  }
+
+  if ((count ?? 0) > 0) {
+    throw new Error(
+      'Unit tidak dapat dihapus karena sudah memiliki riwayat transaksi. Pertahankan data unit agar riwayat penyewaan tetap aman.'
+    );
+  }
+
+  const { data: deletedBike, error: deleteError } = await supabase
+    .from('bikes')
+    .delete()
+    .eq('id', id)
+    .neq('status', 'Sedang Disewa')
+    .select('id')
+    .maybeSingle();
+
+  if (deleteError) {
+    if (deleteError.code === '23503') {
+      throw new Error(
+        'Unit tidak dapat dihapus karena masih digunakan oleh data lain, misalnya riwayat transaksi atau perawatan.'
+      );
+    }
+
+    throw new Error(
+      `Gagal menghapus unit sepeda: ${deleteError.message}`
+    );
+  }
+
+  if (!deletedBike) {
+    throw new Error(
+      'Unit tidak berhasil dihapus. Status unit mungkin sudah berubah atau unit sudah tidak tersedia.'
+    );
+  }
 }
