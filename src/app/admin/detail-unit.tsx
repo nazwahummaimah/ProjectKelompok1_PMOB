@@ -1,15 +1,18 @@
 
 import React, { useCallback, useState } from 'react';
+
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
+
 import {
   useLocalSearchParams,
   useRouter,
@@ -53,23 +56,28 @@ export default function AdminUnitDetailScreen() {
 
       const data = await getBikeById(id);
       setBike(data);
+
+      if (!data) {
+        setErrorMessage('Unit sepeda tidak ditemukan.');
+      }
     } catch (error) {
       console.error('Admin bike detail error:', error);
 
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'Gagal mengambil detail unit sepeda.',
+          : 'Gagal mengambil detail unit sepeda.'
       );
     } finally {
       setLoading(false);
     }
   }, [id]);
 
+  // Memuat ulang detail setiap kali halaman kembali difokuskan.
   useFocusEffect(
     useCallback(() => {
       loadBike();
-    }, [loadBike]),
+    }, [loadBike])
   );
 
   const formatRupiah = (value: number) => {
@@ -87,7 +95,7 @@ export default function AdminUnitDetailScreen() {
       showBottomNav
       showBack
     >
-      {/* Loading */}
+      {/* LOADING */}
       {loading && (
         <View style={styles.stateContainer}>
           <ActivityIndicator
@@ -101,7 +109,7 @@ export default function AdminUnitDetailScreen() {
         </View>
       )}
 
-      {/* Error */}
+      {/* ERROR */}
       {!loading && !!errorMessage && (
         <View style={styles.stateContainer}>
           <Ionicons
@@ -126,74 +134,148 @@ export default function AdminUnitDetailScreen() {
               Coba Lagi
             </Text>
           </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Unit Not Found */}
-      {!loading && !errorMessage && !bike && (
-        <View style={styles.stateContainer}>
-          <Ionicons
-            name="bicycle-outline"
-            size={38}
-            color={COLORS.textSecondary}
-          />
-
-          <Text style={styles.stateTitle}>
-            Unit Tidak Ditemukan
-          </Text>
-
-          <Text style={styles.helper}>
-            Data sepeda dengan ID {id || '-'} tidak ditemukan.
-          </Text>
 
           <TouchableOpacity
-            style={styles.retryButton}
+            style={styles.backButton}
             onPress={() =>
               router.replace('/admin/inventaris' as any)
             }
           >
-            <Text style={styles.retryButtonText}>
+            <Text style={styles.backButtonText}>
               Kembali ke Inventaris
             </Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* Detail Data */}
+      {/* DETAIL DATA */}
       {!loading && !errorMessage && bike && (
         <>
-          {/* Hero */}
+          {/* HERO FOTO UNIT */}
           <View style={styles.hero}>
-            <View style={styles.bikeIcon}>
-              <Ionicons
-                name="bicycle"
-                size={48}
-                color={COLORS.secondaryDark}
+            {bike.image_url ? (
+              <Image
+                source={{ uri: bike.image_url }}
+                style={styles.heroImage}
+                resizeMode="cover"
               />
+            ) : (
+              <View style={styles.heroFallback}>
+                <View style={styles.fallbackIcon}>
+                  <Ionicons
+                    name="bicycle"
+                    size={58}
+                    color={COLORS.secondaryDark}
+                  />
+                </View>
+
+                <Text style={styles.fallbackTitle}>
+                  Foto Belum Tersedia
+                </Text>
+
+                <Text style={styles.fallbackSubtitle}>
+                  Tambahkan foto melalui Edit Data Unit.
+                </Text>
+              </View>
+            )}
+
+            {/* ID UNIT */}
+            <View style={styles.heroIdBadge}>
+              <Ionicons
+                name="pricetag-outline"
+                size={13}
+                color="#FFFFFF"
+              />
+
+              <Text style={styles.heroIdText}>
+                {bike.id}
+              </Text>
             </View>
 
-            <Text style={styles.unitId}>
-              {bike.id}
-            </Text>
+            {/* INFORMASI DI BAGIAN BAWAH FOTO */}
+            {bike.image_url && (
+              <View style={styles.heroOverlay}>
+                <View style={styles.heroTextContainer}>
+                  <Text style={styles.heroName}>
+                    {bike.name}
+                  </Text>
 
-            <Text style={styles.name}>
-              {bike.name}
-            </Text>
+                  <Text style={styles.heroCategory}>
+                    {bike.category}
+                  </Text>
+                </View>
 
-            <Text style={styles.category}>
-              {bike.category}
-            </Text>
+                <View style={styles.heroStatus}>
+                  <AdminStatusBadge status={bike.status} />
+                </View>
+              </View>
+            )}
 
-            <View style={{ marginTop: 10 }}>
-              <AdminStatusBadge status={bike.status} />
+            {/* STATUS UNTUK FALLBACK TANPA GAMBAR */}
+            {!bike.image_url && (
+              <View style={styles.fallbackStatus}>
+                <AdminStatusBadge status={bike.status} />
+              </View>
+            )}
+          </View>
+
+          {/* RINGKASAN UNIT */}
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryItem}>
+              <Ionicons
+                name="cash-outline"
+                size={19}
+                color={COLORS.secondaryDark}
+              />
+
+              <View style={styles.summaryTextContainer}>
+                <Text style={styles.summaryLabel}>
+                  Tarif Sewa
+                </Text>
+
+                <Text style={styles.summaryValue}>
+                  Rp{formatRupiah(Number(bike.price_per_hour))}
+                  <Text style={styles.summaryUnit}>
+                    {' '}/ jam
+                  </Text>
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.summaryDivider} />
+
+            <View style={styles.summaryItem}>
+              <Ionicons
+                name="location-outline"
+                size={19}
+                color={COLORS.secondaryDark}
+              />
+
+              <View style={styles.summaryTextContainer}>
+                <Text style={styles.summaryLabel}>
+                  Lokasi Unit
+                </Text>
+
+                <Text
+                  style={styles.summaryValue}
+                  numberOfLines={2}
+                >
+                  {bike.location || 'Belum ditentukan'}
+                </Text>
+              </View>
             </View>
           </View>
 
-          {/* Informasi Unit */}
+          {/* INFORMASI UNIT */}
           <View style={adminUi.card}>
             <Text style={styles.cardTitle}>
               Informasi Unit
             </Text>
+
+            <InfoRow
+              label="Kode Unit"
+              value={bike.id}
+            />
 
             <InfoRow
               label="Kode QR"
@@ -237,7 +319,7 @@ export default function AdminUnitDetailScreen() {
             />
           </View>
 
-          {/* Identitas QR Sungguhan */}
+          {/* IDENTITAS QR UNIT */}
           <View style={adminUi.card}>
             <View style={adminUi.row}>
               <Ionicons
@@ -249,7 +331,10 @@ export default function AdminUnitDetailScreen() {
               <Text
                 style={[
                   styles.cardTitle,
-                  { marginLeft: 8, marginBottom: 0 },
+                  {
+                    marginLeft: 8,
+                    marginBottom: 0,
+                  },
                 ]}
               >
                 Identitas QR Unit
@@ -298,7 +383,7 @@ export default function AdminUnitDetailScreen() {
             </View>
           </View>
 
-          {/* Kondisi Teknis */}
+          {/* KONDISI TEKNIS */}
           <View style={adminUi.card}>
             <Text style={styles.cardTitle}>
               Kondisi Teknis
@@ -331,7 +416,7 @@ export default function AdminUnitDetailScreen() {
             />
           </View>
 
-          {/* Fitur */}
+          {/* FITUR UNIT */}
           {bike.features && bike.features.length > 0 && (
             <View style={adminUi.card}>
               <Text style={styles.cardTitle}>
@@ -353,7 +438,7 @@ export default function AdminUnitDetailScreen() {
             </View>
           )}
 
-          {/* Extra Tags */}
+          {/* TAG TAMBAHAN */}
           {bike.extra_tags && bike.extra_tags.length > 0 && (
             <View style={adminUi.card}>
               <Text style={styles.cardTitle}>
@@ -375,7 +460,7 @@ export default function AdminUnitDetailScreen() {
             </View>
           )}
 
-          {/* Edit Button */}
+          {/* EDIT BUTTON */}
           <TouchableOpacity
             style={adminUi.button}
             onPress={() =>
@@ -400,7 +485,7 @@ export default function AdminUnitDetailScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* Maintenance Button */}
+          {/* MAINTENANCE BUTTON */}
           {bike.status === 'Perawatan' && (
             <TouchableOpacity
               style={[
@@ -422,6 +507,9 @@ export default function AdminUnitDetailScreen() {
   );
 }
 
+/**
+ * Komponen baris informasi unit.
+ */
 function InfoRow({
   label,
   value,
@@ -453,43 +541,160 @@ function InfoRow({
 }
 
 const styles = StyleSheet.create({
+  /* HERO IMAGE */
   hero: {
-    backgroundColor: '#E0F2FE',
+    height: 280,
     borderRadius: SIZES.radiusLarge,
-    padding: 22,
-    alignItems: 'center',
+    overflow: 'hidden',
+    backgroundColor: '#E0F2FE',
     marginBottom: SIZES.medium,
+    position: 'relative',
   },
 
-  bikeIcon: {
-    width: 94,
-    height: 94,
-    borderRadius: 26,
-    backgroundColor: COLORS.surface,
+  heroImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+  },
+
+  heroFallback: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    padding: 20,
+    backgroundColor: '#E0F2FE',
   },
 
-  unitId: {
-    ...FONTS.caption,
+  fallbackIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 30,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+
+  fallbackTitle: {
+    ...FONTS.labelLarge,
     color: COLORS.secondaryDark,
+  },
+
+  fallbackSubtitle: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+
+  heroIdBadge: {
+    position: 'absolute',
+    top: 14,
+    left: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: SIZES.radiusSmall,
+  },
+
+  heroIdText: {
+    ...FONTS.caption,
+    color: '#FFFFFF',
     fontWeight: '700',
   },
 
-  name: {
+  heroOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 17,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(15, 23, 42, 0.68)',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    gap: 10,
+  },
+
+  heroTextContainer: {
+    flex: 1,
+  },
+
+  heroName: {
     ...FONTS.headline2,
-    color: COLORS.textPrimary,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+
+  heroCategory: {
+    ...FONTS.caption,
+    color: '#E2E8F0',
     marginTop: 4,
-    textAlign: 'center',
   },
 
-  category: {
-    ...FONTS.body,
+  heroStatus: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+
+  fallbackStatus: {
+    position: 'absolute',
+    bottom: 18,
+    alignSelf: 'center',
+  },
+
+  /* SUMMARY */
+  summaryCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: SIZES.radiusLarge,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 15,
+    marginBottom: SIZES.medium,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  summaryItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 9,
+  },
+
+  summaryTextContainer: {
+    flex: 1,
+  },
+
+  summaryLabel: {
+    ...FONTS.caption,
     color: COLORS.textSecondary,
-    marginTop: 2,
   },
 
+  summaryValue: {
+    ...FONTS.labelMedium,
+    color: COLORS.textPrimary,
+    marginTop: 3,
+  },
+
+  summaryUnit: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+    fontWeight: 'normal',
+  },
+
+  summaryDivider: {
+    width: 1,
+    height: 38,
+    backgroundColor: COLORS.border,
+    marginHorizontal: 12,
+  },
+
+  /* INFORMATION */
   cardTitle: {
     ...FONTS.labelLarge,
     color: COLORS.secondaryDark,
@@ -514,6 +719,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 
+  /* QR */
   qrBox: {
     alignItems: 'center',
     padding: 16,
@@ -545,6 +751,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
+  /* STATES */
   stateContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -571,6 +778,16 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
 
+  backButton: {
+    padding: 10,
+  },
+
+  backButtonText: {
+    ...FONTS.labelMedium,
+    color: COLORS.secondaryDark,
+  },
+
+  /* TAGS */
   tagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',

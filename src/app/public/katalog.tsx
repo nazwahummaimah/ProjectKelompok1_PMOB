@@ -1,46 +1,41 @@
 
 import React, {
   useCallback,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
 
 import {
-  ActivityIndicator,
   SafeAreaView,
   ScrollView,
-  StyleSheet,
+  View,
   Text,
+  StyleSheet,
   TextInput,
   TouchableOpacity,
-  View,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
-import {
-  useFocusEffect,
-  useRouter,
-} from 'expo-router';
+import { useRouter } from 'expo-router';
 
-import { COLORS, FONTS, SIZES } from '../../constants/theme';
+import { COLORS, SIZES, FONTS } from '../../constants/theme';
 
-import FeatureTag from '../../components/molecules/FeatureTag';
 import HeaderApp from '../../components/molecules/HeaderApp';
 import StatusBadge from '../../components/molecules/StatusBadge';
-
+import FeatureTag from '../../components/molecules/FeatureTag';
 import BottomNavBar, {
   TabType,
 } from '../../components/molecules/BottomNavBar';
 
 import {
-  Bike,
   getBikes,
+  Bike,
 } from '../../services/bikeService';
 
-type FilterStatus =
-  | 'Semua'
-  | 'Tersedia'
-  | 'Sedang Disewa';
+type FilterStatus = 'Semua' | 'Tersedia' | 'Sedang Disewa';
 
 const formatRupiah = (value: number): string => {
   return new Intl.NumberFormat('id-ID').format(value);
@@ -58,14 +53,12 @@ const Katalog: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Mengambil data sepeda langsung dari Supabase.
   const loadBikes = useCallback(async () => {
     try {
       setLoading(true);
       setErrorMessage('');
 
       const data = await getBikes();
-
       setBikes(data);
     } catch (error) {
       console.error('Katalog load error:', error);
@@ -73,35 +66,27 @@ const Katalog: React.FC = () => {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'Gagal memuat katalog sepeda.',
+          : 'Gagal memuat katalog sepeda.'
       );
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Memuat ulang katalog setiap kali halaman dibuka kembali.
-  useFocusEffect(
-    useCallback(() => {
-      loadBikes();
-    }, [loadBikes]),
-  );
+  useEffect(() => {
+    loadBikes();
+  }, [loadBikes]);
 
-  // Menghitung jumlah sepeda tersedia.
   const availableCount = useMemo(
-    () =>
-      bikes.filter((bike) => bike.status === 'Tersedia').length,
-    [bikes],
+    () => bikes.filter((bike) => bike.status === 'Tersedia').length,
+    [bikes]
   );
 
-  // Menghitung jumlah sepeda sedang disewa.
   const rentedCount = useMemo(
-    () =>
-      bikes.filter((bike) => bike.status === 'Sedang Disewa').length,
-    [bikes],
+    () => bikes.filter((bike) => bike.status === 'Sedang Disewa').length,
+    [bikes]
   );
 
-  // Pencarian dan filter status.
   const filteredBikes = useMemo(() => {
     const keyword = searchQuery.trim().toLowerCase();
 
@@ -120,7 +105,6 @@ const Katalog: React.FC = () => {
     });
   }, [bikes, searchQuery, filterStatus]);
 
-  // Navigasi Bottom Navigation.
   const handleTabPress = (tab: TabType) => {
     setActiveTab(tab);
 
@@ -142,7 +126,6 @@ const Katalog: React.FC = () => {
     }
   };
 
-  // Mengambil fitur dan lokasi untuk ditampilkan pada kartu.
   const getBikeFeatures = (bike: Bike): string[] => {
     const features = bike.features ?? [];
     const result = [...features];
@@ -154,6 +137,13 @@ const Katalog: React.FC = () => {
     return result.slice(0, 4);
   };
 
+  const openBikeDetail = (bikeId: string) => {
+    router.push({
+      pathname: '/public/DetailUnit' as any,
+      params: { id: bikeId },
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <HeaderApp notificationCount={0} />
@@ -162,7 +152,7 @@ const Katalog: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header Title Section */}
+        {/* HEADER */}
         <View style={styles.titleSection}>
           <View style={styles.titleRow}>
             <Text style={styles.pageTitle}>
@@ -178,11 +168,11 @@ const Katalog: React.FC = () => {
 
           <Text style={styles.pageSubtitle}>
             Eksplorasi armada sepeda siap jalan di seluruh pos
-            terdekat. Akses terbuka untuk semua pelancong & warga.
+            penyewaan Jamal Jepret.
           </Text>
         </View>
 
-        {/* Search Input Bar */}
+        {/* SEARCH */}
         <View style={styles.searchContainer}>
           <Ionicons
             name="search-outline"
@@ -198,77 +188,66 @@ const Katalog: React.FC = () => {
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
+
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery('')}
+              hitSlop={10}
+            >
+              <Ionicons
+                name="close-circle"
+                size={19}
+                color={COLORS.textSecondary}
+              />
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* Filter Chips */}
+        {/* FILTER */}
         <View style={styles.filterRow}>
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              filterStatus === 'Semua' && styles.filterChipActive,
-            ]}
-            onPress={() => setFilterStatus('Semua')}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                filterStatus === 'Semua' &&
-                  styles.filterChipTextActive,
-              ]}
-            >
-              Semua{' '}
-              <Text style={styles.chipCount}>
-                {bikes.length}
-              </Text>
-            </Text>
-          </TouchableOpacity>
+          {(
+            [
+              'Semua',
+              'Tersedia',
+              'Sedang Disewa',
+            ] as FilterStatus[]
+          ).map((item) => {
+            const active = filterStatus === item;
 
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              filterStatus === 'Tersedia' &&
-                styles.filterChipActive,
-            ]}
-            onPress={() => setFilterStatus('Tersedia')}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                filterStatus === 'Tersedia' &&
-                  styles.filterChipTextActive,
-              ]}
-            >
-              Tersedia{' '}
-              <Text style={styles.chipCountSuccess}>
-                {availableCount}
-              </Text>
-            </Text>
-          </TouchableOpacity>
+            const count =
+              item === 'Semua'
+                ? bikes.length
+                : item === 'Tersedia'
+                  ? availableCount
+                  : rentedCount;
 
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              filterStatus === 'Sedang Disewa' &&
-                styles.filterChipActive,
-            ]}
-            onPress={() => setFilterStatus('Sedang Disewa')}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                filterStatus === 'Sedang Disewa' &&
-                  styles.filterChipTextActive,
-              ]}
-            >
-              Sedang Disewa{' '}
-              <Text style={styles.chipCount}>
-                {rentedCount}
-              </Text>
-            </Text>
-          </TouchableOpacity>
+            return (
+              <TouchableOpacity
+                key={item}
+                style={[
+                  styles.filterChip,
+                  active && styles.filterChipActive,
+                ]}
+                onPress={() => setFilterStatus(item)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    active && styles.filterChipTextActive,
+                  ]}
+                >
+                  {item}{' '}
+                  <Text style={styles.chipCount}>
+                    {count}
+                  </Text>
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
-        {/* Notice Box */}
+        {/* NOTICE */}
         <View style={styles.noticeBox}>
           <Ionicons
             name="information-circle-outline"
@@ -284,7 +263,7 @@ const Katalog: React.FC = () => {
           </Text>
         </View>
 
-        {/* Loading */}
+        {/* LOADING */}
         {loading && (
           <View style={styles.stateContainer}>
             <ActivityIndicator
@@ -298,7 +277,7 @@ const Katalog: React.FC = () => {
           </View>
         )}
 
-        {/* Error */}
+        {/* ERROR */}
         {!loading && !!errorMessage && (
           <View style={styles.stateContainer}>
             <Ionicons
@@ -322,7 +301,7 @@ const Katalog: React.FC = () => {
           </View>
         )}
 
-        {/* Empty Database */}
+        {/* EMPTY DATABASE */}
         {!loading &&
           !errorMessage &&
           bikes.length === 0 && (
@@ -344,7 +323,7 @@ const Katalog: React.FC = () => {
             </View>
           )}
 
-        {/* Search / Filter Empty */}
+        {/* FILTER EMPTY */}
         {!loading &&
           !errorMessage &&
           bikes.length > 0 &&
@@ -367,7 +346,7 @@ const Katalog: React.FC = () => {
             </View>
           )}
 
-        {/* Catalog List */}
+        {/* CATALOG LIST */}
         {!loading && !errorMessage && (
           <View style={styles.catalogList}>
             {filteredBikes.map((item) => (
@@ -375,18 +354,63 @@ const Katalog: React.FC = () => {
                 key={item.id}
                 style={styles.cardContainer}
               >
-                <View style={styles.imageContainer}>
-                  <View style={styles.topOverlay}>
-                    <View style={styles.idBadge}>
-                      <Text style={styles.idText}>
-                        ID: {item.id}
-                      </Text>
+                {/* BIKE IMAGE */}
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => openBikeDetail(item.id)}
+                >
+                  <View style={styles.imageContainer}>
+                    {item.image_url ? (
+                      <Image
+                        source={{ uri: item.image_url }}
+                        style={styles.bikeImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={styles.imageFallback}>
+                        <Ionicons
+                          name="bicycle"
+                          size={54}
+                          color="#94A3B8"
+                        />
+
+                        <Text style={styles.imageFallbackText}>
+                          Foto belum tersedia
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* IMAGE OVERLAY */}
+                    <View style={styles.imageOverlay} />
+
+                    {/* TOP BADGES */}
+                    <View style={styles.topOverlay}>
+                      <View style={styles.idBadge}>
+                        <Text style={styles.idText}>
+                          ID: {item.id}
+                        </Text>
+                      </View>
+
+                      <StatusBadge status={item.status} />
                     </View>
 
-                    <StatusBadge status={item.status} />
-                  </View>
-                </View>
+                    {/* IMAGE CAPTION */}
+                    <View style={styles.imageCaption}>
+                      <Text
+                        style={styles.imageCaptionName}
+                        numberOfLines={1}
+                      >
+                        {item.name}
+                      </Text>
 
+                      <Text style={styles.imageCaptionCategory}>
+                        {item.category}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+
+                {/* CARD DETAILS */}
                 <View style={styles.cardDetails}>
                   <View style={styles.cardHeaderRow}>
                     <View style={styles.titleColumn}>
@@ -395,7 +419,7 @@ const Katalog: React.FC = () => {
                       </Text>
 
                       <Text style={styles.bikeName}>
-                        {item.name}
+                        {item.id}
                       </Text>
                     </View>
 
@@ -406,16 +430,16 @@ const Katalog: React.FC = () => {
 
                       <Text style={styles.priceText}>
                         Rp{formatRupiah(
-                          Number(item.price_per_hour),
+                          Number(item.price_per_hour)
                         )}
                         <Text style={styles.perHour}>
-                          {' '} / jam
+                          {' '}/ jam
                         </Text>
                       </Text>
                     </View>
                   </View>
 
-                  {/* Fitur Sepeda */}
+                  {/* FEATURES */}
                   <View style={styles.tagsRow}>
                     {getBikeFeatures(item).map(
                       (feature, index) => (
@@ -423,20 +447,15 @@ const Katalog: React.FC = () => {
                           key={`${item.id}-${index}`}
                           label={feature}
                         />
-                      ),
+                      )
                     )}
                   </View>
 
-                  {/* Detail Unit */}
+                  {/* DETAIL BUTTON */}
                   <TouchableOpacity
                     style={styles.detailButton}
                     activeOpacity={0.7}
-                    onPress={() =>
-                      router.push({
-                        pathname: '/public/DetailUnit' as any,
-                        params: { id: item.id },
-                      })
-                    }
+                    onPress={() => openBikeDetail(item.id)}
                   >
                     <Text style={styles.detailButtonText}>
                       Lihat Detail Unit
@@ -531,7 +550,9 @@ const styles = StyleSheet.create({
 
   filterRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     marginBottom: SIZES.medium,
+    gap: 7,
   },
 
   filterChip: {
@@ -541,7 +562,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginRight: 8,
   },
 
   filterChipActive: {
@@ -562,11 +582,6 @@ const styles = StyleSheet.create({
   chipCount: {
     color: COLORS.secondaryDark,
     fontSize: 10,
-    fontWeight: 'bold',
-  },
-
-  chipCountSuccess: {
-    color: COLORS.success,
     fontWeight: 'bold',
   },
 
@@ -600,9 +615,34 @@ const styles = StyleSheet.create({
   },
 
   imageContainer: {
-    height: 160,
+    height: 205,
     backgroundColor: '#CBD5E1',
     position: 'relative',
+    overflow: 'hidden',
+  },
+
+  bikeImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+  },
+
+  imageFallback: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E2E8F0',
+  },
+
+  imageFallbackText: {
+    ...FONTS.caption,
+    color: '#64748B',
+    marginTop: 8,
+  },
+
+  imageOverlay: {
+    ...StyleSheet.absoluteFill ,
+    backgroundColor: 'rgba(15, 23, 42, 0.10)',
   },
 
   topOverlay: {
@@ -612,18 +652,42 @@ const styles = StyleSheet.create({
     right: SIZES.medium,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
 
   idBadge: {
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: 'rgba(15, 23, 42, 0.72)',
+    paddingHorizontal: 9,
+    paddingVertical: 6,
     borderRadius: SIZES.radiusSmall,
   },
 
   idText: {
     ...FONTS.caption,
     color: COLORS.surface,
+    fontWeight: '700',
+  },
+
+  imageCaption: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: SIZES.large,
+    paddingVertical: 13,
+    backgroundColor: 'rgba(15, 23, 42, 0.52)',
+  },
+
+  imageCaptionName: {
+    ...FONTS.labelLarge,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+
+  imageCaptionCategory: {
+    ...FONTS.caption,
+    color: '#E2E8F0',
+    marginTop: 2,
   },
 
   cardDetails: {

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Alert,
   ActivityIndicator,
+  Image,
   Text,
   TextInput,
   TouchableOpacity,
@@ -12,6 +13,7 @@ import {
 
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 
 import AdminPageLayout, {
   adminUi,
@@ -21,6 +23,8 @@ import {
   createBike,
   getBikeById,
   updateBike,
+  uploadBikeImage,
+  deleteBikeImageByUrl,
   Bike,
   CreateBikeInput,
 } from '../../services/bikeService';
@@ -34,6 +38,8 @@ const CATEGORIES = [
   'Road Bike',
   'Electric Bike',
 ];
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 type FormState = {
   name: string;
@@ -93,6 +99,11 @@ export default function AdminUnitFormScreen() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [existingBike, setExistingBike] = useState<Bike | null>(null);
 
+  const [selectedImage, setSelectedImage] =
+    useState<ImagePicker.ImagePickerAsset | null>(null);
+
+  const [removeImage, setRemoveImage] = useState(false);
+
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -124,7 +135,9 @@ export default function AdminUnitFormScreen() {
 
         if (!data) {
           setExistingBike(null);
-          setErrorMessage('Unit sepeda yang akan diedit tidak ditemukan.');
+          setErrorMessage(
+            'Unit sepeda yang akan diedit tidak ditemukan.'
+          );
           return;
         }
 
@@ -147,6 +160,9 @@ export default function AdminUnitFormScreen() {
           extraTags: (data.extra_tags ?? []).join(', '),
           notes: data.notes ?? '',
         });
+
+        setSelectedImage(null);
+        setRemoveImage(false);
       } catch (error) {
         console.error('Load bike form error:', error);
 
@@ -169,6 +185,116 @@ export default function AdminUnitFormScreen() {
     };
   }, [id]);
 
+  /**
+   * Membuka galeri dan memilih gambar sepeda.
+   */
+  const handlePickImage = async () => {
+    try {
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert(
+          'Izin Diperlukan',
+          'Izinkan aplikasi mengakses galeri untuk memilih gambar sepeda.'
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (result.canceled) return;
+
+      const asset = result.assets?.[0];
+
+      if (!asset) return;
+
+      const allowedTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+      ];
+
+      if (
+        asset.mimeType &&
+        !allowedTypes.includes(asset.mimeType)
+      ) {
+        Alert.alert(
+          'Format Tidak Didukung',
+          'Gunakan gambar JPG, PNG, atau WEBP.'
+        );
+        return;
+      }
+
+      if (
+        asset.fileSize !== undefined &&
+        asset.fileSize > MAX_IMAGE_SIZE
+      ) {
+        Alert.alert(
+          'Ukuran Gambar Terlalu Besar',
+          'Ukuran gambar maksimal 5 MB.'
+        );
+        return;
+      }
+
+      setSelectedImage(asset);
+      setRemoveImage(false);
+    } catch (error) {
+      console.error('Pick image error:', error);
+
+      Alert.alert(
+        'Gagal Memilih Gambar',
+        error instanceof Error
+          ? error.message
+          : 'Terjadi kesalahan saat membuka galeri.'
+      );
+    }
+  };
+
+  /**
+   * Membatalkan gambar yang dipilih atau menghapus
+   * gambar lama dari data ketika form disimpan.
+   */
+  const handleRemoveImage = () => {
+    if (selectedImage) {
+      setSelectedImage(null);
+      return;
+    }
+
+    if (form.imageUrl) {
+      Alert.alert(
+        'Hapus Foto Unit?',
+        'Foto akan dihapus dari data unit setelah perubahan berhasil disimpan.',
+        [
+          {
+            text: 'Batal',
+            style: 'cancel',
+          },
+          {
+            text: 'Hapus Foto',
+            style: 'destructive',
+            onPress: () => {
+              setForm((previous) => ({
+                ...previous,
+                imageUrl: '',
+              }));
+
+              setRemoveImage(true);
+            },
+          },
+        ]
+      );
+    }
+  };
+
+  /**
+   * Menyimpan data unit beserta gambar jika ada.
+   */
   const handleSave = async () => {
     const name = form.name.trim();
     const category = form.category.trim();
@@ -210,7 +336,9 @@ export default function AdminUnitFormScreen() {
       location: nullableText(form.location),
       address: nullableText(form.address),
       opening_hours: nullableText(form.openingHours),
-      image_url: nullableText(form.imageUrl),
+      image_url: removeImage
+        ? null
+        : nullableText(form.imageUrl),
       tire_size: nullableText(form.tireSize),
       brakes: nullableText(form.brakes),
       transmission: nullableText(form.transmission),
@@ -221,11 +349,31 @@ export default function AdminUnitFormScreen() {
       notes: nullableText(form.notes),
     };
 
+    let uploadedImageUrl: string | null = null;
+
     try {
       setSaving(true);
 
+      // Upload gambar baru jika admin memilih gambar.
+      if (selectedImage) {
+        uploadedImageUrl = await uploadBikeImage(
+          selectedImage.uri,
+          selectedImage.mimeType
+        );
+
+        payload.image_url = uploadedImageUrl;
+      }
+
       if (isEdit && id) {
         await updateBike(id, payload);
+
+        // Hapus gambar lama setelah data berhasil diperbarui.
+        if (
+          existingBike?.image_url &&
+          (selectedImage || removeImage)
+        ) {
+          await deleteBikeImageByUrl(existingBike.image_url);
+        }
 
         Alert.alert(
           'Berhasil',
@@ -260,6 +408,11 @@ export default function AdminUnitFormScreen() {
     } catch (error) {
       console.error('Save bike error:', error);
 
+      // Hapus gambar baru jika penyimpanan data gagal.
+      if (uploadedImageUrl) {
+        await deleteBikeImageByUrl(uploadedImageUrl);
+      }
+
       Alert.alert(
         'Gagal Menyimpan',
         error instanceof Error
@@ -283,6 +436,7 @@ export default function AdminUnitFormScreen() {
             size="large"
             color={COLORS.secondaryDark}
           />
+
           <Text style={styles.helper}>
             Memuat data dari Supabase...
           </Text>
@@ -304,6 +458,7 @@ export default function AdminUnitFormScreen() {
             size={38}
             color="#EF4444"
           />
+
           <Text style={styles.helper}>
             {errorMessage || 'Unit tidak ditemukan.'}
           </Text>
@@ -323,6 +478,12 @@ export default function AdminUnitFormScreen() {
     );
   }
 
+  const previewImage = selectedImage?.uri
+    ? selectedImage.uri
+    : removeImage
+      ? null
+      : form.imageUrl || null;
+
   return (
     <AdminPageLayout
       title={isEdit ? 'Edit Unit' : 'Tambah Unit'}
@@ -331,6 +492,7 @@ export default function AdminUnitFormScreen() {
       showBottomNav
       showBack
     >
+      {/* INFORMASI DASAR */}
       <View style={adminUi.card}>
         <Text style={styles.sectionTitle}>
           Informasi Dasar
@@ -352,6 +514,7 @@ export default function AdminUnitFormScreen() {
             <TouchableOpacity
               key={item}
               onPress={() => updateField('category', item)}
+              disabled={saving}
               style={[
                 adminUi.chip,
                 form.category === item && adminUi.chipActive,
@@ -379,14 +542,94 @@ export default function AdminUnitFormScreen() {
           keyboardType="numeric"
         />
 
-        <FormField
-          label="URL Gambar"
-          value={form.imageUrl}
-          onChangeText={(value) => updateField('imageUrl', value)}
-          placeholder="https://contoh.com/gambar-sepeda.jpg"
-        />
+        {/* UPLOAD FOTO */}
+        <View style={styles.field}>
+          <Text style={styles.label}>
+            Foto Sepeda
+          </Text>
+
+          <TouchableOpacity
+            style={styles.imagePicker}
+            onPress={handlePickImage}
+            disabled={saving}
+            activeOpacity={0.8}
+          >
+            {previewImage ? (
+              <Image
+                source={{ uri: previewImage }}
+                style={styles.imagePreview}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                <Ionicons
+                  name="cloud-upload-outline"
+                  size={42}
+                  color={COLORS.secondaryDark}
+                />
+
+                <Text style={styles.imagePlaceholderTitle}>
+                  Pilih Foto Sepeda
+                </Text>
+
+                <Text style={styles.imagePlaceholderDescription}>
+                  JPG, PNG, atau WEBP
+                </Text>
+
+                <Text style={styles.imagePlaceholderDescription}>
+                  Maksimal 5 MB
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.imageAction}
+            onPress={handlePickImage}
+            disabled={saving}
+          >
+            <Ionicons
+              name="images-outline"
+              size={18}
+              color={COLORS.secondaryDark}
+            />
+
+            <Text style={styles.imageActionText}>
+              {previewImage ? 'Ganti Gambar' : 'Pilih dari Galeri'}
+            </Text>
+          </TouchableOpacity>
+
+          {previewImage && (
+            <TouchableOpacity
+              style={styles.removeImageAction}
+              onPress={handleRemoveImage}
+              disabled={saving}
+            >
+              <Ionicons
+                name="trash-outline"
+                size={16}
+                color="#DC2626"
+              />
+
+              <Text style={styles.removeImageText}>
+                {selectedImage
+                  ? 'Batalkan Gambar Baru'
+                  : 'Hapus Foto Unit'}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          <Text style={styles.imageHelper}>
+            {selectedImage
+              ? 'Gambar baru akan diunggah ketika data unit disimpan.'
+              : isEdit && form.imageUrl && !removeImage
+                ? 'Foto saat ini tersimpan di Supabase Storage.'
+                : 'Foto bersifat opsional. Kamu dapat menambahkannya nanti.'}
+          </Text>
+        </View>
       </View>
 
+      {/* INFORMASI LOKASI */}
       <View style={adminUi.card}>
         <Text style={styles.sectionTitle}>
           Informasi Lokasi
@@ -415,6 +658,7 @@ export default function AdminUnitFormScreen() {
         />
       </View>
 
+      {/* SPESIFIKASI DAN KONDISI */}
       <View style={adminUi.card}>
         <Text style={styles.sectionTitle}>
           Spesifikasi dan Kondisi
@@ -458,6 +702,7 @@ export default function AdminUnitFormScreen() {
         />
       </View>
 
+      {/* FITUR DAN CATATAN */}
       <View style={adminUi.card}>
         <Text style={styles.sectionTitle}>
           Fitur dan Catatan
@@ -492,6 +737,7 @@ export default function AdminUnitFormScreen() {
         />
       </View>
 
+      {/* INFORMASI STATUS */}
       <View style={styles.statusInfo}>
         <Ionicons
           name="information-circle-outline"
@@ -506,6 +752,7 @@ export default function AdminUnitFormScreen() {
         </Text>
       </View>
 
+      {/* TOMBOL SIMPAN */}
       <TouchableOpacity
         style={[
           adminUi.button,
@@ -514,6 +761,7 @@ export default function AdminUnitFormScreen() {
         ]}
         onPress={handleSave}
         disabled={saving}
+        activeOpacity={0.8}
       >
         {saving ? (
           <ActivityIndicator
@@ -530,7 +778,7 @@ export default function AdminUnitFormScreen() {
 
         <Text style={[adminUi.buttonText, { marginLeft: 8 }]}>
           {saving
-            ? 'Menyimpan...'
+            ? 'Mengunggah dan Menyimpan...'
             : isEdit
               ? 'Simpan Perubahan'
               : 'Simpan Data Unit'}
@@ -540,6 +788,9 @@ export default function AdminUnitFormScreen() {
   );
 }
 
+/**
+ * Komponen input form yang digunakan ulang.
+ */
 function FormField({
   label,
   value,
@@ -623,6 +874,78 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     lineHeight: 18,
     marginBottom: SIZES.medium,
+  },
+
+  imagePicker: {
+    width: '100%',
+    height: 190,
+    borderRadius: SIZES.radiusMedium,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderStyle: 'dashed',
+    backgroundColor: '#F8FAFC',
+  },
+
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+  },
+
+  imagePlaceholder: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+
+  imagePlaceholderTitle: {
+    ...FONTS.labelMedium,
+    color: COLORS.secondaryDark,
+    marginTop: 10,
+  },
+
+  imagePlaceholderDescription: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+    marginTop: 3,
+  },
+
+  imageAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: 12,
+    borderRadius: SIZES.radiusMedium,
+    backgroundColor: '#F0F9FF',
+    marginTop: 10,
+  },
+
+  imageActionText: {
+    ...FONTS.labelMedium,
+    color: COLORS.secondaryDark,
+  },
+
+  removeImageAction: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    padding: 10,
+  },
+
+  removeImageText: {
+    ...FONTS.caption,
+    color: '#DC2626',
+    fontWeight: '600',
+  },
+
+  imageHelper: {
+    ...FONTS.caption,
+    color: COLORS.textSecondary,
+    lineHeight: 18,
+    marginTop: 5,
   },
 
   statusInfo: {
