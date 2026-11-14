@@ -4,7 +4,6 @@ import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -24,6 +23,8 @@ import AdminPageLayout, {
 } from '../../components/organisms/AdminPageLayout';
 
 import AdminStatusBadge from '../../components/molecules/AdminStatusBadge';
+
+import { useAdmin } from '../../context/AdminContext';
 
 import {
   getTransactionById,
@@ -73,6 +74,9 @@ export default function AdminTransactionDetailScreen() {
     ? params.id[0]
     : params.id;
 
+  // Sinkronisasi data operasional Admin.
+  const { refreshData } = useAdmin();
+
   const [transaction, setTransaction] =
     useState<TransactionWithItems | null>(null);
 
@@ -88,6 +92,10 @@ export default function AdminTransactionDetailScreen() {
   const [returnForms, setReturnForms] = useState<
     Record<string, ReturnFormState>
   >({});
+
+  // -----------------------------------------
+  // LOAD DETAIL TRANSAKSI
+  // -----------------------------------------
 
   const loadTransaction = useCallback(async () => {
     if (!id) {
@@ -180,7 +188,10 @@ export default function AdminTransactionDetailScreen() {
       'Konfirmasi Pembayaran',
       'Pastikan pembayaran tunai atau QRIS sudah diterima dan diverifikasi.',
       [
-        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Batal',
+          style: 'cancel',
+        },
         {
           text: 'Tandai Lunas',
           onPress: () => {
@@ -203,6 +214,7 @@ export default function AdminTransactionDetailScreen() {
 
       await confirmRentalHandover(transaction.id);
 
+      await refreshData();
       await loadTransaction();
 
       Alert.alert(
@@ -238,7 +250,10 @@ export default function AdminTransactionDetailScreen() {
       'Konfirmasi Serah Terima',
       `Pastikan seluruh ${transaction.transaction_items.length} sepeda benar-benar telah diserahkan kepada ${transaction.customer_name}.`,
       [
-        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Batal',
+          style: 'cancel',
+        },
         {
           text: 'Ya, Serahkan Sepeda',
           onPress: () => {
@@ -279,6 +294,10 @@ export default function AdminTransactionDetailScreen() {
     }));
   };
 
+  // -----------------------------------------
+  // PROSES PENGEMBALIAN
+  // -----------------------------------------
+
   const handleReturn = async () => {
     if (!transaction || processingReturn) return;
 
@@ -316,17 +335,24 @@ export default function AdminTransactionDetailScreen() {
     try {
       setProcessingReturn(true);
 
+      // 1. Proses pengembalian melalui RPC Supabase.
+      // RPC juga membuat catatan maintenance untuk sepeda rusak.
       await completeRentalReturn(
         transaction.id,
         returnNotes,
         items
       );
 
+      // 2. Refresh data AdminContext.
+      // Termasuk data sepeda, transaksi, dan maintenance.
+      await refreshData();
+
+      // 3. Ambil kembali detail transaksi terbaru.
       await loadTransaction();
 
       Alert.alert(
         'Pengembalian Berhasil',
-        'Transaksi telah selesai. Status sepeda telah diperbarui sesuai kondisi masing-masing unit.'
+        'Transaksi telah selesai. Status sepeda dan data perawatan telah diperbarui sesuai kondisi masing-masing unit.'
       );
     } catch (err) {
       Alert.alert(
@@ -349,7 +375,10 @@ export default function AdminTransactionDetailScreen() {
       'Konfirmasi Pengembalian',
       'Pastikan semua kondisi sepeda sudah diperiksa dan sesuai dengan kondisi fisik saat diterima.',
       [
-        { text: 'Periksa Lagi', style: 'cancel' },
+        {
+          text: 'Periksa Lagi',
+          style: 'cancel',
+        },
         {
           text: 'Ya, Selesaikan Transaksi',
           onPress: () => {
@@ -376,6 +405,7 @@ export default function AdminTransactionDetailScreen() {
             size="large"
             color={COLORS.secondaryDark}
           />
+
           <Text style={styles.stateText}>
             Mengambil data transaksi...
           </Text>
@@ -521,21 +551,51 @@ export default function AdminTransactionDetailScreen() {
           Rincian Penyewaan
         </Text>
 
-        <Info label="Kode transaksi" value={transaction.transaction_code} />
-        <Info label="Tanggal dan waktu sewa" value={rentalDate} />
-        <Info label="Estimasi selesai" value={estimatedEnd} />
-        <Info label="Durasi" value={`${transaction.duration_hours} jam`} />
+        <Info
+          label="Kode transaksi"
+          value={transaction.transaction_code}
+        />
+
+        <Info
+          label="Tanggal dan waktu sewa"
+          value={rentalDate}
+        />
+
+        <Info
+          label="Estimasi selesai"
+          value={estimatedEnd}
+        />
+
+        <Info
+          label="Durasi"
+          value={`${transaction.duration_hours} jam`}
+        />
+
         <Info
           label="Jumlah sepeda"
           value={`${transaction.transaction_items.length} unit`}
         />
-        <Info label="Kategori pelanggan" value={transaction.customer_type} />
-        <Info label="Jenis hari" value={transaction.day_type} />
+
+        <Info
+          label="Kategori pelanggan"
+          value={transaction.customer_type}
+        />
+
+        <Info
+          label="Jenis hari"
+          value={transaction.day_type}
+        />
+
         <Info
           label="Tarif per jam"
           value={`${formatRupiah(Number(transaction.hourly_rate))}/unit`}
         />
-        <Info label="Jaminan" value={transaction.guarantee_type} last />
+
+        <Info
+          label="Jaminan"
+          value={transaction.guarantee_type}
+          last
+        />
       </View>
 
       {/* PEMBAYARAN */}

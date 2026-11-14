@@ -832,17 +832,26 @@ export function AdminProvider({
         throw new Error('Hanya Admin yang dapat memproses maintenance.');
       }
 
-      const { error: updateError } = await db
+      const { data, error: updateError } = await db
         .from('maintenance')
         .update({
           type,
-          note,
+          note: note.trim(),
           status: 'Sedang Dikerjakan',
-          started_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('status', 'Menunggu')
+        .select('id')
+        .maybeSingle();
 
       if (updateError) throw updateError;
+
+      if (!data) {
+        throw new Error(
+          'Data perawatan tidak ditemukan atau statusnya bukan Menunggu.',
+        );
+      }
 
       await refreshData();
     },
@@ -858,35 +867,15 @@ export function AdminProvider({
         throw new Error('Hanya Admin yang dapat menyelesaikan maintenance.');
       }
 
-      const { data: record, error: readError } = await db
-        .from('maintenance')
-        .select('bike_id')
-        .eq('id', id)
-        .single();
+      const { error: rpcError } = await db.rpc(
+        'admin_complete_maintenance',
+        {
+          p_maintenance_id: id,
+          p_fit_to_use: fitToUse,
+        },
+      );
 
-      if (readError) throw readError;
-
-      const now = new Date().toISOString();
-
-      const { error: updateError } = await db
-        .from('maintenance')
-        .update({
-          status: 'Selesai',
-          completed_at: now,
-        })
-        .eq('id', id);
-
-      if (updateError) throw updateError;
-
-      const { error: bikeError } = await db
-        .from('bikes')
-        .update({
-          status: fitToUse ? 'Tersedia' : 'Perawatan',
-          updated_at: now,
-        })
-        .eq('id', record.bike_id);
-
-      if (bikeError) throw bikeError;
+      if (rpcError) throw rpcError;
 
       await refreshData();
     },
