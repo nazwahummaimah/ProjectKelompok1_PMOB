@@ -11,8 +11,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system/legacy';
 
 import AdminPageLayout, {
   adminUi,
@@ -129,79 +127,373 @@ export default function ReportDetailScreen() {
 
   const operationalDifference = income - expenseTotal;
 
+  // Membuat dan membuka dialog cetak laporan PDF
   const generatePdf = async () => {
-  if (isGenerating) return;
+    if (isGenerating) return;
 
-  try {
-    setIsGenerating(true);
+    try {
+      setIsGenerating(true);
 
-    // Buat HTML laporan menggunakan kode HTML yang sudah ada.
-    // Pertahankan seluruh isi HTML laporan sebelumnya.
-    const html = `
-      <!-- MASUKKAN HTML LAPORAN LAMA DI SINI -->
-    `;
+      const transactionTableRows =
+        transactionRows.length > 0
+          ? transactionRows
+              .map(
+                (item, index) => `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td>${escapeHtml(item.id)}</td>
+                    <td>${escapeHtml(item.customerName)}</td>
+                    <td>${escapeHtml(formatDate(item.date))}</td>
+                    <td class="income">
+                      ${escapeHtml(formatRupiah(Number(item.total || 0)))}
+                    </td>
+                  </tr>
+                `,
+              )
+              .join('')
+          : `
+              <tr>
+                <td colspan="5" class="empty">
+                  Tidak ada pemasukan lunas pada periode ini.
+                </td>
+              </tr>
+            `;
 
-    // 1. Generate PDF
-    const pdf = await Print.printToFileAsync({
-      html,
-      base64: false,
-    });
+      const expenseTableRows =
+        expenseRows.length > 0
+          ? expenseRows
+              .map(
+                (item, index) => `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td>${escapeHtml(item.description)}</td>
+                    <td>${escapeHtml(item.category)}</td>
+                    <td>${escapeHtml(formatDate(item.date))}</td>
+                    <td class="expense">
+                      ${escapeHtml(formatRupiah(Number(item.amount || 0)))}
+                    </td>
+                  </tr>
+                `,
+              )
+              .join('')
+          : `
+              <tr>
+                <td colspan="5" class="empty">
+                  Tidak ada pengeluaran pada periode ini.
+                </td>
+              </tr>
+            `;
 
-    // 2. Pastikan direktori cache tersedia
-    if (!FileSystem.cacheDirectory) {
-      throw new Error('Direktori cache aplikasi tidak tersedia.');
-    }
+      const generatedAt = new Date().toLocaleString('id-ID', {
+        dateStyle: 'long',
+        timeStyle: 'short',
+      });
 
-    // 3. Salin PDF ke cache aplikasi dengan nama file baru
-    const fileName = `Laporan-Keuangan-Jamal-Jepret-${Date.now()}.pdf`;
+      const html = `
+        <!DOCTYPE html>
+        <html lang="id">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    const destinationUri =
-      FileSystem.cacheDirectory + fileName;
+            <title>Laporan Keuangan Jamal Jepret</title>
 
-    await FileSystem.copyAsync({
-      from: pdf.uri,
-      to: destinationUri,
-    });
+            <style>
+              * {
+                box-sizing: border-box;
+              }
 
-    // 4. Pastikan file hasil salinan benar-benar tersedia
-    const fileInfo = await FileSystem.getInfoAsync(destinationUri);
+              body {
+                font-family: Arial, Helvetica, sans-serif;
+                color: #1e293b;
+                margin: 32px;
+                font-size: 11px;
+              }
 
-    if (!fileInfo.exists) {
-      throw new Error('File PDF tidak ditemukan setelah proses penyalinan.');
-    }
+              .header {
+                border-bottom: 3px solid #0f766e;
+                padding-bottom: 16px;
+                margin-bottom: 24px;
+              }
 
-    // 5. Bagikan file hasil salinan
-    const sharingAvailable = await Sharing.isAvailableAsync();
+              .brand {
+                font-size: 23px;
+                font-weight: bold;
+                color: #0f766e;
+                margin: 0 0 6px;
+              }
 
-    if (!sharingAvailable) {
+              .subtitle {
+                color: #64748b;
+                margin: 0;
+                font-size: 11px;
+              }
+
+              .report-title {
+                margin-top: 22px;
+                font-size: 18px;
+                font-weight: bold;
+              }
+
+              .period {
+                color: #475569;
+                margin-top: 6px;
+              }
+
+              .summary {
+                display: flex;
+                gap: 10px;
+                margin: 20px 0 28px;
+              }
+
+              .summary-item {
+                flex: 1;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 12px;
+              }
+
+              .summary-label {
+                color: #64748b;
+                font-size: 10px;
+                margin-bottom: 8px;
+              }
+
+              .summary-value {
+                font-size: 13px;
+                font-weight: bold;
+              }
+
+              .income-value {
+                color: #15803d;
+              }
+
+              .expense-value {
+                color: #b45309;
+              }
+
+              .difference-value {
+                color: #0f766e;
+              }
+
+              h2 {
+                font-size: 14px;
+                margin: 24px 0 10px;
+                color: #0f172a;
+              }
+
+              table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 18px;
+              }
+
+              th {
+                background: #f1f5f9;
+                color: #334155;
+                text-align: left;
+                font-weight: bold;
+              }
+
+              th, td {
+                border: 1px solid #e2e8f0;
+                padding: 9px 7px;
+                vertical-align: top;
+              }
+
+              .income {
+                color: #15803d;
+                font-weight: bold;
+                white-space: nowrap;
+              }
+
+              .expense {
+                color: #b45309;
+                font-weight: bold;
+                white-space: nowrap;
+              }
+
+              .empty {
+                text-align: center;
+                color: #64748b;
+                padding: 16px;
+              }
+
+              .total-box {
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+                padding: 14px;
+                margin-top: 24px;
+              }
+
+              .total-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 7px 0;
+                border-bottom: 1px solid #e2e8f0;
+              }
+
+              .total-row:last-child {
+                border-bottom: none;
+                font-weight: bold;
+                font-size: 13px;
+                padding-top: 12px;
+              }
+
+              .footer {
+                margin-top: 32px;
+                padding-top: 12px;
+                border-top: 1px solid #e2e8f0;
+                color: #64748b;
+                font-size: 9px;
+                text-align: center;
+              }
+
+              @page {
+                size: A4;
+                margin: 15mm;
+              }
+
+              @media print {
+                body {
+                  margin: 0;
+                }
+
+                tr {
+                  page-break-inside: avoid;
+                }
+              }
+            </style>
+          </head>
+
+          <body>
+            <div class="header">
+              <p class="brand">JAMAL JEPRET</p>
+              <p class="subtitle">Sistem Penyewaan Sepeda</p>
+
+              <div class="report-title">Laporan Keuangan</div>
+              <div class="period">
+                Periode: ${escapeHtml(period)}
+              </div>
+              <div class="period">
+                Tanggal dibuat: ${escapeHtml(generatedAt)}
+              </div>
+            </div>
+
+            <div class="summary">
+              <div class="summary-item">
+                <div class="summary-label">Total Pemasukan</div>
+                <div class="summary-value income-value">
+                  ${escapeHtml(formatRupiah(income))}
+                </div>
+              </div>
+
+              <div class="summary-item">
+                <div class="summary-label">Total Pengeluaran</div>
+                <div class="summary-value expense-value">
+                  ${escapeHtml(formatRupiah(expenseTotal))}
+                </div>
+              </div>
+
+              <div class="summary-item">
+                <div class="summary-label">Selisih Operasional</div>
+                <div class="summary-value difference-value">
+                  ${escapeHtml(formatRupiah(operationalDifference))}
+                </div>
+              </div>
+            </div>
+
+            <h2>
+              Rincian Pemasukan (${transactionRows.length} transaksi)
+            </h2>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>ID Transaksi</th>
+                  <th>Pelanggan</th>
+                  <th>Tanggal</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                ${transactionTableRows}
+              </tbody>
+            </table>
+
+            <h2>
+              Rincian Pengeluaran (${expenseRows.length} catatan)
+            </h2>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Deskripsi</th>
+                  <th>Kategori</th>
+                  <th>Tanggal</th>
+                  <th>Jumlah</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                ${expenseTableRows}
+              </tbody>
+            </table>
+
+            <div class="total-box">
+              <div class="total-row">
+                <span>Total Pemasukan</span>
+                <span class="income-value">
+                  ${escapeHtml(formatRupiah(income))}
+                </span>
+              </div>
+
+              <div class="total-row">
+                <span>Total Pengeluaran</span>
+                <span class="expense-value">
+                  ${escapeHtml(formatRupiah(expenseTotal))}
+                </span>
+              </div>
+
+              <div class="total-row">
+                <span>Selisih Operasional</span>
+                <span class="difference-value">
+                  ${escapeHtml(formatRupiah(operationalDifference))}
+                </span>
+              </div>
+            </div>
+
+            <div class="footer">
+              Laporan ini dibuat secara otomatis oleh sistem Jamal Jepret.
+            </div>
+          </body>
+        </html>
+      `;
+
+      // Langsung buka dialog cetak Android.
+      // Tidak membuat URI file untuk dibaca atau disalin secara manual.
+      await Print.printAsync({
+        html,
+      });
+    } catch (error) {
+      console.error('Gagal membuka laporan PDF:', error);
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Terjadi kesalahan yang tidak diketahui.';
+
       Alert.alert(
-        'PDF Berhasil Dibuat',
-        `PDF berhasil dibuat di:\n${destinationUri}`,
+        'Gagal Membuka Laporan',
+        `Laporan belum berhasil dibuka.\n\n${message}`,
       );
-      return;
+    } finally {
+      setIsGenerating(false);
     }
-
-    await Sharing.shareAsync(destinationUri, {
-      mimeType: 'application/pdf',
-      dialogTitle: 'Simpan atau Bagikan Laporan Keuangan',
-      UTI: 'com.adobe.pdf',
-    });
-  } catch (error) {
-    console.error('Gagal membuat laporan PDF:', error);
-
-    const message =
-      error instanceof Error
-        ? error.message
-        : 'Terjadi kesalahan yang tidak diketahui.';
-
-    Alert.alert(
-      'Gagal Membuat PDF',
-      `Laporan PDF belum berhasil dibuat.\n\n${message}`,
-    );
-  } finally {
-    setIsGenerating(false);
-  }
-};
+  };
 
   return (
     <AdminPageLayout
@@ -308,8 +600,9 @@ export default function ReportDetailScreen() {
               size="small"
               color={COLORS.textPrimary}
             />
+
             <Text style={[adminUi.buttonText, { marginLeft: 8 }]}>
-              Membuat PDF...
+              Membuka laporan...
             </Text>
           </>
         ) : (
@@ -328,8 +621,9 @@ export default function ReportDetailScreen() {
       </TouchableOpacity>
 
       <Text style={styles.helper}>
-        Laporan PDF berisi ringkasan keuangan, rincian pemasukan,
-        dan rincian pengeluaran sesuai periode yang dipilih.
+        Setelah laporan terbuka, pilih Save as PDF atau Simpan
+        sebagai PDF pada dialog cetak untuk menyimpan laporan
+        ke perangkat.
       </Text>
     </AdminPageLayout>
   );
