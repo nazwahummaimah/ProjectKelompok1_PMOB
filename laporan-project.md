@@ -18,11 +18,11 @@ Fitur Utama:
 
 ### Dokumentasi Wawancara ###
 
-  <img src="wwc.jpeg" width="50%" >
+  <img src="assets/images/wwc.jpeg" width="50%" >
 
-  <img src="unit sepeda.jpeg" width="50%" >
+  <img src="assets/images/unit sepeda.jpeg" width="50%" >
 
-  <img src="pencatatan.jpeg" width="50%" >
+  <img src="assets/images/pencatatan.jpeg" width="50%" >
 
 Notulensi:
 1. Pencatatan transaksi penyewaan masih menggunakan buku manual dan staf terkadang lupa mencatat transaksi
