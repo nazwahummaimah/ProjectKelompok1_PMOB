@@ -48,9 +48,9 @@ Aplikasi Penyewaan Sepeda Jamal Jepret merupakan aplikasi mobile yang dirancang 
     <th>Katalog</th>
   </tr>
   <tr>
-    <td align="center"><img src="./splashscreen.jpeg" width="150"></td>
-    <td align="center"><img src="./beranda.jpeg" width="150"></td>
-    <td align="center"><img src="./katalog.jpeg" width="150"></td>
+    <td align="center"><img src="./assets/images/splashscreen.jpeg" width="150"></td>
+    <td align="center"><img src="./assets/images/beranda.jpeg" width="150"></td>
+    <td align="center"><img src="./assets/images/katalog.jpeg" width="150"></td>
   </tr>
   <tr>
     <th>Scan QR Code</th>
@@ -58,9 +58,9 @@ Aplikasi Penyewaan Sepeda Jamal Jepret merupakan aplikasi mobile yang dirancang 
     <th>Registrasi</th>
   </tr>
   <tr>
-    <td align="center"><img src="./scan.jpeg" width="150"></td>
-    <td align="center"><img src="./loginn.jpeg" width="150"></td>
-    <td align="center"><img src="./registrasi.jpeg" width="150"></td>
+    <td align="center"><img src="./assets/images/scan.jpeg" width="150"></td>
+    <td align="center"><img src="./assets/images/loginn.jpeg" width="150"></td>
+    <td align="center"><img src="./assets/images/registrasi.jpeg" width="150"></td>
   </tr>
   <tr>
     <th>Dashboard</th>
@@ -68,9 +68,9 @@ Aplikasi Penyewaan Sepeda Jamal Jepret merupakan aplikasi mobile yang dirancang 
     <th>Profil</th>
   </tr>
   <tr>
-    <td align="center"><img src="./berandauser.jpeg" width="150"></td>
-    <td align="center"><img src="./riwayat.jpeg" width="150"></td>
-    <td align="center"><img src="./profil.jpeg" width="150"></td>
+    <td align="center"><img src="./assets/images/berandauser.jpeg" width="150"></td>
+    <td align="center"><img src="./assets/images/riwayat.jpeg" width="150"></td>
+    <td align="center"><img src="./assets/images/profil.jpeg" width="150"></td>
   </tr>
 </table>
 

@@ -14,7 +14,7 @@ Memperbaiki validasi login dan register, membuat halaman dashboard dan role menu
 
 **Dokumentasi Hasil Perbaikan:**
 
-<img src="validasilogin,register, halaman user.gif" width="320" alt="Dokumentasi Validasi Login dan Registrasi">
+<img src="./assets/images/validasilogin,register, halaman user.gif" width="320" alt="Dokumentasi Validasi Login dan Registrasi">
 
 **2. Dzaky Muhammad Nafis**
 
@@ -22,4 +22,4 @@ Menambahkan halaman dashboard admin dan menu role admin
 
 **Dokumentasi Hasil Perbaikan:**
 
-<img src="loginadmin, dashboard.gif" width="320" alt="Dokumentasi Validasi Login dan Registrasi">
+<img src="./assets/images/loginadmin, dashboard.gif" width="320" alt="Dokumentasi Validasi Login dan Registrasi">

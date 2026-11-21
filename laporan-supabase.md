@@ -7,25 +7,25 @@
 ### Setup Supabase ###
 1. Invite Anggota
 
-<img src="invitesupabase.png" width="50%" >
+<img src="assets/images/invitesupabase.png" width="50%" >
 
 2. Tabel Database
 
-<img src="tabeldatabase.png" width="50%" >
+<img src="assets/images/tabeldatabase.png" width="50%" >
 
 3. Skema Tabel Database
 
-<img src="skematabeldatabase.png" width="50%" >
+<img src="assets/images/skematabeldatabase.png" width="50%" >
 
 ### Hasil Halaman Integrasi tabel bikes ###
-![alt text](bikes.gif)
+<img src="./assets/images/bikes.gif" width="250" alt="Dokumentasi Bikes">
 
 ### Hasil Halaman Integrasi tabel maintanance ###
 
 ### Hasil Halaman Integrasi tabel expenses ###
 
 ### Hasil Halaman Integrasi tabel profiles ###
-![alt text](profil.gif)
+<img src="./assets/images/profil.gif" width="250" alt="Dokumentasi Profil">
 
 ### Hasil Halaman Integrasi tabel transaktion_item & transaktion ###
-![alt text](transaksi.gif)
+<img src="./assets/images/transaksi.gif" width="250" alt="Dokumentasi Bikes">
