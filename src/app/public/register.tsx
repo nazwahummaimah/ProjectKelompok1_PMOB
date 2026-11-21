@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   SafeAreaView,
-  ScrollView,
+  Keyboard,
   View,
   Text,
   StyleSheet,
@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
@@ -41,11 +42,9 @@ const Register: React.FC = () => {
   const router = useRouter();
   const { signUp } = useAuth();
 
-  // ===================================================
   // STATE
-  // ===================================================
-
   const [activeTab, setActiveTab] = useState<TabType>('Login');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -69,10 +68,24 @@ const Register: React.FC = () => {
 
   const [submitted, setSubmitted] = useState(false);
 
-  // ===================================================
-  // VALIDATION
-  // ===================================================
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(
+      'keyboardDidShow',
+      () => setKeyboardVisible(true)
+    );
 
+    const hideSubscription = Keyboard.addListener(
+      'keyboardDidHide',
+      () => setKeyboardVisible(false)
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
+  // VALIDATION
   const validation = {
     fullName: validateFullName(fullName),
     email: validateEmail(email),
@@ -116,17 +129,7 @@ const Register: React.FC = () => {
     }));
   };
 
-  // ===================================================
   // NORMALIZE INDONESIAN PHONE NUMBER
-  // ===================================================
-
-  /**
-   * Mengubah nomor WhatsApp menjadi format internasional.
-   *
-   * 081234567890  -> +6281234567890
-   * 6281234567890 -> +6281234567890
-   * 81234567890   -> +6281234567890
-   */
   const normalizePhone = (value: string): string => {
     let digits = value.replace(/\D/g, '');
 
@@ -139,10 +142,7 @@ const Register: React.FC = () => {
     return `+62${digits}`;
   };
 
-  // ===================================================
   // REGISTER
-  // ===================================================
-
   const handleSubmit = async () => {
     if (isSubmitting) return;
 
@@ -170,8 +170,6 @@ const Register: React.FC = () => {
       const normalizedEmail = email.trim().toLowerCase();
       const normalizedPhone = normalizePhone(phone);
 
-      // Registrasi melalui AuthContext agar alur autentikasi
-      // terpusat dan konsisten dengan halaman login.
       const result = await signUp({
         fullName: fullName.trim(),
         email: normalizedEmail,
@@ -179,10 +177,6 @@ const Register: React.FC = () => {
         password,
         customerType: 'Umum',
       });
-
-      // =================================================
-      // EMAIL VERIFICATION ENABLED
-      // =================================================
 
       if (result.needsEmailConfirmation) {
         Alert.alert(
@@ -200,10 +194,6 @@ const Register: React.FC = () => {
 
         return;
       }
-
-      // =================================================
-      // SESSION AVAILABLE
-      // =================================================
 
       Alert.alert(
         'Registrasi Berhasil',
@@ -254,10 +244,7 @@ const Register: React.FC = () => {
     }
   };
 
-  // ===================================================
   // BOTTOM NAVIGATION
-  // ===================================================
-
   const handleTabPress = (tab: TabType) => {
     if (isSubmitting) return;
 
@@ -282,10 +269,7 @@ const Register: React.FC = () => {
     }
   };
 
-  // ===================================================
   // RENDER
-  // ===================================================
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -313,10 +297,14 @@ const Register: React.FC = () => {
         </View>
       </View>
 
-      <ScrollView
+      <KeyboardAwareScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        bottomOffset={30}
+        extraKeyboardSpace={30}
       >
         <Text style={styles.pageTitle}>
           Daftar Akun Baru
@@ -515,9 +503,7 @@ const Register: React.FC = () => {
             />
 
             <TouchableOpacity
-              onPress={() =>
-                setShowPassword(!showPassword)
-              }
+              onPress={() => setShowPassword(!showPassword)}
               disabled={isSubmitting}
             >
               <Ionicons
@@ -679,21 +665,20 @@ const Register: React.FC = () => {
             </Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* BOTTOM NAVIGATION */}
-      <BottomNavBar
-        activeTab={activeTab}
-        onTabPress={handleTabPress}
-      />
+      {!keyboardVisible && (
+        <BottomNavBar
+          activeTab={activeTab}
+          onTabPress={handleTabPress}
+        />
+      )}
     </SafeAreaView>
   );
 };
 
-// =====================================================
 // STYLES
-// =====================================================
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -728,8 +713,14 @@ const styles = StyleSheet.create({
     marginLeft: SIZES.medium,
   },
 
+  scrollView: {
+    flex: 1,
+  },
+
   scrollContent: {
     padding: SIZES.large,
+    paddingBottom: 48,
+    flexGrow: 1,
   },
 
   pageTitle: {
