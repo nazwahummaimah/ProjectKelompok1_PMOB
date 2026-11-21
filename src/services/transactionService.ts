@@ -101,10 +101,44 @@ export interface CreateTransactionInput {
    HELPERS
 ========================================================= */
 
-function normalizePhone(phone: string): string {
-  return phone.replace(/\D/g, '');
+// Normalisasi nomor untuk pencocokan pelanggan.
+// Semua format nomor Indonesia disamakan menjadi 62xxxxxxxxxx.
+function normalizePhoneForMatch(phone: string): string {
+  let digits = phone.replace(/\D/g, '');
+
+  // Format panggilan internasional 0062 menjadi 62
+  if (digits.startsWith('00')) {
+    digits = digits.slice(2);
+  }
+
+  // Sudah menggunakan kode negara Indonesia
+  if (digits.startsWith('62')) {
+    return digits;
+  }
+
+  // Format lokal 08xxx menjadi 628xxx
+  if (digits.startsWith('0')) {
+    return `62${digits.slice(1)}`;
+  }
+
+  // Format 8xxx menjadi 628xxx
+  if (digits.startsWith('8')) {
+    return `62${digits}`;
+  }
+
+  return digits;
 }
 
+// Format penyimpanan transaksi tetap menggunakan 08xxx.
+function normalizePhoneForStorage(phone: string): string {
+  const normalized = normalizePhoneForMatch(phone);
+
+  if (normalized.startsWith('62')) {
+    return `0${normalized.slice(2)}`;
+  }
+
+  return normalized;
+}
 function validateCustomerInput(
   input: CreateTransactionInput
 ): void {
@@ -112,7 +146,7 @@ function validateCustomerInput(
     throw new Error('Nama pelanggan minimal 3 karakter.');
   }
 
-  const digits = normalizePhone(input.phone);
+  const digits = normalizePhoneForMatch(input.phone);
 
   if (digits.length < 9 || digits.length > 15) {
     throw new Error('Nomor WhatsApp harus terdiri dari 9–15 digit.');
@@ -244,7 +278,7 @@ export async function getMyTransactions(): Promise<Transaction[]> {
 export async function searchRegisteredCustomerByPhone(
   phone: string
 ): Promise<RegisteredCustomer | null> {
-  const digits = normalizePhone(phone);
+  const digits = normalizePhoneForMatch(phone);
 
   if (digits.length < 9 || digits.length > 15) {
     throw new Error('Nomor WhatsApp harus terdiri dari 9–15 digit.');
@@ -260,7 +294,7 @@ export async function searchRegisteredCustomerByPhone(
   }
 
   const customer = (data ?? []).find((profile) => {
-    const profilePhone = normalizePhone(profile.phone ?? '');
+    const profilePhone = normalizePhoneForMatch(profile.phone ?? '');
 
     return (
       profilePhone === digits &&
@@ -315,7 +349,7 @@ export async function createTransaction(
       input.durationHours * 60 * 60 * 1000
   );
 
-  const digits = normalizePhone(input.phone);
+  const digits = normalizePhoneForMatch(input.phone);
 
   const total =
     input.hourlyRate *

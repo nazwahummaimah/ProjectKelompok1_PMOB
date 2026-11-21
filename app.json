@@ -2,6 +2,7 @@
   "expo": {
     "name": "kelompok-1",
     "slug": "kelompok-1",
+    "owner": "jamal_jepret",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
