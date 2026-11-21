@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import {
   SafeAreaView,
-  ScrollView,
+  Keyboard,
   View,
   Text,
   StyleSheet,
@@ -12,6 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
@@ -26,12 +28,15 @@ import {
 
 import HeaderApp from '@/components/molecules/HeaderApp';
 import { useAuth } from '../../context/AuthContext';
+import GoogleSignInButton from '../../components/molecules/GoogleSignInButton';
 
 const Login: React.FC = () => {
   const router = useRouter();
   const { signIn } = useAuth();
 
   const [activeTab, setActiveTab] = useState<TabType>('Login');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +48,23 @@ const Login: React.FC = () => {
   });
 
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(
+      'keyboardDidShow',
+      () => setKeyboardVisible(true)
+    );
+
+    const hideSubscription = Keyboard.addListener(
+      'keyboardDidHide',
+      () => setKeyboardVisible(false)
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const emailValidation = validateEmail(email);
   const passwordValidation = validateLoginPassword(password);
@@ -66,6 +88,7 @@ const Login: React.FC = () => {
 
   const handleSubmit = async () => {
     setSubmitted(true);
+
     setTouched({
       email: true,
       password: true,
@@ -155,9 +178,14 @@ const Login: React.FC = () => {
 
       <HeaderApp notificationCount={0} />
 
-      <ScrollView
+      <KeyboardAwareScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        bottomOffset={30}
+        extraKeyboardSpace={30}
       >
         <Text style={styles.pageTitle}>Masuk ke Akun</Text>
 
@@ -211,6 +239,7 @@ const Login: React.FC = () => {
               autoCapitalize="none"
               autoCorrect={false}
               editable={!isSubmitting}
+              returnKeyType="next"
             />
           </View>
 
@@ -337,6 +366,9 @@ const Login: React.FC = () => {
           )}
         </TouchableOpacity>
 
+        {/* GOOGLE LOGIN */}
+        <GoogleSignInButton disabled={isSubmitting} />
+
         {/* REGISTER LINK */}
         <View style={styles.registerRow}>
           <Text style={styles.registerPrompt}>
@@ -361,12 +393,15 @@ const Login: React.FC = () => {
             cepat, dan jelas.
           </Text>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
-      <BottomNavBar
-        activeTab={activeTab}
-        onTabPress={handleTabPress}
-      />
+      {/* BOTTOM NAVIGATION */}
+      {!keyboardVisible && (
+        <BottomNavBar
+          activeTab={activeTab}
+          onTabPress={handleTabPress}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -376,36 +411,50 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+
+  scrollView: {
+    flex: 1,
+  },
+
   scrollContent: {
     padding: SIZES.large,
+    paddingBottom: 48,
+    flexGrow: 1,
   },
+
   pageTitle: {
     ...FONTS.headline1,
     color: COLORS.secondaryDark,
     marginBottom: 4,
   },
+
   pageSubtitle: {
     ...FONTS.body,
     color: COLORS.textSecondary,
     marginBottom: SIZES.xlarge,
   },
+
   inputGroup: {
     marginBottom: SIZES.large,
   },
+
   inputLabel: {
     ...FONTS.labelMedium,
     color: COLORS.textPrimary,
     marginBottom: SIZES.small,
   },
+
   labelWithLink: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+
   forgotText: {
     ...FONTS.caption,
     color: COLORS.secondaryDark,
   },
+
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -416,17 +465,21 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     paddingHorizontal: SIZES.medium,
   },
+
   inputBoxError: {
     borderColor: COLORS.accentCritical,
   },
+
   inputBoxValid: {
     borderColor: COLORS.success,
   },
+
   textInput: {
     flex: 1,
     ...FONTS.body,
     color: COLORS.textPrimary,
   },
+
   submitBtn: {
     flexDirection: 'row',
     height: 48,
@@ -436,34 +489,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SIZES.large,
   },
+
   submitBtnDisabled: {
     opacity: 0.6,
   },
+
   submitBtnText: {
     ...FONTS.labelMedium,
     color: COLORS.textPrimary,
     fontWeight: 'bold',
   },
+
   registerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginBottom: SIZES.xxlarge,
   },
+
   registerPrompt: {
     ...FONTS.body,
     color: COLORS.textSecondary,
   },
+
   registerLink: {
     ...FONTS.body,
     fontWeight: 'bold',
     color: COLORS.secondaryDark,
   },
+
   footerTagline: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: SIZES.large,
   },
+
   taglineDot: {
     width: 6,
     height: 6,
@@ -471,6 +531,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primaryLight,
     marginRight: 6,
   },
+
   taglineText: {
     ...FONTS.caption,
     color: COLORS.textSecondary,

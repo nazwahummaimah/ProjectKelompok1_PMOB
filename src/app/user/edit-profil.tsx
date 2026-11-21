@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 
 import {
   SafeAreaView,
-  ScrollView,
   View,
   Text,
   StyleSheet,
@@ -14,6 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
@@ -45,20 +45,27 @@ export default function EditUserProfileScreen() {
     fullName: false,
     phone: false,
   });
+
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const validation = {
-    fullName: validateFullName(fullName),
-    phone: validateWhatsApp(phone),
-  };
+  const fullNameError =
+    touched.fullName || submitted
+      ? validateFullName(fullName)
+      : undefined;
 
-  const show = (field: keyof typeof touched) =>
-    touched[field] || submitted;
+  const phoneError =
+    touched.phone || submitted
+      ? validateWhatsApp(phone)
+      : undefined;
 
-  // ===================================================
-  // SAVE PROFILE
-  // ===================================================
+  const fullNameValid =
+    (touched.fullName || submitted) &&
+    !validateFullName(fullName);
+
+  const phoneValid =
+    (touched.phone || submitted) &&
+    !validateWhatsApp(phone);
 
   const handleSave = async () => {
     setSubmitted(true);
@@ -68,10 +75,13 @@ export default function EditUserProfileScreen() {
       phone: true,
     });
 
-    if (validation.fullName || validation.phone) {
+    const nameValidation = validateFullName(fullName);
+    const phoneValidation = validateWhatsApp(phone);
+
+    if (nameValidation || phoneValidation) {
       Alert.alert(
         'Periksa Kembali Data',
-        'Masih ada kolom yang perlu diperbaiki.',
+        'Masih ada data profil yang perlu diperbaiki.',
       );
       return;
     }
@@ -87,8 +97,8 @@ export default function EditUserProfileScreen() {
       });
 
       Alert.alert(
-        'Profil Diperbarui',
-        'Perubahan profil berhasil disimpan ke database.',
+        'Berhasil',
+        'Profil berhasil diperbarui.',
         [
           {
             text: 'OK',
@@ -102,27 +112,26 @@ export default function EditUserProfileScreen() {
       Alert.alert(
         'Gagal Memperbarui Profil',
         error?.message ||
-          'Terjadi kesalahan ketika menyimpan profil.',
+          'Terjadi kesalahan saat memperbarui profil. Silakan coba kembali.',
       );
     } finally {
       setSaving(false);
     }
   };
 
-  // ===================================================
-  // LOADING
-  // ===================================================
-
   if (profileLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" />
+
+        <HeaderApp notificationCount={0} />
 
         <View style={styles.loadingContainer}>
           <ActivityIndicator
             size="large"
             color={COLORS.secondaryDark}
           />
+
           <Text style={styles.loadingText}>
             Memuat profil...
           </Text>
@@ -137,10 +146,14 @@ export default function EditUserProfileScreen() {
 
       <HeaderApp notificationCount={0} />
 
-      <ScrollView
+      <KeyboardAwareScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
+        bottomOffset={30}
+        extraKeyboardSpace={30}
       >
         <TouchableOpacity
           style={styles.backLink}
@@ -152,6 +165,7 @@ export default function EditUserProfileScreen() {
             size={18}
             color={COLORS.secondaryDark}
           />
+
           <Text style={styles.backText}>
             Kembali ke Profil
           </Text>
@@ -170,205 +184,209 @@ export default function EditUserProfileScreen() {
           dengan riwayat penyewaanmu.
         </Text>
 
-        <View style={styles.formCard}>
-          {/* FULL NAME */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              Nama Lengkap
-            </Text>
+        {/* NAMA LENGKAP */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>
+            Nama Lengkap
+          </Text>
 
-            <View
-              style={[
-                styles.inputWrap,
-                show('fullName') &&
-                  validation.fullName &&
-                  styles.inputError,
-                show('fullName') &&
-                  !validation.fullName &&
-                  styles.inputValid,
-              ]}
-            >
-              <Ionicons
-                name="person-outline"
-                size={19}
-                color={COLORS.textSecondary}
-              />
-
-              <TextInput
-                style={styles.input}
-                value={fullName}
-                onChangeText={(value) => {
-                  setFullName(value);
-
-                  setTouched((current) => ({
-                    ...current,
-                    fullName: true,
-                  }));
-                }}
-                onBlur={() =>
-                  setTouched((current) => ({
-                    ...current,
-                    fullName: true,
-                  }))
-                }
-                placeholder="Masukkan nama lengkap"
-                placeholderTextColor={COLORS.textSecondary}
-                autoCapitalize="words"
-                editable={!saving}
-              />
-            </View>
-
-            <ValidationMessage
-              error={
-                show('fullName')
-                  ? validation.fullName
-                  : undefined
-              }
-              success={
-                show('fullName') && !validation.fullName
-                  ? 'Nama lengkap valid.'
-                  : undefined
-              }
-            />
-          </View>
-
-          {/* EMAIL */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
-
-            <View
-              style={[
-                styles.inputWrap,
-                styles.disabledInput,
-              ]}
-            >
-              <Ionicons
-                name="mail-outline"
-                size={19}
-                color={COLORS.textSecondary}
-              />
-
-              <TextInput
-                style={styles.input}
-                value={profile.email}
-                editable={false}
-              />
-
-              <Ionicons
-                name="lock-closed-outline"
-                size={16}
-                color={COLORS.textSecondary}
-              />
-            </View>
-
-            <Text style={styles.helperText}>
-              Email digunakan sebagai identitas login dan
-              belum dapat diubah melalui halaman ini.
-            </Text>
-          </View>
-
-          {/* PHONE */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              Nomor WhatsApp
-            </Text>
-
-            <View
-              style={[
-                styles.inputWrap,
-                show('phone') &&
-                  validation.phone &&
-                  styles.inputError,
-                show('phone') &&
-                  !validation.phone &&
-                  styles.inputValid,
-              ]}
-            >
-              <Ionicons
-                name="logo-whatsapp"
-                size={19}
-                color={COLORS.textSecondary}
-              />
-
-              <TextInput
-                style={styles.input}
-                value={phone}
-                onChangeText={(value) => {
-                  setPhone(value);
-
-                  setTouched((current) => ({
-                    ...current,
-                    phone: true,
-                  }));
-                }}
-                onBlur={() =>
-                  setTouched((current) => ({
-                    ...current,
-                    phone: true,
-                  }))
-                }
-                placeholder="08xxxxxxxxxx atau +628xxxxxxxxxx"
-                placeholderTextColor={COLORS.textSecondary}
-                keyboardType="phone-pad"
-                editable={!saving}
-              />
-            </View>
-
-            <ValidationMessage
-              error={
-                show('phone')
-                  ? validation.phone
-                  : undefined
-              }
-              success={
-                show('phone') && !validation.phone
-                  ? 'Nomor WhatsApp valid.'
-                  : undefined
-              }
-            />
-          </View>
-
-          {/* SAVE BUTTON */}
-          <TouchableOpacity
+          <View
             style={[
-              styles.saveButton,
-              saving && styles.disabledButton,
+              styles.inputBox,
+              fullNameError && styles.inputBoxError,
+              fullNameValid && styles.inputBoxValid,
             ]}
-            activeOpacity={0.85}
-            onPress={handleSave}
-            disabled={saving}
           >
-            {saving ? (
+            <Ionicons
+              name="person-outline"
+              size={20}
+              color={
+                fullNameError
+                  ? COLORS.accentCritical
+                  : fullNameValid
+                    ? COLORS.success
+                    : COLORS.textSecondary
+              }
+              style={styles.inputIcon}
+            />
+
+            <TextInput
+              style={styles.textInput}
+              value={fullName}
+              onChangeText={(value) => {
+                setFullName(value);
+
+                setTouched((current) => ({
+                  ...current,
+                  fullName: true,
+                }));
+              }}
+              onBlur={() =>
+                setTouched((current) => ({
+                  ...current,
+                  fullName: true,
+                }))
+              }
+              placeholder="Masukkan nama lengkap"
+              placeholderTextColor={COLORS.textSecondary}
+              autoCapitalize="words"
+              autoCorrect={false}
+              editable={!saving}
+              returnKeyType="next"
+            />
+          </View>
+
+          <ValidationMessage
+            error={fullNameError}
+            success={
+              fullNameValid
+                ? 'Nama lengkap valid.'
+                : undefined
+            }
+          />
+        </View>
+
+        {/* NOMOR WHATSAPP */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>
+            Nomor WhatsApp
+          </Text>
+
+          <View
+            style={[
+              styles.inputBox,
+              phoneError && styles.inputBoxError,
+              phoneValid && styles.inputBoxValid,
+            ]}
+          >
+            <Ionicons
+              name="call-outline"
+              size={20}
+              color={
+                phoneError
+                  ? COLORS.accentCritical
+                  : phoneValid
+                    ? COLORS.success
+                    : COLORS.textSecondary
+              }
+              style={styles.inputIcon}
+            />
+
+            <TextInput
+              style={styles.textInput}
+              value={phone}
+              onChangeText={(value) => {
+                setPhone(value);
+
+                setTouched((current) => ({
+                  ...current,
+                  phone: true,
+                }));
+              }}
+              onBlur={() =>
+                setTouched((current) => ({
+                  ...current,
+                  phone: true,
+                }))
+              }
+              placeholder="Contoh: 081234567890"
+              placeholderTextColor={COLORS.textSecondary}
+              keyboardType="phone-pad"
+              editable={!saving}
+              returnKeyType="done"
+            />
+          </View>
+
+          <ValidationMessage
+            error={phoneError}
+            success={
+              phoneValid
+                ? 'Nomor WhatsApp valid.'
+                : undefined
+            }
+          />
+
+          <Text style={styles.helperText}>
+            Gunakan nomor WhatsApp aktif agar petugas dapat
+            menghubungi kamu jika diperlukan.
+          </Text>
+        </View>
+
+        {/* EMAIL */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>
+            Email
+          </Text>
+
+          <View style={[styles.inputBox, styles.disabledInput]}>
+            <Ionicons
+              name="mail-outline"
+              size={20}
+              color={COLORS.textSecondary}
+              style={styles.inputIcon}
+            />
+
+            <TextInput
+              style={[styles.textInput, styles.disabledText]}
+              value={profile.email}
+              editable={false}
+              placeholder="Email akun"
+              placeholderTextColor={COLORS.textSecondary}
+            />
+          </View>
+
+          <Text style={styles.helperText}>
+            Email tidak dapat diubah melalui halaman ini.
+          </Text>
+        </View>
+
+        {/* SAVE BUTTON */}
+        <TouchableOpacity
+          style={[
+            styles.saveButton,
+            saving && styles.disabledButton,
+          ]}
+          onPress={handleSave}
+          disabled={saving}
+          activeOpacity={0.8}
+        >
+          {saving ? (
+            <>
               <ActivityIndicator
+                size="small"
                 color={COLORS.textPrimary}
               />
-            ) : (
-              <>
-                <Text style={styles.saveButtonText}>
-                  Simpan Perubahan
-                </Text>
 
-                <Ionicons
-                  name="checkmark-circle-outline"
-                  size={19}
-                  color={COLORS.textPrimary}
-                />
-              </>
-            )}
-          </TouchableOpacity>
+              <Text style={styles.saveButtonText}>
+                Menyimpan...
+              </Text>
+            </>
+          ) : (
+            <>
+              <Ionicons
+                name="save-outline"
+                size={18}
+                color={COLORS.textPrimary}
+              />
 
-          {/* CANCEL BUTTON */}
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => router.back()}
-            disabled={saving}
-          >
-            <Text style={styles.cancelButtonText}>
-              Batal
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+              <Text style={styles.saveButtonText}>
+                Simpan Perubahan
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        {/* CANCEL BUTTON */}
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => router.back()}
+          disabled={saving}
+        >
+          <Text style={styles.cancelButtonText}>
+            Batal
+          </Text>
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
@@ -378,96 +396,117 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+
+  scrollView: {
+    flex: 1,
+  },
+
   scrollContent: {
     padding: SIZES.large,
-    paddingBottom: SIZES.xxlarge,
+    paddingBottom: 56,
+    flexGrow: 1,
   },
+
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: SIZES.medium,
+    padding: SIZES.large,
   },
+
   loadingText: {
     ...FONTS.body,
     color: COLORS.textSecondary,
+    marginTop: SIZES.medium,
   },
+
   backLink: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
     marginBottom: SIZES.large,
   },
+
   backText: {
     ...FONTS.labelMedium,
     color: COLORS.secondaryDark,
+    marginLeft: 6,
   },
+
   eyebrow: {
     ...FONTS.caption,
-    color: COLORS.secondaryDark,
-    fontWeight: '700',
-    letterSpacing: 1.1,
-    marginBottom: 5,
+    color: COLORS.textSecondary,
+    letterSpacing: 1,
+    marginBottom: SIZES.small,
   },
+
   pageTitle: {
     ...FONTS.headline1,
-    color: COLORS.textPrimary,
+    color: COLORS.secondaryDark,
+    marginBottom: 6,
   },
+
   pageSubtitle: {
     ...FONTS.body,
     color: COLORS.textSecondary,
-    marginTop: 5,
-    marginBottom: SIZES.large,
-    lineHeight: 21,
+    marginBottom: SIZES.xlarge,
+    lineHeight: 20,
   },
-  formCard: {
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: SIZES.radiusLarge,
-    padding: SIZES.large,
-  },
+
   inputGroup: {
     marginBottom: SIZES.large,
   },
-  label: {
+
+  inputLabel: {
     ...FONTS.labelMedium,
     color: COLORS.textPrimary,
     marginBottom: SIZES.small,
   },
-  inputWrap: {
+
+  inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 50,
+    minHeight: 48,
+    backgroundColor: COLORS.surface,
+    borderRadius: SIZES.radiusMedium,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: SIZES.radiusMedium,
     paddingHorizontal: SIZES.medium,
-    backgroundColor: COLORS.surface,
-    gap: 10,
   },
-  input: {
-    flex: 1,
-    color: COLORS.textPrimary,
-    ...FONTS.body,
-    paddingVertical: 12,
-  },
-  inputError: {
+
+  inputBoxError: {
     borderColor: COLORS.accentCritical,
   },
-  inputValid: {
+
+  inputBoxValid: {
     borderColor: COLORS.success,
   },
-  disabledInput: {
-    backgroundColor: '#F1F5F9',
+
+  inputIcon: {
+    marginRight: 10,
   },
+
+  textInput: {
+    flex: 1,
+    ...FONTS.body,
+    color: COLORS.textPrimary,
+    paddingVertical: 10,
+  },
+
+  disabledInput: {
+    backgroundColor: COLORS.background,
+  },
+
+  disabledText: {
+    color: COLORS.textSecondary,
+  },
+
   helperText: {
     ...FONTS.caption,
     color: COLORS.textSecondary,
     marginTop: 6,
     lineHeight: 17,
   },
+
   saveButton: {
     minHeight: 50,
     borderRadius: SIZES.radiusMedium,
@@ -478,18 +517,22 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: SIZES.small,
   },
+
   saveButtonText: {
     ...FONTS.labelMedium,
     color: COLORS.textPrimary,
   },
+
   disabledButton: {
     opacity: 0.6,
   },
+
   cancelButton: {
     alignItems: 'center',
     paddingVertical: SIZES.medium,
     marginTop: SIZES.small,
   },
+
   cancelButtonText: {
     ...FONTS.labelMedium,
     color: COLORS.textSecondary,

@@ -59,10 +59,11 @@ export const supabase = createClient(
   supabasePublishableKey,
   {
     auth: {
-      storage: AsyncStorage,
+      storage: supabaseStorage,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,
+      flowType: 'pkce',
     },
   },
 );
