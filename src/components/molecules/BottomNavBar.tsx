@@ -1,6 +1,3 @@
-
-// components/molecules/BottomNavBar.tsx
-
 import React from 'react';
 import {
   View,
@@ -8,16 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
-
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 import { COLORS, FONTS } from '../../constants/theme';
 
-// =====================================================
-// TYPES
-// =====================================================
-
+// Navigation types
 export type TabType =
   | 'Beranda'
   | 'Katalog'
@@ -36,6 +27,7 @@ export type AdminTabType =
   | 'Transaksi'
   | 'Lainnya';
 
+// Props
 type PublicBottomNavProps = {
   variant?: 'public';
   activeTab: TabType;
@@ -59,11 +51,16 @@ type BottomNavBarProps =
   | UserBottomNavProps
   | AdminBottomNavProps;
 
-// =====================================================
-// TAB CONFIGURATION
-// =====================================================
+// Tab configuration
+type TabConfig<T extends string> = {
+  name: T;
+  label?: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  activeIcon: keyof typeof Ionicons.glyphMap;
+};
 
-const PUBLIC_TABS = [
+// Public navigation
+const PUBLIC_TABS: TabConfig<TabType>[] = [
   {
     name: 'Beranda',
     icon: 'home-outline',
@@ -85,9 +82,10 @@ const PUBLIC_TABS = [
     icon: 'person-outline',
     activeIcon: 'person',
   },
-] as const;
+];
 
-const USER_TABS = [
+// User navigation
+const USER_TABS: TabConfig<UserTabType>[] = [
   {
     name: 'Beranda',
     icon: 'home-outline',
@@ -108,9 +106,10 @@ const USER_TABS = [
     icon: 'person-outline',
     activeIcon: 'person',
   },
-] as const;
+];
 
-const ADMIN_TABS = [
+// Admin navigation
+const ADMIN_TABS: TabConfig<AdminTabType>[] = [
   {
     name: 'Dashboard',
     icon: 'grid-outline',
@@ -131,15 +130,9 @@ const ADMIN_TABS = [
     icon: 'ellipsis-horizontal-circle-outline',
     activeIcon: 'ellipsis-horizontal-circle',
   },
-] as const;
-
-// =====================================================
-// COMPONENT
-// =====================================================
+];
 
 const BottomNavBar: React.FC<BottomNavBarProps> = (props) => {
-  const insets = useSafeAreaInsets();
-
   const tabs =
     props.variant === 'user'
       ? USER_TABS
@@ -158,122 +151,100 @@ const BottomNavBar: React.FC<BottomNavBarProps> = (props) => {
   };
 
   return (
-    <View
-      style={[
-        styles.safeAreaContainer,
-        {
-          paddingBottom: insets.bottom,
-        },
-      ]}
-    >
-      <View style={styles.navContainer}>
-        {tabs.map((tab) => {
-          const isActive = props.activeTab === tab.name;
+    <View style={styles.navContainer}>
+      {tabs.map((tab) => {
+        const isActive = props.activeTab === tab.name;
+        const tabLabel = tab.label ?? tab.name;
 
-          const tabLabel =
-            'label' in tab ? tab.label : tab.name;
+        return (
+          <TouchableOpacity
+            key={tab.name}
+            style={[
+              styles.tabItem,
+              isActive && styles.activeTabItem,
+            ]}
+            activeOpacity={0.7}
+            onPress={() => handlePress(tab.name)}
+            hitSlop={{
+              top: 8,
+              bottom: 8,
+              left: 4,
+              right: 4,
+            }}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isActive }}
+            accessibilityLabel={tabLabel}
+          >
+            <Ionicons
+              name={isActive ? tab.activeIcon : tab.icon}
+              size={22}
+              color={
+                isActive
+                  ? COLORS.primaryActive
+                  : COLORS.textSecondaryStrong
+              }
+            />
 
-          return (
-            <TouchableOpacity
-              key={tab.name}
-              style={styles.tabItem}
-              activeOpacity={0.7}
-              onPress={() => handlePress(tab.name)}
-              accessibilityRole="button"
-              accessibilityState={{
-                selected: isActive,
-              }}
-              accessibilityLabel={tabLabel}
+            <Text
+              style={[
+                styles.tabLabel,
+                {
+                  color: isActive
+                    ? COLORS.primaryActive
+                    : COLORS.textSecondaryStrong,
+                },
+                isActive && styles.activeTabLabel,
+              ]}
+              numberOfLines={1}
             >
-              {isActive && (
-                <View style={styles.activeIndicator} />
-              )}
-
-              <Ionicons
-                name={
-                  (isActive
-                    ? tab.activeIcon
-                    : tab.icon) as keyof typeof Ionicons.glyphMap
-                }
-                size={22}
-                color={
-                  isActive
-                    ? COLORS.secondaryDark
-                    : COLORS.textSecondary
-                }
-              />
-
-              <Text
-                style={[
-                  styles.tabLabel,
-                  {
-                    color: isActive
-                      ? COLORS.secondaryDark
-                      : COLORS.textSecondary,
-                  },
-                  isActive && styles.activeTabLabel,
-                ]}
-              >
-                {tabLabel}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+              {tabLabel}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 };
 
-// =====================================================
-// STYLES
-// =====================================================
-
-
 const styles = StyleSheet.create({
-  safeAreaContainer: {
-    backgroundColor: COLORS.surface,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-
-    // Hilangkan efek navbar mengambang
-    elevation: 0,
-    shadowColor: 'transparent',
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-  },
-
   navContainer: {
     flexDirection: 'row',
-    height: 64,
+    height: 68,
     backgroundColor: COLORS.surface,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.borderStrong,
     justifyContent: 'space-around',
     alignItems: 'center',
+    paddingHorizontal: 8,
+    elevation: 8,
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
 
   tabItem: {
     flex: 1,
+    minWidth: 0,
+    minHeight: 48,
+    marginHorizontal: 4,
+    paddingVertical: 5,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100%',
   },
 
-  activeIndicator: {
-    position: 'absolute',
-    top: 0,
-    width: 28,
-    height: 3,
-    backgroundColor: COLORS.secondaryDark,
-    borderBottomLeftRadius: 3,
-    borderBottomRightRadius: 3,
+  activeTabItem: {
+    backgroundColor: COLORS.primaryActiveBackground,
   },
 
   tabLabel: {
     ...FONTS.caption,
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 16,
     marginTop: 4,
   },
 

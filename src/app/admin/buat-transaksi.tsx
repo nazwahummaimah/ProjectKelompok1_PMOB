@@ -157,28 +157,33 @@ export default function CreateTransactionScreen() {
      CUSTOMER LOOKUP
   ========================================================= */
 
+  const [phoneLookupCompleted, setPhoneLookupCompleted] = useState(false);
+
   const handleCustomerLookup = async () => {
+    if (searchingCustomer) return;
+
     const digits = phone.replace(/\D/g, '');
 
     if (digits.length < 9 || digits.length > 15) {
+      setPhoneLookupCompleted(false);
       setLinkedUserId(null);
-
       setCustomerLookupMessage(
-        'Masukkan nomor WhatsApp yang valid untuk mencari pelanggan.'
+        'Masukkan nomor WhatsApp yang valid sebelum mencari pelanggan.'
       );
-
       return;
     }
 
     try {
       setSearchingCustomer(true);
-      setCustomerLookupMessage('');
+      setPhoneLookupCompleted(false);
+      setCustomerLookupMessage('Memeriksa nomor WhatsApp...');
       setLinkedUserId(null);
 
       const customer =
         await searchRegisteredCustomerByPhone(digits);
 
       if (customer) {
+        // Pelanggan terdaftar: gunakan identitas dari akun yang ditemukan.
         setCustomerName(customer.full_name);
 
         if (
@@ -189,25 +194,29 @@ export default function CreateTransactionScreen() {
         }
 
         setLinkedUserId(customer.id);
-
         setCustomerLookupMessage(
           `Akun ditemukan: ${customer.full_name}. Transaksi akan dihubungkan dengan akun pelanggan ini.`
         );
       } else {
-        setCustomerName('');
+        // Jangan menghapus nama yang mungkin sudah diisi Admin sebelumnya.
+        // Nama tetap dapat dilengkapi manual untuk pelanggan tanpa akun.
         setLinkedUserId(null);
-
         setCustomerLookupMessage(
-          'Akun pelanggan tidak ditemukan. Transaksi akan dicatat sebagai pelanggan tanpa akun.'
+          'Akun pelanggan tidak ditemukan. Silakan isi nama lengkap secara manual.'
         );
       }
+
+      // Pencarian berhasil diselesaikan, baik ditemukan maupun tidak.
+      setPhoneLookupCompleted(true);
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : 'Gagal mencari pelanggan.';
+          : 'Gagal mencari pelanggan. Periksa koneksi lalu coba lagi.';
 
+      // Error jaringan bukan hasil pencarian yang valid. Nama tetap terkunci.
       setLinkedUserId(null);
+      setPhoneLookupCompleted(false);
       setCustomerLookupMessage(message);
     } finally {
       setSearchingCustomer(false);
@@ -220,6 +229,14 @@ export default function CreateTransactionScreen() {
 
   const handleSubmit = async () => {
     if (saving) return;
+
+    if (searchingCustomer || !phoneLookupCompleted) {
+      Alert.alert(
+        'Periksa nomor WhatsApp',
+        'Masukkan nomor WhatsApp dan tekan Cari sebelum melanjutkan transaksi.'
+      );
+      return;
+    }
 
     if (customerName.trim().length < 3) {
       Alert.alert(
@@ -330,43 +347,33 @@ export default function CreateTransactionScreen() {
     <AdminPageLayout
       title="Buat Transaksi"
       subtitle="Catat penyewaan langsung di lokasi. Pembayaran dan serah terima dicatat terpisah."
-      showBack
-    >
+      showBack>
       {/* 1. IDENTITAS PELANGGAN */}
 
       <View style={adminUi.card}>
-        <Text style={styles.sectionTitle}>
-          1. Identitas Pelanggan
-        </Text>
+        <Text style={styles.sectionTitle}>1. Identitas Pelanggan</Text>
 
-        <Text style={styles.label}>
-          Nama lengkap *
-        </Text>
-
-        <TextInput
-          value={customerName}
-          onChangeText={(value) => {
-            setCustomerName(value);
-            setLinkedUserId(null);
-            setCustomerLookupMessage('');
-          }}
-          style={adminUi.input}
-          placeholder="Nama pelanggan"
-          placeholderTextColor={COLORS.textSecondary}
-        />
-
-        <Text style={[styles.label, { marginTop: 12 }]}>
-          Nomor WhatsApp *
-        </Text>
+        {/* Nomor WhatsApp */}
+        <Text style={[styles.label, { marginTop: 12 }]}>Nomor WhatsApp *</Text>
 
         <View style={styles.lookupRow}>
           <TextInput
             value={phone}
             onChangeText={(value) => {
               setPhone(value);
+
+              // Jika nama berasal dari akun yang sebelumnya ditemukan,
+              // kosongkan agar tidak terbawa ke nomor pelanggan yang baru.
+              // Nama manual untuk pelanggan tanpa akun tetap dipertahankan.
+              if (linkedUserId) {
+                setCustomerName('');
+              }
+
               setLinkedUserId(null);
+              setPhoneLookupCompleted(false);
               setCustomerLookupMessage('');
             }}
+            editable={!searchingCustomer}
             style={[adminUi.input, { flex: 1 }]}
             placeholder="08xxxxxxxxxx"
             keyboardType="phone-pad"
@@ -374,57 +381,70 @@ export default function CreateTransactionScreen() {
           />
 
           <TouchableOpacity
-            style={[
-              styles.lookupButton,
-              searchingCustomer && { opacity: 0.6 },
-            ]}
+            style={[styles.lookupButton, searchingCustomer && { opacity: 0.6 }]}
             onPress={handleCustomerLookup}
             disabled={searchingCustomer}
-          >
+            activeOpacity={0.7}>
             {searchingCustomer ? (
-              <ActivityIndicator
-                size="small"
-                color={COLORS.secondaryDark}
-              />
+              <ActivityIndicator size="small" color={COLORS.secondaryDark} />
             ) : (
-              <Text style={styles.lookupButtonText}>
-                Cari
-              </Text>
+              <Text style={styles.lookupButtonText}>Cari</Text>
             )}
           </TouchableOpacity>
         </View>
 
+        {/* Nama Lengkap */}
+        <Text style={[styles.label, { marginTop: 14 }]}>Nama Lengkap *</Text>
+
+        <TextInput
+          value={customerName}
+          onChangeText={(value) => {
+            setCustomerName(value);
+          }}
+          editable={phoneLookupCompleted && !linkedUserId && !searchingCustomer}
+          style={[
+            adminUi.input,
+            (!phoneLookupCompleted || !!linkedUserId || searchingCustomer) &&
+              styles.disabledInput,
+          ]}
+          placeholder={
+            !phoneLookupCompleted
+              ? 'Cek nomor WhatsApp terlebih dahulu'
+              : linkedUserId
+                ? 'Nama sesuai akun pelanggan'
+                : 'Nama pelanggan'
+          }
+          placeholderTextColor={COLORS.textSecondary}
+        />
+
+        {/* Pesan Pencarian */}
         {customerLookupMessage ? (
-          <Text style={styles.lookupMessage}>
-            {customerLookupMessage}
-          </Text>
+          <Text style={styles.lookupMessage}>{customerLookupMessage}</Text>
         ) : null}
 
+        {/* Status Akun Terhubung */}
         {linkedUserId ? (
           <Text style={styles.linkedCustomer}>
             ✓ Transaksi terhubung dengan akun pelanggan.
           </Text>
         ) : null}
 
+        {/* Kategori Pelanggan */}
         <Text style={[styles.label, { marginTop: 14 }]}>
           Kategori pelanggan
         </Text>
 
         <ChoiceRow
-          options={['Pelajar', 'Umum']}
+          options={["Pelajar", "Umum"]}
           value={customerType}
-          onChange={(value) =>
-            setCustomerType(value as CustomerType)
-          }
+          onChange={(value) => setCustomerType(value as CustomerType)}
         />
       </View>
 
       {/* 2. PILIH UNIT SEPEDA */}
 
       <View style={adminUi.card}>
-        <Text style={styles.sectionTitle}>
-          2. Pilih Unit Sepeda
-        </Text>
+        <Text style={styles.sectionTitle}>2. Pilih Unit Sepeda</Text>
 
         <Text style={styles.helper}>
           Hanya unit berstatus Tersedia yang dapat dipilih.
@@ -432,34 +452,20 @@ export default function CreateTransactionScreen() {
 
         {loadingBikes ? (
           <View style={styles.stateContainer}>
-            <ActivityIndicator
-              size="small"
-              color={COLORS.secondaryDark}
-            />
-            <Text style={styles.helper}>
-              Memuat data sepeda...
-            </Text>
+            <ActivityIndicator size="small" color={COLORS.secondaryDark} />
+            <Text style={styles.helper}>Memuat data sepeda...</Text>
           </View>
         ) : bikeError ? (
           <View style={styles.stateContainer}>
-            <Text style={styles.errorText}>
-              {bikeError}
-            </Text>
+            <Text style={styles.errorText}>{bikeError}</Text>
 
-            <TouchableOpacity
-              style={adminUi.outlineButton}
-              onPress={loadBikes}
-            >
-              <Text style={styles.retryText}>
-                Coba Lagi
-              </Text>
+            <TouchableOpacity style={adminUi.outlineButton} onPress={loadBikes}>
+              <Text style={styles.retryText}>Coba Lagi</Text>
             </TouchableOpacity>
           </View>
         ) : availableBikes.length === 0 ? (
           <View style={styles.stateContainer}>
-            <Text style={styles.helper}>
-              Belum ada sepeda yang tersedia.
-            </Text>
+            <Text style={styles.helper}>Belum ada sepeda yang tersedia.</Text>
           </View>
         ) : (
           availableBikes.map((bike) => {
@@ -469,23 +475,13 @@ export default function CreateTransactionScreen() {
               <TouchableOpacity
                 key={bike.id}
                 onPress={() => toggleUnit(bike.id)}
-                style={[
-                  styles.unitRow,
-                  selected && styles.unitRowSelected,
-                ]}
-              >
+                style={[styles.unitRow, selected && styles.unitRowSelected]}>
                 <View style={styles.checkbox}>
-                  {selected ? (
-                    <Text style={styles.checkMark}>
-                      ✓
-                    </Text>
-                  ) : null}
+                  {selected ? <Text style={styles.checkMark}>✓</Text> : null}
                 </View>
 
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.unitName}>
-                    {bike.name}
-                  </Text>
+                  <Text style={styles.unitName}>{bike.name}</Text>
 
                   <Text style={styles.helper}>
                     {bike.id} · {bike.category}
@@ -499,13 +495,8 @@ export default function CreateTransactionScreen() {
         )}
 
         {!loadingBikes && !bikeError ? (
-          <TouchableOpacity
-            style={styles.refreshButton}
-            onPress={loadBikes}
-          >
-            <Text style={styles.retryText}>
-              ↻ Perbarui daftar sepeda
-            </Text>
+          <TouchableOpacity style={styles.refreshButton} onPress={loadBikes}>
+            <Text style={styles.retryText}>↻ Perbarui daftar sepeda</Text>
           </TouchableOpacity>
         ) : null}
 
@@ -519,42 +510,29 @@ export default function CreateTransactionScreen() {
       {/* 3. DURASI DAN TARIF */}
 
       <View style={adminUi.card}>
-        <Text style={styles.sectionTitle}>
-          3. Durasi dan Tarif
-        </Text>
+        <Text style={styles.sectionTitle}>3. Durasi dan Tarif</Text>
 
-        <Text style={styles.label}>
-          Jenis hari
-        </Text>
+        <Text style={styles.label}>Jenis hari</Text>
 
         <ChoiceRow
-          options={['Hari biasa', 'Hari libur']}
+          options={["Hari biasa", "Hari libur"]}
           value={dayType}
-          onChange={(value) =>
-            setDayType(value as DayType)
-          }
+          onChange={(value) => setDayType(value as DayType)}
         />
 
-        <Text style={[styles.label, { marginTop: 14 }]}>
-          Durasi sewa (jam)
-        </Text>
+        <Text style={[styles.label, { marginTop: 14 }]}>Durasi sewa (jam)</Text>
 
         <View style={styles.durationRow}>
           <TouchableOpacity
             style={styles.stepper}
-            onPress={() =>
-              setDuration(String(Math.max(1, hours - 1)))
-            }
-          >
+            onPress={() => setDuration(String(Math.max(1, hours - 1)))}>
             <Text style={styles.stepperText}>−</Text>
           </TouchableOpacity>
 
           <TextInput
             value={duration}
             onChangeText={(value) =>
-              setDuration(
-                value.replace(/[^0-9]/g, '').slice(0, 2)
-              )
+              setDuration(value.replace(/[^0-9]/g, "").slice(0, 2))
             }
             keyboardType="number-pad"
             style={styles.durationInput}
@@ -562,91 +540,62 @@ export default function CreateTransactionScreen() {
 
           <TouchableOpacity
             style={styles.stepper}
-            onPress={() =>
-              setDuration(String(Math.min(24, hours + 1)))
-            }
-          >
+            onPress={() => setDuration(String(Math.min(24, hours + 1)))}>
             <Text style={styles.stepperText}>+</Text>
           </TouchableOpacity>
         </View>
 
         <Text style={styles.helper}>
-          Tarif {customerType.toLowerCase()} ·{' '}
-          {dayType.toLowerCase()}:{' '}
+          Tarif {customerType.toLowerCase()} · {dayType.toLowerCase()}:{" "}
           {formatRupiah(hourlyRate)}/jam/unit
         </Text>
 
         <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>
-            Estimasi total
-          </Text>
+          <Text style={styles.totalLabel}>Estimasi total</Text>
 
-          <Text style={styles.totalValue}>
-            {formatRupiah(total)}
-          </Text>
+          <Text style={styles.totalValue}>{formatRupiah(total)}</Text>
         </View>
 
         <Text style={styles.helper}>
-          Perhitungan: tarif per jam × durasi × jumlah unit.
-          Harga paket belum ditetapkan.
+          Perhitungan: tarif per jam × durasi × jumlah unit. Harga paket belum
+          ditetapkan.
         </Text>
       </View>
 
       {/* 4. JAMINAN DAN PEMBAYARAN */}
 
       <View style={adminUi.card}>
-        <Text style={styles.sectionTitle}>
-          4. Jaminan dan Pembayaran
-        </Text>
+        <Text style={styles.sectionTitle}>4. Jaminan dan Pembayaran</Text>
 
-        <Text style={styles.label}>
-          Jenis jaminan
-        </Text>
+        <Text style={styles.label}>Jenis jaminan</Text>
 
         <ChoiceRow
-          options={[
-            'Identitas Terverifikasi',
-            'Sepeda Motor',
-          ]}
+          options={["Identitas Terverifikasi", "Sepeda Motor"]}
           value={guarantee}
-          onChange={(value) =>
-            setGuarantee(value as GuaranteeType)
-          }
+          onChange={(value) => setGuarantee(value as GuaranteeType)}
         />
 
-        <Text style={[styles.label, { marginTop: 14 }]}>
-          Metode pembayaran
-        </Text>
+        <Text style={[styles.label, { marginTop: 14 }]}>Metode pembayaran</Text>
 
         <ChoiceRow
-          options={['Tunai', 'QRIS']}
+          options={["Tunai", "QRIS"]}
           value={paymentMethod}
-          onChange={(value) =>
-            setPaymentMethod(value as PaymentMethod)
-          }
+          onChange={(value) => setPaymentMethod(value as PaymentMethod)}
         />
 
         <TouchableOpacity
           style={styles.paymentToggle}
-          onPress={() =>
-            setPaymentMarkedPaid((value) => !value)
-          }
-        >
+          onPress={() => setPaymentMarkedPaid((value) => !value)}>
           <View
             style={[
               styles.checkbox,
               paymentMarkedPaid && styles.checkboxActive,
-            ]}
-          >
-            {paymentMarkedPaid ? (
-              <Text style={styles.checkMark}>✓</Text>
-            ) : null}
+            ]}>
+            {paymentMarkedPaid ? <Text style={styles.checkMark}>✓</Text> : null}
           </View>
 
           <View style={{ flex: 1 }}>
-            <Text style={styles.unitName}>
-              Tandai pembayaran Lunas
-            </Text>
+            <Text style={styles.unitName}>Tandai pembayaran Lunas</Text>
 
             <Text style={styles.helper}>
               QRIS dicatat manual, bukan melalui payment gateway.
@@ -669,21 +618,12 @@ export default function CreateTransactionScreen() {
         ]}
         onPress={handleSubmit}
         disabled={
-          saving ||
-          loadingBikes ||
-          !!bikeError ||
-          selectedUnits.length === 0
-        }
-      >
-        {saving ? (
-          <ActivityIndicator
-            size="small"
-            color="#FFFFFF"
-          />
-        ) : null}
+          saving || loadingBikes || !!bikeError || selectedUnits.length === 0
+        }>
+        {saving ? <ActivityIndicator size="small" color="#FFFFFF" /> : null}
 
         <Text style={adminUi.buttonText}>
-          {saving ? 'Menyimpan Transaksi...' : 'Simpan Transaksi'}
+          {saving ? "Menyimpan Transaksi..." : "Simpan Transaksi"}
         </Text>
       </TouchableOpacity>
     </AdminPageLayout>
@@ -935,4 +875,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: 12,
   },
+
+  disabledInput: {
+    backgroundColor: '#F1F5F9',
+    borderColor: '#CBD5E1',
+  }
 });

@@ -463,26 +463,19 @@ export default function AdminTransactionDetailScreen() {
     <AdminPageLayout
       title="Detail Transaksi"
       subtitle={transaction.transaction_code}
-      showBack
-    >
+      showBack>
       {/* IDENTITAS PELANGGAN */}
 
       <View style={styles.statusHeader}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.customerName}>
-            {transaction.customer_name}
-          </Text>
+          <Text style={styles.customerName}>{transaction.customer_name}</Text>
 
-          <Text style={styles.customerMeta}>
-            {transaction.phone}
-          </Text>
+          <Text style={styles.customerMeta}>{transaction.phone}</Text>
 
           <Text style={styles.customerMeta}>
             {transaction.customer_type}
-            {' · '}
-            {transaction.user_id
-              ? 'Akun terhubung'
-              : 'Pelanggan tamu'}
+            {" · "}
+            {transaction.user_id ? "Akun terhubung" : "Pelanggan tamu"}
           </Text>
         </View>
 
@@ -492,9 +485,7 @@ export default function AdminTransactionDetailScreen() {
       {/* DAFTAR SEPEDA */}
 
       <View style={adminUi.card}>
-        <Text style={styles.cardTitle}>
-          Unit yang Disewa
-        </Text>
+        <Text style={styles.cardTitle}>Unit yang Disewa</Text>
 
         {transaction.transaction_items.length === 0 ? (
           <Text style={styles.emptyText}>
@@ -513,14 +504,12 @@ export default function AdminTransactionDetailScreen() {
 
               <View style={{ flex: 1 }}>
                 <Text style={styles.unitName}>
-                  {item.bikes?.name ?? 'Sepeda tidak ditemukan'}
+                  {item.bikes?.name ?? "Sepeda tidak ditemukan"}
                 </Text>
 
                 <Text style={styles.meta}>
                   {item.bike_id}
-                  {item.bikes?.category
-                    ? ` · ${item.bikes.category}`
-                    : ''}
+                  {item.bikes?.category ? ` · ${item.bikes.category}` : ""}
                 </Text>
 
                 {item.return_condition ? (
@@ -530,14 +519,12 @@ export default function AdminTransactionDetailScreen() {
                 ) : null}
 
                 {item.return_note ? (
-                  <Text style={styles.meta}>
-                    Catatan: {item.return_note}
-                  </Text>
+                  <Text style={styles.meta}>Catatan: {item.return_note}</Text>
                 ) : null}
               </View>
 
               <AdminStatusBadge
-                status={item.bikes?.status ?? 'Tidak diketahui'}
+                status={item.bikes?.status ?? "Tidak diketahui"}
               />
             </View>
           ))
@@ -547,81 +534,48 @@ export default function AdminTransactionDetailScreen() {
       {/* RINCIAN PENYEWAAN */}
 
       <View style={adminUi.card}>
-        <Text style={styles.cardTitle}>
-          Rincian Penyewaan
-        </Text>
+        <Text style={styles.cardTitle}>Rincian Penyewaan</Text>
 
-        <Info
-          label="Kode transaksi"
-          value={transaction.transaction_code}
-        />
+        <Info label="Kode transaksi" value={transaction.transaction_code} />
 
-        <Info
-          label="Tanggal dan waktu sewa"
-          value={rentalDate}
-        />
+        <Info label="Tanggal dan waktu sewa" value={rentalDate} />
 
-        <Info
-          label="Estimasi selesai"
-          value={estimatedEnd}
-        />
+        <Info label="Estimasi selesai" value={estimatedEnd} />
 
-        <Info
-          label="Durasi"
-          value={`${transaction.duration_hours} jam`}
-        />
+        <Info label="Durasi" value={`${transaction.duration_hours} jam`} />
 
         <Info
           label="Jumlah sepeda"
           value={`${transaction.transaction_items.length} unit`}
         />
 
-        <Info
-          label="Kategori pelanggan"
-          value={transaction.customer_type}
-        />
+        <Info label="Kategori pelanggan" value={transaction.customer_type} />
 
-        <Info
-          label="Jenis hari"
-          value={transaction.day_type}
-        />
+        <Info label="Jenis hari" value={transaction.day_type} />
 
         <Info
           label="Tarif per jam"
           value={`${formatRupiah(Number(transaction.hourly_rate))}/unit`}
         />
 
-        <Info
-          label="Jaminan"
-          value={transaction.guarantee_type}
-          last
-        />
+        <Info label="Jaminan" value={transaction.guarantee_type} last />
       </View>
 
       {/* PEMBAYARAN */}
 
       <View style={adminUi.card}>
-        <Text style={styles.cardTitle}>
-          Pembayaran
-        </Text>
+        <Text style={styles.cardTitle}>Pembayaran</Text>
 
-        <Info
-          label="Metode pembayaran"
-          value={transaction.payment_method}
-        />
+        <Info label="Metode pembayaran" value={transaction.payment_method} />
 
         <View style={styles.paymentRow}>
-          <Text style={styles.infoLabel}>
-            Status pembayaran
-          </Text>
+          <Text style={styles.infoLabel}>Status pembayaran</Text>
 
           <AdminStatusBadge status={transaction.payment_status} />
         </View>
 
         <View style={[adminUi.between, styles.totalRow]}>
-          <Text style={styles.totalLabel}>
-            Total transaksi
-          </Text>
+          <Text style={styles.totalLabel}>Total transaksi</Text>
 
           <Text style={styles.totalValue}>
             {formatRupiah(Number(transaction.total))}
@@ -631,29 +585,25 @@ export default function AdminTransactionDetailScreen() {
 
       {/* AKSI PEMBAYARAN */}
 
-      {transaction.status === 'Menunggu Serah Terima' ? (
-        <>
-          {transaction.payment_status === 'Belum Lunas' ? (
+      {transaction.status === "Menunggu Serah Terima" ? (
+        <View style={styles.handoverSection}>
+          {transaction.payment_status === "Belum Lunas" ? (
             <TouchableOpacity
-              style={adminUi.button}
+              style={[adminUi.button, styles.confirmPaymentButton]}
               disabled={savingPayment || processingHandover}
-              onPress={confirmPayment}
-            >
+              onPress={confirmPayment}>
               {savingPayment ? (
                 <ActivityIndicator color={COLORS.textPrimary} />
               ) : (
-                <Text style={adminUi.buttonText}>
+                <Text
+                  style={[adminUi.buttonText, styles.confirmPaymentButtonText]}>
                   Konfirmasi Pembayaran Lunas
                 </Text>
               )}
             </TouchableOpacity>
           ) : (
             <View style={styles.paidNotice}>
-              <Ionicons
-                name="checkmark-circle"
-                size={19}
-                color="#15803D"
-              />
+              <Ionicons name="checkmark-circle" size={19} color="#15803D" />
 
               <Text style={styles.paidNoticeText}>
                 Pembayaran telah dinyatakan Lunas.
@@ -664,8 +614,7 @@ export default function AdminTransactionDetailScreen() {
           <TouchableOpacity
             style={adminUi.button}
             disabled={processingHandover || savingPayment}
-            onPress={confirmHandover}
-          >
+            onPress={confirmHandover}>
             {processingHandover ? (
               <ActivityIndicator color={COLORS.textPrimary} />
             ) : (
@@ -676,52 +625,40 @@ export default function AdminTransactionDetailScreen() {
                   color={COLORS.textPrimary}
                 />
 
-                <Text style={adminUi.buttonText}>
-                  Konfirmasi Serah Terima
-                </Text>
+                <Text style={adminUi.buttonText}>Konfirmasi Serah Terima</Text>
               </>
             )}
           </TouchableOpacity>
 
           <Text style={styles.helper}>
-            Pastikan sepeda benar-benar telah diserahkan kepada
-            pelanggan. Status pembayaran dikelola secara terpisah.
+            Pastikan sepeda benar-benar telah diserahkan kepada pelanggan.
+            Status pembayaran dikelola secara terpisah.
           </Text>
-        </>
+        </View>
       ) : null}
 
       {/* FORM PENGEMBALIAN */}
 
-      {transaction.status === 'Sedang Berlangsung' ? (
+      {transaction.status === "Sedang Berlangsung" ? (
         <View style={adminUi.card}>
-          <Text style={styles.cardTitle}>
-            Proses Pengembalian Sepeda
-          </Text>
+          <Text style={styles.cardTitle}>Proses Pengembalian Sepeda</Text>
 
           <Text style={styles.sectionDescription}>
-            Periksa kondisi fisik setiap sepeda sebelum menyelesaikan
-            transaksi.
+            Periksa kondisi fisik setiap sepeda sebelum menyelesaikan transaksi.
           </Text>
 
           {transaction.transaction_items.map((item, index) => {
             const form = returnForms[item.bike_id];
 
             return (
-              <View
-                key={item.id}
-                style={styles.returnBikeCard}
-              >
+              <View key={item.id} style={styles.returnBikeCard}>
                 <Text style={styles.returnBikeTitle}>
                   {index + 1}. {item.bikes?.name ?? item.bike_id}
                 </Text>
 
-                <Text style={styles.meta}>
-                  Kode unit: {item.bike_id}
-                </Text>
+                <Text style={styles.meta}>Kode unit: {item.bike_id}</Text>
 
-                <Text style={styles.fieldLabel}>
-                  Kondisi sepeda
-                </Text>
+                <Text style={styles.fieldLabel}>Kondisi sepeda</Text>
 
                 <View style={styles.conditionOptions}>
                   {RETURN_CONDITIONS.map((condition) => {
@@ -737,14 +674,12 @@ export default function AdminTransactionDetailScreen() {
                         onPress={() => {
                           setBikeCondition(item.bike_id, condition);
                         }}
-                        disabled={processingReturn}
-                      >
+                        disabled={processingReturn}>
                         <Text
                           style={[
                             styles.conditionText,
                             selected && styles.conditionTextActive,
-                          ]}
-                        >
+                          ]}>
                           {condition}
                         </Text>
                       </TouchableOpacity>
@@ -757,7 +692,7 @@ export default function AdminTransactionDetailScreen() {
                 </Text>
 
                 <TextInput
-                  value={form?.note ?? ''}
+                  value={form?.note ?? ""}
                   onChangeText={(value) => {
                     setBikeReturnNote(item.bike_id, value);
                   }}
@@ -788,16 +723,14 @@ export default function AdminTransactionDetailScreen() {
           />
 
           <Text style={styles.returnInfo}>
-            Sepeda dengan kondisi Baik akan kembali Tersedia.
-            Sepeda dengan kondisi Rusak ringan atau Rusak berat
-            akan masuk Perawatan.
+            Sepeda dengan kondisi Baik akan kembali Tersedia. Sepeda dengan
+            kondisi Rusak ringan atau Rusak berat akan masuk Perawatan.
           </Text>
 
           <TouchableOpacity
             style={adminUi.button}
             disabled={processingReturn}
-            onPress={confirmReturn}
-          >
+            onPress={confirmReturn}>
             {processingReturn ? (
               <ActivityIndicator color={COLORS.textPrimary} />
             ) : (
@@ -808,9 +741,7 @@ export default function AdminTransactionDetailScreen() {
                   color={COLORS.textPrimary}
                 />
 
-                <Text style={adminUi.buttonText}>
-                  Konfirmasi Pengembalian
-                </Text>
+                <Text style={adminUi.buttonText}>Konfirmasi Pengembalian</Text>
               </>
             )}
           </TouchableOpacity>
@@ -819,33 +750,22 @@ export default function AdminTransactionDetailScreen() {
 
       {/* INFORMASI PENGEMBALIAN SELESAI */}
 
-      {transaction.status === 'Selesai' ? (
+      {transaction.status === "Selesai" ? (
         <View style={adminUi.card}>
-          <Text style={styles.cardTitle}>
-            Informasi Pengembalian
-          </Text>
+          <Text style={styles.cardTitle}>Informasi Pengembalian</Text>
 
-          <Info
-            label="Waktu pengembalian aktual"
-            value={actualReturn ?? '-'}
-          />
+          <Info label="Waktu pengembalian aktual" value={actualReturn ?? "-"} />
 
           <Info
             label="Catatan umum pengembalian"
-            value={transaction.return_notes || '-'}
+            value={transaction.return_notes || "-"}
             last
           />
 
           <View style={styles.finished}>
-            <Ionicons
-              name="checkmark-circle"
-              size={20}
-              color="#15803D"
-            />
+            <Ionicons name="checkmark-circle" size={20} color="#15803D" />
 
-            <Text style={styles.finishedText}>
-              Transaksi telah selesai.
-            </Text>
+            <Text style={styles.finishedText}>Transaksi telah selesai.</Text>
           </View>
         </View>
       ) : null}
@@ -916,9 +836,21 @@ const styles = StyleSheet.create({
   centerState: {
     flex: 1,
     minHeight: 220,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: 12,
+  },
+
+  handoverSection: {
+    gap: 12,
+  },
+
+  confirmPaymentButton: {
+    backgroundColor: "#15803D",
+  },
+
+  confirmPaymentButtonText: {
+    color: "#FFFFFF",
   },
 
   stateText: {
@@ -928,16 +860,16 @@ const styles = StyleSheet.create({
 
   errorText: {
     ...FONTS.body,
-    color: '#DC2626',
-    textAlign: 'center',
+    color: "#DC2626",
+    textAlign: "center",
     marginTop: 10,
   },
 
   statusHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#E0F2FE',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#E0F2FE",
     padding: SIZES.large,
     borderRadius: SIZES.radiusLarge,
     marginBottom: SIZES.medium,
@@ -969,8 +901,8 @@ const styles = StyleSheet.create({
   },
 
   unitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 9,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
@@ -981,9 +913,9 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#E0F2FE',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#E0F2FE",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   unitName: {
@@ -1001,13 +933,13 @@ const styles = StyleSheet.create({
     ...FONTS.caption,
     color: COLORS.secondaryDark,
     marginTop: 4,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 
   emptyText: {
     ...FONTS.body,
     color: COLORS.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     paddingVertical: 12,
   },
 
@@ -1025,14 +957,14 @@ const styles = StyleSheet.create({
   infoValue: {
     ...FONTS.body,
     color: COLORS.textPrimary,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 3,
   },
 
   paymentRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 10,
   },
 
@@ -1056,17 +988,17 @@ const styles = StyleSheet.create({
   paidNotice: {
     padding: 13,
     borderRadius: 12,
-    backgroundColor: '#DCFCE7',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#DCFCE7",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     marginBottom: 10,
   },
 
   paidNoticeText: {
     ...FONTS.labelMedium,
-    color: '#15803D',
+    color: "#15803D",
   },
 
   helper: {
@@ -1096,8 +1028,8 @@ const styles = StyleSheet.create({
   },
 
   conditionOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 7,
   },
 
@@ -1107,18 +1039,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 11,
     paddingVertical: 9,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
 
   conditionButtonActive: {
     borderColor: COLORS.secondaryDark,
-    backgroundColor: '#E0F2FE',
+    backgroundColor: "#E0F2FE",
   },
 
   conditionText: {
     ...FONTS.caption,
     color: COLORS.textSecondary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 
   conditionTextActive: {
@@ -1133,7 +1065,7 @@ const styles = StyleSheet.create({
     minHeight: 75,
     color: COLORS.textPrimary,
     ...FONTS.body,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
 
   returnInfo: {
@@ -1147,16 +1079,16 @@ const styles = StyleSheet.create({
   finished: {
     padding: 14,
     borderRadius: 12,
-    backgroundColor: '#DCFCE7',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#DCFCE7",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     marginTop: 15,
   },
 
   finishedText: {
     ...FONTS.labelMedium,
-    color: '#15803D',
+    color: "#15803D",
   },
 });
