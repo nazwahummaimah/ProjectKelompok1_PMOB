@@ -7,4 +7,4 @@
 4. Nazwa Hummaimah Shiddqin (2488010039)
 
 ### Hasil Halaman ###
-<img src="./assets/images/oauth.gif" width="320" alt="OAUth">
+<img src="./assets/images/laporan-oauth.gif" width="320" alt="OAUth">
